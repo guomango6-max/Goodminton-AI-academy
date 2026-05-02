@@ -1,5 +1,5 @@
 import { createOpenAI } from '@ai-sdk/openai';
-import { streamText } from 'ai';
+import { streamText, convertToModelMessages, UIMessage } from 'ai';
 
 const deepseek = createOpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY,
@@ -24,11 +24,12 @@ const systemPrompt = `你是 Goodminton Academy 的 AI 诊室顾问。你的角�
 3. 如果涉及教学改进，记下这个洞察`;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages }: { messages: UIMessage[] } = await req.json();
+  const modelMessages = await convertToModelMessages(messages);
 
   return streamText({
     model: deepseek('deepseek-chat'),
     system: systemPrompt,
-    messages,
-  }).toDataStreamResponse();
+    messages: modelMessages,
+  }).toUIMessageStreamResponse();
 }

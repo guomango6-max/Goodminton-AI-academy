@@ -2,14 +2,18 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 
 export default function Home() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
   });
 
+  const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
+
+  const isLoading = status === 'submitted' || status === 'streaming';
 
   useEffect(() => {
     setIsMounted(true);
@@ -18,6 +22,13 @@ export default function Home() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    sendMessage({ text: input });
+    setInput('');
+  };
 
   if (!isMounted) return null;
 
@@ -64,7 +75,12 @@ export default function Home() {
                       : 'bg-white text-slate-900 border border-slate-200 rounded-bl-none shadow-sm'
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  <p className="text-sm leading-relaxed">
+                    {message.parts
+                      .filter((p) => p.type === 'text')
+                      .map((p) => (p as { type: 'text'; text: string }).text)
+                      .join('')}
+                  </p>
                 </div>
               </div>
             ))}
@@ -91,7 +107,7 @@ export default function Home() {
             <input
               type="text"
               value={input}
-              onChange={handleInputChange}
+              onChange={(e) => setInput(e.target.value)}
               placeholder="说出你的想法..."
               disabled={isLoading}
               className="flex-1 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-50 disabled:text-slate-500"
