@@ -33,8 +33,7 @@ export default function Home() {
   };
 
   const handlePromptClick = (prompt: string) => {
-    setInput(prompt);
-    inputRef.current?.focus();
+    sendMessage({ text: prompt });
   };
 
   const examplePrompts = [
