@@ -26,11 +26,9 @@ const systemPrompt = `你是 Goodminton Academy 的 AI 诊室顾问。你的角�
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
-  const result = streamText({
+  return streamText({
     model: deepseek('deepseek-chat'),
     system: systemPrompt,
     messages,
-  });
-
-  return result.toDataStreamResponse();
+  }).toDataStreamResponse();
 }
