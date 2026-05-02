@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import Link from 'next/link';
+import ContactFooter from './ContactFooter';
 
 type Prompt = { icon: string; text: string };
 
@@ -137,7 +138,10 @@ export default function ChatRoom({
                   {message.parts
                     .filter((p) => p.type === 'text')
                     .map((p) => (p as { type: 'text'; text: string }).text)
-                    .join('')}
+                    .join('') ||
+                    /* fallback for any structural variation */
+                    (message as unknown as { content?: string }).content ||
+                    ''}
                 </div>
               </div>
             ))}
@@ -184,6 +188,8 @@ export default function ChatRoom({
           </div>
         </form>
       </div>
+
+      <ContactFooter />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import ContactFooter from './components/ContactFooter';
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
@@ -62,6 +63,8 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      <ContactFooter />
     </div>
   );
 }
