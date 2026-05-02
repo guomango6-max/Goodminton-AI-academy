@@ -1,5 +1,10 @@
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
+
+const deepseek = createOpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: 'https://api.deepseek.com/v1',
+});
 
 const systemPrompt = `你是 Goodminton Academy 的 AI 诊室顾问。你的角色是：
 
@@ -22,10 +27,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = streamText({
-    model: openai('deepseek-chat', {
-      apiKey: process.env.DEEPSEEK_API_KEY,
-      baseURL: 'https://api.deepseek.com/v1',
-    }),
+    model: deepseek('deepseek-chat'),
     system: systemPrompt,
     messages,
   });
