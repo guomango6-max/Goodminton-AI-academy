@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   const systemPrompt = role === 'friend' ? systemPrompts.friend : systemPrompts.student;
 
   return streamText({
-    model: deepseek('deepseek-chat'),
+    model: deepseek.chat('deepseek-chat'),
     system: systemPrompt,
     messages: modelMessages,
   }).toUIMessageStreamResponse();
