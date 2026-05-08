@@ -59,7 +59,9 @@ async function appendFeedbackMarkdown({
   await appendFile(feedbackPath, entry, 'utf8');
 }
 
-async function sendFeedbackWebhook({
+const NTFY_TOPIC = process.env.NTFY_TOPIC || 'goodminton-feedback-ef27280b6181';
+
+async function sendFeedbackNtfy({
   time,
   role,
   lang,
@@ -70,30 +72,24 @@ async function sendFeedbackWebhook({
   lang: string;
   lastUserText: string;
 }) {
-  const webhookUrl = process.env.GOODMINTON_FEEDBACK_WEBHOOK_URL;
-  if (!webhookUrl) return;
-  const secret = process.env.GOODMINTON_FEEDBACK_WEBHOOK_SECRET;
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
-    const response = await fetch(webhookUrl, {
+    const response = await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        time,
-        role,
-        lang,
-        lastUserText,
-        source: 'Goodminton Academy chat',
-        ...(secret ? { secret } : {}),
-      }),
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+        title: `[${role}/${lang}] Goodminton feedback`,
+        tags: 'badminton,speech_balloon',
+      },
+      body: `${lastUserText}\n\n— ${time}`,
       signal: controller.signal,
     });
 
     if (!response.ok) {
-      throw new Error(`Webhook failed: ${response.status} ${response.statusText}`);
+      const body = await response.text().catch(() => '');
+      throw new Error(`ntfy failed: ${response.status} ${response.statusText} ${body}`);
     }
   } finally {
     clearTimeout(timeout);
@@ -120,9 +116,9 @@ async function logFeedback({ messages, role, lang }: { messages: UIMessage[]; ro
   }
 
   try {
-    await sendFeedbackWebhook({ time, role, lang, lastUserText });
+    await sendFeedbackNtfy({ time, role, lang, lastUserText });
   } catch (error) {
-    console.error('[goodminton-feedback-webhook-error]', error);
+    console.error('[goodminton-feedback-ntfy-error]', error);
   }
 }
 
