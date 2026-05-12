@@ -11,15 +11,14 @@ const copy = {
     heading: '明德 · 新民 · 至善',
     intro: '',
     studentTitle: '我是学员',
-    studentDesc: '记录课后感受、训练问题和技术反馈，让下一节课更贴近你的真实状态。',
-    studentCta: '进入学员教室',
+    studentDesc: '登录取回你的训练 JSON、课后反馈和学习路径，让每次审查都变成自己的理解。',
+    studentCta: '进入学员数据',
     friendTitle: '我是球友',
     friendDesc: '聊约球、比赛分析和战术选择，把一次对话变成更清晰的行动。',
     friendCta: '开始聊天',
     subtitle: 'AI 教室',
     philosophyKicker: 'GOOD intentions. MINimal steps. consistent TONe.',
-    philosophyLine: '梯度向上 步长变小 路径积分',
-    philosophyChinese: '梯度向上 · 步长变小 · 路径积分',
+    philosophyItems: ['梯度向上', '步长变小', '路径积分'],
     studentMeta: 'Feedback / Training / Lesson',
     friendMeta: 'Tactics / Match / Play',
     imageAlt: '旧书墙图片，象征训练知识库和长期积累',
@@ -29,15 +28,14 @@ const copy = {
     heading: 'Clearer, kinder, more useful badminton coaching.',
     intro: 'Choose an entry point to share training feedback or start a focused conversation about technique, tactics, and lessons.',
     studentTitle: "I'm a Student",
-    studentDesc: 'Capture session feelings, training issues, and technique feedback so the next lesson starts from the right place.',
-    studentCta: 'Enter student room',
+    studentDesc: 'Log in to retrieve your training JSON, feedback, and learning path so review becomes your own understanding.',
+    studentCta: 'Open student data',
     friendTitle: "I'm a Player",
     friendDesc: 'Talk games, match analysis, and tactical choices, then turn the conversation into clearer action.',
     friendCta: 'Start chatting',
     subtitle: 'AI Coach',
     philosophyKicker: 'Goodminton',
-    philosophyLine: '梯度向上 步长变小 路径积分',
-    philosophyChinese: 'Upward gradient · smaller steps · path integration',
+    philosophyItems: ['Upward gradient', 'smaller steps', 'path integration'],
     studentMeta: 'Feedback / Training / Lesson',
     friendMeta: 'Tactics / Match / Play',
     imageAlt: 'Old books on shelves, suggesting a training knowledge base and long-term accumulation',
@@ -102,9 +100,14 @@ export default function Home() {
               <p className="text-[11px] font-medium uppercase tracking-[0.22em]">
                 consistent <strong className="font-semibold">TON</strong>e
               </p>
-              <p className="text-sm font-medium tracking-[0.18em]">梯度向上</p>
-              <p className="text-sm font-medium tracking-[0.18em]">步长变小</p>
-              <p className="text-sm font-medium tracking-[0.18em]">路径积分</p>
+              {t.philosophyItems.map((item) => (
+                <p
+                  key={item}
+                  className={`text-sm font-medium ${lang === 'zh' ? 'tracking-[0.18em]' : 'tracking-normal'}`}
+                >
+                  {item}
+                </p>
+              ))}
             </div>
           </div>
 
