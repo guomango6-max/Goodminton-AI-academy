@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local training automation
+/training-inbox/
+/training-notes/
+/training-archive/
+/raw-training-inbox/
+/training-fetch-state.json
+/scripts/training-automation.env.ps1
+/scripts/external-training-sources.json
+/data/student-review/
+/data/students/*.json
+!/data/students/demo.json

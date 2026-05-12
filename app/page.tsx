@@ -1,7 +1,9 @@
 'use client';
 
+import { FormEvent, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import ContactFooter from './components/ContactFooter';
 import { useLang } from './components/LangContext';
 
@@ -11,8 +13,13 @@ const copy = {
     heading: '明德 · 新民 · 至善',
     intro: '',
     studentTitle: '我是学员',
-    studentDesc: '登录取回你的训练 JSON、课后反馈和学习路径，让每次审查都变成自己的理解。',
-    studentCta: '进入学员数据',
+    studentDesc: '输入学员 ID 和访问码，直接进入自己的训练页面。',
+    studentCta: '登录进入',
+    studentIdLabel: '学员 ID',
+    studentIdPlaceholder: '例如 demo',
+    accessCodeLabel: '访问码',
+    accessCodePlaceholder: '由教练提供',
+    loadingStudent: '正在读取...',
     friendTitle: '我是球友',
     friendDesc: '聊约球、比赛分析和战术选择，把一次对话变成更清晰的行动。',
     friendCta: '开始聊天',
@@ -28,8 +35,13 @@ const copy = {
     heading: 'Clearer, kinder, more useful badminton coaching.',
     intro: 'Choose an entry point to share training feedback or start a focused conversation about technique, tactics, and lessons.',
     studentTitle: "I'm a Student",
-    studentDesc: 'Log in to retrieve your training JSON, feedback, and learning path so review becomes your own understanding.',
-    studentCta: 'Open student data',
+    studentDesc: 'Enter your student ID and access code to open your training page directly.',
+    studentCta: 'Log in',
+    studentIdLabel: 'Student ID',
+    studentIdPlaceholder: 'e.g. demo',
+    accessCodeLabel: 'Access code',
+    accessCodePlaceholder: 'Provided by coach',
+    loadingStudent: 'Loading...',
     friendTitle: "I'm a Player",
     friendDesc: 'Talk games, match analysis, and tactical choices, then turn the conversation into clearer action.',
     friendCta: 'Start chatting',
@@ -45,6 +57,43 @@ const copy = {
 export default function Home() {
   const { lang, toggle } = useLang();
   const t = copy[lang];
+  const router = useRouter();
+  const [studentId, setStudentId] = useState('');
+  const [accessCode, setAccessCode] = useState('');
+  const [studentError, setStudentError] = useState('');
+  const [studentLoading, setStudentLoading] = useState(false);
+
+  async function handleStudentLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStudentError('');
+    setStudentLoading(true);
+
+    try {
+      const response = await fetch('/api/student-data', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ studentId, accessCode }),
+      });
+      const payload = (await response.json()) as { student?: unknown; error?: string };
+
+      if (!response.ok || !payload.student) {
+        throw new Error(payload.error || (lang === 'zh' ? '读取失败。' : 'Failed to load student data.'));
+      }
+
+      window.sessionStorage.setItem('goodminton-student-current', JSON.stringify(payload.student));
+      router.push('/student');
+    } catch (requestError) {
+      setStudentError(
+        requestError instanceof Error
+          ? requestError.message
+          : lang === 'zh'
+            ? '读取失败。'
+            : 'Failed to load student data.',
+      );
+    } finally {
+      setStudentLoading(false);
+    }
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#f1f2f4] text-slate-900">
@@ -123,19 +172,46 @@ export default function Home() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent" />
           </div>
 
-          <Link
-            href="/student"
+          <form
+            onSubmit={handleStudentLogin}
             className="card-hover-light animate-fade-up delay-3 group relative overflow-hidden rounded-3xl border border-black/8 bg-white p-6 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.15)] md:col-span-6 md:row-span-2"
           >
             <div className="pointer-events-none absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-emerald-200/0 blur-2xl transition-all duration-500 group-hover:bg-emerald-200/60" />
             <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{t.studentMeta}</p>
             <h3 className="mt-4 text-2xl font-semibold text-slate-900">{t.studentTitle}</h3>
             <p className="mt-3 max-w-md text-sm leading-7 text-slate-600">{t.studentDesc}</p>
-            <div className="mt-6 inline-flex items-center gap-2 rounded-md border border-emerald-700/30 bg-emerald-700/8 px-3 py-2 text-sm font-medium text-emerald-800">
-              {t.studentCta}
-              <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+            <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+              <label className="block text-xs font-medium text-slate-600">
+                {t.studentIdLabel}
+                <input
+                  value={studentId}
+                  onChange={(event) => setStudentId(event.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none transition-colors focus:border-emerald-700 focus:bg-white"
+                  placeholder={t.studentIdPlaceholder}
+                  autoComplete="username"
+                />
+              </label>
+              <label className="block text-xs font-medium text-slate-600">
+                {t.accessCodeLabel}
+                <input
+                  value={accessCode}
+                  onChange={(event) => setAccessCode(event.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none transition-colors focus:border-emerald-700 focus:bg-white"
+                  placeholder={t.accessCodePlaceholder}
+                  type="password"
+                  autoComplete="current-password"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={studentLoading}
+                className="mt-5 h-10 rounded-md border border-emerald-700/30 bg-emerald-700/8 px-4 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-700 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:mt-[22px]"
+              >
+                {studentLoading ? t.loadingStudent : t.studentCta}
+              </button>
             </div>
-          </Link>
+            {studentError ? <div className="mt-3 text-sm text-red-600">{studentError}</div> : null}
+          </form>
 
           <Link
             href="/friend"

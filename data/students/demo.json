@@ -183,27 +183,30 @@
   ],
   "lessonHistory": [
     {
+      "id": "lesson-2026-04-20",
       "date": "2026-04-20",
       "title": "启动方向判断",
-      "focus": "接发后第一步方向",
+      "mainContent": ["接发准备姿势", "第一步方向", "中路保护范围"],
       "coachNote": "能更早判断来球方向，但启动后拍子准备偏低。",
       "studentNote": "我开始能分清楚是往中路还是边线保护。",
       "homeworkDone": 2,
       "homeworkTotal": 3
     },
     {
+      "id": "lesson-2026-05-01",
       "date": "2026-05-01",
       "title": "第一步落点",
-      "focus": "第一步落地后保持拍面在身前",
+      "mainContent": ["第一步落点", "落地举拍", "快球下的身体稳定"],
       "coachNote": "第一步比以前稳，落地后还需要更快举拍。",
       "studentNote": "我感觉脚下没以前乱，但快球还是会慌。",
       "homeworkDone": 3,
       "homeworkTotal": 3
     },
     {
+      "id": "lesson-2026-05-12",
       "date": "2026-05-12",
       "title": "接发后第一拍保护",
-      "focus": "接发后保护中路和下一拍",
+      "mainContent": ["接发后第一拍", "保护中路", "下一拍预判"],
       "coachNote": "启动方向更清楚，下一步要把第一步和拍面准备连起来。",
       "studentNote": "知道要保护中路，但实战里还会慢半拍。",
       "homeworkDone": 1,

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { FormEvent, useEffect, useState } from 'react';
+import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 
 type StudentPathItem = {
   label: string;
@@ -76,9 +77,11 @@ type StudentData = {
     }>;
   }>;
   lessonHistory?: Array<{
+    id?: string;
     date: string;
     title: string;
-    focus: string;
+    mainContent?: string[];
+    focus?: string;
     coachNote: string;
     studentNote: string;
     homeworkDone: number;
@@ -123,6 +126,25 @@ function readStudentDraft(key: string): StudentDraft | null {
     return JSON.parse(savedDraft) as StudentDraft;
   } catch {
     window.localStorage.removeItem(key);
+    return null;
+  }
+}
+
+function readCurrentStudent(): StudentData | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const savedStudent = window.sessionStorage.getItem('goodminton-student-current');
+
+  if (!savedStudent) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(savedStudent) as StudentData;
+  } catch {
+    window.sessionStorage.removeItem('goodminton-student-current');
     return null;
   }
 }
@@ -252,25 +274,6 @@ function SkillTree({ groups }: { groups: NonNullable<StudentData['skillTree']> }
     <div className="grid gap-8 lg:grid-cols-[240px_1fr] lg:items-start">
       <div>
         <div className="text-3xl font-semibold tracking-tight text-slate-950">技能柱形图</div>
-        <p className="mt-4 text-sm leading-7 text-slate-500">
-          先看一级大类，再点开某一类看具体技术。柱子越高，掌握越稳定。
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {groups.map((group) => (
-            <button
-              key={group.group}
-              onClick={() => setSelectedGroup(group.group)}
-              className={
-                'rounded-full border px-3 py-1.5 text-xs font-medium ' +
-                (group.group === activeGroup?.group
-                  ? 'border-[#7e9be8] bg-[#dbe6ff] text-slate-800'
-                  : 'border-slate-200 bg-white text-slate-500')
-              }
-            >
-              {group.group}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="overflow-x-auto pb-2">
@@ -290,7 +293,18 @@ function SkillTree({ groups }: { groups: NonNullable<StudentData['skillTree']> }
           <div className="mt-3 flex justify-between gap-3 px-2">
             {chartItems.map(({ group }) => (
               <div key={group.group} className="w-16 shrink-0 text-center">
-                <div className="h-8 text-xs font-medium leading-4 text-slate-700">{group.group}</div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGroup(group.group)}
+                  className={
+                    'min-h-8 rounded-full border px-2.5 py-1 text-xs font-medium leading-4 ' +
+                    (group.group === activeGroup?.group
+                      ? 'border-[#7e9be8] bg-[#dbe6ff] text-[#4969c9]'
+                      : 'border-slate-200 bg-white text-slate-700')
+                  }
+                >
+                  {group.group}
+                </button>
               </div>
             ))}
           </div>
@@ -333,170 +347,38 @@ function SkillTree({ groups }: { groups: NonNullable<StudentData['skillTree']> }
   );
 }
 
-function LessonTimeline({ lessons }: { lessons: NonNullable<StudentData['lessonHistory']> }) {
+function LessonLog({ lessons }: { lessons: NonNullable<StudentData['lessonHistory']> }) {
   return (
-    <div className="space-y-4">
+    <div className="max-h-96 overflow-auto rounded-md bg-white">
+      <div className="min-w-[860px] space-y-1 font-mono text-sm">
       {lessons.map((lesson, index) => (
-        <article key={`${lesson.date}-${lesson.title}`} className="relative pl-8">
-          {index < lessons.length - 1 ? <div className="absolute left-[11px] top-7 h-full w-px bg-slate-200" /> : null}
-          <div className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full border border-emerald-700 bg-white text-xs font-semibold text-emerald-800">
-            {index + 1}
+        <div key={lesson.id || `${lesson.date}-${lesson.title}`} className="space-y-1 border-b border-slate-100 py-2 last:border-b-0">
+          <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
+            <span className="text-slate-500">{lesson.date.slice(5)}</span>
+            <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+            <span className="text-slate-900">课堂标题： {lesson.title}</span>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div className="text-xs text-slate-500">{lesson.date}</div>
-                <div className="mt-1 text-base font-semibold text-slate-950">{lesson.title}</div>
-                <div className="mt-1 text-sm text-slate-600">重点：{lesson.focus}</div>
-              </div>
-              <div className="rounded-full bg-white px-3 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
-                作业 {lesson.homeworkDone}/{lesson.homeworkTotal}
-              </div>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div className="rounded-md bg-white p-3 text-sm leading-6 text-slate-600">
-                <span className="font-medium text-slate-900">教练：</span>
-                {lesson.coachNote}
-              </div>
-              <div className="rounded-md bg-white p-3 text-sm leading-6 text-slate-600">
-                <span className="font-medium text-slate-900">学生：</span>
-                {lesson.studentNote}
-              </div>
-            </div>
+          <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
+            <span className="text-slate-500">{lesson.date.slice(5)}</span>
+            <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+            <span className="text-slate-900">
+              课堂主要内容： {(lesson.mainContent || [lesson.focus]).filter(Boolean).join(' / ')}
+            </span>
           </div>
-        </article>
+          <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
+            <span className="text-slate-500">{lesson.date.slice(5)}</span>
+            <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+            <span className="text-slate-900">教练观察： {lesson.coachNote}</span>
+          </div>
+          <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
+            <span className="text-slate-500">{lesson.date.slice(5)}</span>
+            <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+            <span className="text-slate-900">学生反馈： {lesson.studentNote}</span>
+          </div>
+        </div>
       ))}
-    </div>
-  );
-}
-
-function GrowthPath({ items }: { items: NonNullable<StudentData['growthPath']> }) {
-  const maxScore = Math.max(...items.map((item) => item.score), 100);
-
-  return (
-    <div className="overflow-x-auto pb-2">
-      <div className="grid min-w-[680px] items-end gap-4" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
-        {items.map((item, index) => (
-          <div key={`${item.date}-${item.stage}`} className="relative text-center">
-            {index > 0 ? <div className="absolute right-1/2 top-10 h-px w-full bg-emerald-700/40" /> : null}
-            <div className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full border-2 border-emerald-700 bg-white text-xl font-semibold text-emerald-800">
-              {item.score}
-            </div>
-            <div className="mx-auto mt-3 h-20 w-2 rounded-full bg-slate-200">
-              <div
-                className="mt-auto rounded-full bg-emerald-700"
-                style={{ height: `${Math.max(12, (item.score / maxScore) * 80)}px` }}
-              />
-            </div>
-            <div className="mt-3 text-sm font-medium text-slate-900">{item.stage}</div>
-            <div className="mt-1 text-xs text-slate-500">
-              {item.date} / {item.ability}
-            </div>
-          </div>
-        ))}
       </div>
     </div>
-  );
-}
-
-function LoginPanel({
-  studentId,
-  accessCode,
-  error,
-  loading,
-  onStudentIdChange,
-  onAccessCodeChange,
-  onSubmit,
-}: {
-  studentId: string;
-  accessCode: string;
-  error: string;
-  loading: boolean;
-  onStudentIdChange: (value: string) => void;
-  onAccessCodeChange: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}) {
-  return (
-    <main className="min-h-screen bg-[#f6f8fa] text-slate-900">
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-700 text-sm font-semibold text-white">
-            G
-          </div>
-          <div className="text-sm font-semibold">Goodminton Academy</div>
-          <div className="ml-auto rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600">学员数据</div>
-        </div>
-      </div>
-      <div className="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid w-full gap-6 lg:grid-cols-[1fr_400px]">
-          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-              Goodminton / 学员数据
-            </div>
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950">
-              取回你的训练数据
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-              输入学员 ID 和访问码后，系统会读取属于你的 JSON 文件，并把训练阶段、反馈、
-              知识链接和下一步练习展示出来。你的审查会帮助大脑建立连接，而不是只把资料存在系统里。
-            </p>
-            <div className="mt-8 grid gap-3 md:grid-cols-3">
-              {[
-                ['身份确认', '确认学生身份和访问权限'],
-                ['读取 JSON', '加载个人训练数据文件'],
-                ['学习图谱', '把反馈和训练任务连起来'],
-              ].map(([item, detail], index) => (
-                <div key={item} className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-xs text-slate-500">步骤 {index + 1}</div>
-                  <div className="mt-2 text-sm font-medium">{item}</div>
-                  <div className="mt-2 text-xs leading-5 text-slate-500">{detail}</div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-8 rounded-lg border border-emerald-900 bg-slate-950 p-5 text-white">
-              <div className="text-sm text-slate-300">审查原则</div>
-              <div className="mt-2 text-lg font-semibold">看见来源，确认链接，完成一次内化动作。</div>
-            </div>
-          </section>
-
-          <form onSubmit={onSubmit} className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-lg font-semibold">学员入口</div>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              访问码由教练提供。第一版使用本地 JSON，后面可以平滑换成数据库账号。
-            </p>
-            <label className="mt-6 block text-sm font-medium text-slate-700">
-              学员 ID
-              <input
-                value={studentId}
-                onChange={(event) => onStudentIdChange(event.target.value)}
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900"
-                placeholder="例如 demo"
-                autoComplete="username"
-              />
-            </label>
-            <label className="mt-4 block text-sm font-medium text-slate-700">
-              访问码
-              <input
-                value={accessCode}
-                onChange={(event) => onAccessCodeChange(event.target.value)}
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900"
-                placeholder="由教练提供"
-                type="password"
-                autoComplete="current-password"
-              />
-            </label>
-            {error ? <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-6 w-full rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
-            >
-              {loading ? '正在读取...' : '读取我的 JSON'}
-            </button>
-          </form>
-        </div>
-      </div>
-    </main>
   );
 }
 
@@ -688,14 +570,8 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
           ) : null}
 
           {student.lessonHistory?.length ? (
-            <Section title="上课记录">
-              <LessonTimeline lessons={student.lessonHistory} />
-            </Section>
-          ) : null}
-
-          {student.growthPath?.length ? (
-            <Section title="成长路径">
-              <GrowthPath items={student.growthPath} />
+            <Section title="上课日志">
+              <LessonLog lessons={student.lessonHistory} />
             </Section>
           ) : null}
 
@@ -814,50 +690,34 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 }
 
 export default function StudentPage() {
-  const [studentId, setStudentId] = useState('');
-  const [accessCode, setAccessCode] = useState('');
-  const [student, setStudent] = useState<StudentData | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [student, setStudent] = useState<StudentData | null>(() => readCurrentStudent());
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await fetch('/api/student-data', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ studentId, accessCode }),
-      });
-      const payload = (await response.json()) as { student?: StudentData; error?: string };
-
-      if (!response.ok || !payload.student) {
-        throw new Error(payload.error || '读取失败。');
-      }
-
-      setStudent(payload.student);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : '读取失败。');
-    } finally {
-      setLoading(false);
-    }
+  function logoutStudent() {
+    window.sessionStorage.removeItem('goodminton-student-current');
+    setStudent(null);
   }
 
   if (!student) {
     return (
-      <LoginPanel
-        studentId={studentId}
-        accessCode={accessCode}
-        error={error}
-        loading={loading}
-        onStudentIdChange={setStudentId}
-        onAccessCodeChange={setAccessCode}
-        onSubmit={handleSubmit}
-      />
+      <main className="flex min-h-screen items-center justify-center bg-[#f6f8fa] px-4 text-slate-900">
+        <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-md bg-emerald-700 text-sm font-semibold text-white">
+            G
+          </div>
+          <h1 className="mt-5 text-xl font-semibold">请从主页登录</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            学员入口已经移到 Goodminton 主页。登录成功后会直接进入这里。
+          </p>
+          <Link
+            href="/"
+            className="mt-5 inline-flex rounded-md bg-[#7e9be8] px-4 py-2 text-sm font-medium text-white"
+          >
+            返回主页
+          </Link>
+        </section>
+      </main>
     );
   }
 
-  return <StudentDashboard student={student} onLogout={() => setStudent(null)} />;
+  return <StudentDashboard student={student} onLogout={logoutStudent} />;
 }
