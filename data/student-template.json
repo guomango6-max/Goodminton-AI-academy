@@ -1,0 +1,473 @@
+{
+  "studentId": "pinyin-name",
+  "accessCode": "change-me",
+  "name": "学员姓名",
+  "level": "C1",
+  "reviewMode": "开启",
+  "progress": 50,
+  "stage": {
+    "title": "当前训练重点",
+    "description": "用一句话说明本阶段为什么练这个，以及下一次要验证什么。",
+    "path": [
+      {
+        "label": "启动",
+        "active": true
+      },
+      {
+        "label": "移动",
+        "active": true
+      },
+      {
+        "label": "衔接",
+        "active": false
+      },
+      {
+        "label": "确认",
+        "active": false
+      },
+      {
+        "label": "回动",
+        "active": false
+      },
+      {
+        "label": "调整",
+        "active": false
+      }
+    ],
+    "pathProgress": 35
+  },
+  "today": {
+    "title": "今日最小练习",
+    "description": "一个足够小、能完成、能复查的练习。"
+  },
+  "activity": [
+    {
+      "label": "训练记录",
+      "value": "0",
+      "note": "累计课程"
+    },
+    {
+      "label": "反馈节点",
+      "value": "0",
+      "note": "已建立链接"
+    },
+    {
+      "label": "家庭作业",
+      "value": "0/3",
+      "note": "本次完成"
+    },
+    {
+      "label": "下一解锁",
+      "value": "待定",
+      "note": "下一技术点"
+    }
+  ],
+  "tags": [
+    "反馈",
+    "训练",
+    "复盘"
+  ],
+  "reviewQueue": [
+    {
+      "title": "课堂观察",
+      "source": "student-note.md",
+      "status": "待复查",
+      "detail": "教练观察到的主要问题。"
+    },
+    {
+      "title": "学生反馈",
+      "source": "student-note.md",
+      "status": "待内化",
+      "detail": "学生自己描述的感觉、困惑或建议。"
+    },
+    {
+      "title": "下一次验证",
+      "source": "lesson-log",
+      "status": "下节课重点",
+      "detail": "下一节课需要验证的动作或比赛选择。"
+    }
+  ],
+  "knowledgeLinks": [
+    {
+      "from": "课堂反馈",
+      "to": "当前训练重点",
+      "weight": "强"
+    },
+    {
+      "from": "家庭作业",
+      "to": "技能树",
+      "weight": "中"
+    },
+    {
+      "from": "比赛复盘",
+      "to": "战术选择",
+      "weight": "新"
+    }
+  ],
+  "recentFeedback": [
+    "保留一句教练最近反馈。",
+    "保留一句学生自我感受。",
+    "保留一句下一步提醒。"
+  ],
+  "lessonSummary": {
+    "date": "2026-05-13",
+    "title": "本节课主题",
+    "studentReflection": "",
+    "coachNote": "教练观察和下一次提醒。",
+    "homework": [
+      {
+        "id": "hw-1",
+        "text": "家庭作业 1：动作质量任务。",
+        "done": false
+      },
+      {
+        "id": "hw-2",
+        "text": "家庭作业 2：复盘或记录任务。",
+        "done": false
+      },
+      {
+        "id": "hw-3",
+        "text": "家庭作业 3：下次课前自检任务。",
+        "done": false
+      }
+    ]
+  },
+  "matchReview": {
+    "match": "",
+    "score": "",
+    "whatWorked": "",
+    "nextAdjustment": ""
+  },
+  "abilityMatrix": [
+    {
+      "label": "身体",
+      "value": 50
+    },
+    {
+      "label": "心理",
+      "value": 50
+    },
+    {
+      "label": "比赛",
+      "value": 50
+    },
+    {
+      "label": "技术",
+      "value": 50
+    },
+    {
+      "label": "战术",
+      "value": 50
+    },
+    {
+      "label": "步法",
+      "value": 50
+    }
+  ],
+  "skillTree": [
+    {
+      "group": "发接发",
+      "nodes": [
+        {
+          "label": "反手发小球",
+          "status": "active"
+        },
+        {
+          "label": "反手偷后场",
+          "status": "locked"
+        },
+        {
+          "label": "接发放网",
+          "status": "locked"
+        },
+        {
+          "label": "接发推扑",
+          "status": "locked"
+        },
+        {
+          "label": "接发挑球",
+          "status": "locked"
+        },
+        {
+          "label": "接偷后场发球",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "前场",
+      "nodes": [
+        {
+          "label": "放网",
+          "status": "active"
+        },
+        {
+          "label": "搓球",
+          "status": "locked"
+        },
+        {
+          "label": "推球",
+          "status": "locked"
+        },
+        {
+          "label": "挑球",
+          "status": "locked"
+        },
+        {
+          "label": "扑球",
+          "status": "locked"
+        },
+        {
+          "label": "停顿/假动作",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "中场",
+      "nodes": [
+        {
+          "label": "平抽",
+          "status": "active"
+        },
+        {
+          "label": "挡网/挡杀",
+          "status": "locked"
+        },
+        {
+          "label": "接杀挑球",
+          "status": "locked"
+        },
+        {
+          "label": "反拍正抽",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "正手后场",
+      "nodes": [
+        {
+          "label": "正手高远球",
+          "status": "active"
+        },
+        {
+          "label": "正手杀球",
+          "status": "locked"
+        },
+        {
+          "label": "点杀",
+          "status": "locked"
+        },
+        {
+          "label": "正手劈吊",
+          "status": "locked"
+        },
+        {
+          "label": "双脚跳杀",
+          "status": "locked"
+        },
+        {
+          "label": "中国跳杀",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "头顶后场",
+      "nodes": [
+        {
+          "label": "头顶高远球",
+          "status": "active"
+        },
+        {
+          "label": "头顶吊球",
+          "status": "locked"
+        },
+        {
+          "label": "头顶杀球",
+          "status": "locked"
+        },
+        {
+          "label": "突击跳杀",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "反手后场",
+      "nodes": [
+        {
+          "label": "反手高远球",
+          "status": "active"
+        },
+        {
+          "label": "反手吊球",
+          "status": "locked"
+        },
+        {
+          "label": "反手杀球",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "步法",
+      "nodes": [
+        {
+          "label": "启动",
+          "status": "active"
+        },
+        {
+          "label": "移动",
+          "status": "locked"
+        },
+        {
+          "label": "衔接",
+          "status": "locked"
+        },
+        {
+          "label": "确认",
+          "status": "locked"
+        },
+        {
+          "label": "回动",
+          "status": "locked"
+        },
+        {
+          "label": "调整",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "心理",
+      "nodes": [
+        {
+          "label": "认知灵活度",
+          "status": "active"
+        },
+        {
+          "label": "自我效能感",
+          "status": "locked"
+        },
+        {
+          "label": "情绪调节能力",
+          "status": "locked"
+        },
+        {
+          "label": "意志力与坚韧性",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "身体",
+      "nodes": [
+        {
+          "label": "敏捷",
+          "status": "active"
+        },
+        {
+          "label": "协调",
+          "status": "locked"
+        },
+        {
+          "label": "耐力",
+          "status": "locked"
+        },
+        {
+          "label": "速度",
+          "status": "locked"
+        }
+      ]
+    },
+    {
+      "group": "战术",
+      "nodes": [
+        {
+          "label": "前四拍计划",
+          "status": "active"
+        },
+        {
+          "label": "比分压力处理",
+          "status": "locked"
+        },
+        {
+          "label": "连续回合复盘",
+          "status": "locked"
+        }
+      ]
+    }
+  ],
+  "achievements": [
+    {
+      "id": "first-review",
+      "title": "首条复盘",
+      "category": "习惯",
+      "level": "bronze",
+      "status": "in_progress",
+      "description": "完成第一次课后总结，把课堂感觉转成可追踪记录。",
+      "progress": 0,
+      "target": 1
+    },
+    {
+      "id": "homework-streak",
+      "title": "作业连续完成",
+      "category": "自律",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "连续完成家庭作业，证明训练习惯开始稳定。",
+      "progress": 0,
+      "target": 3
+    },
+    {
+      "id": "skill-collector",
+      "title": "技术采集者",
+      "category": "技术",
+      "level": "bronze",
+      "status": "in_progress",
+      "description": "把课堂技术点沉淀到技能树，形成可复查的训练资产。",
+      "progress": 0,
+      "target": 3
+    },
+    {
+      "id": "footwork-base",
+      "title": "步法底盘",
+      "category": "身体",
+      "level": "silver",
+      "status": "locked",
+      "description": "启动、移动、回动和调整开始形成稳定连接。",
+      "progress": 0,
+      "target": 6
+    },
+    {
+      "id": "pressure-calm",
+      "title": "平分冷静",
+      "category": "心理",
+      "level": "locked",
+      "status": "locked",
+      "description": "在平分或领先时保持清晰选择，先稳住第一拍质量。",
+      "progress": 0,
+      "target": 2
+    }
+  ],
+  "lessonHistory": [
+    {
+      "id": "lesson-2026-05-13",
+      "date": "2026-05-13",
+      "title": "本节课主题",
+      "mainContent": [
+        "课堂主要内容 1",
+        "课堂主要内容 2",
+        "课堂主要内容 3"
+      ],
+      "coachNote": "教练观察。",
+      "studentNote": "学生反馈。",
+      "homeworkDone": 0,
+      "homeworkTotal": 3
+    }
+  ],
+  "growthPath": [],
+  "lastUpdated": "2026-05-13"
+}
