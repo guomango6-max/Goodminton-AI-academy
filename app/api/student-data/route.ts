@@ -13,6 +13,28 @@ function stripPrivateFields(student: Record<string, unknown>) {
   return publicStudent;
 }
 
+function getStudentFromEnv(studentId: string) {
+  const raw = process.env.GOODMINTON_STUDENT_DATA_JSON;
+
+  if (!raw) {
+    return null;
+  }
+
+  const data = JSON.parse(raw) as Record<string, Record<string, unknown>> | Array<Record<string, unknown>>;
+
+  if (Array.isArray(data)) {
+    return data.find((student) => student.studentId === studentId) || null;
+  }
+
+  return data[studentId] || null;
+}
+
+async function getStudentFromFile(studentId: string) {
+  const filePath = join(process.cwd(), 'data', 'students', `${studentId}.json`);
+  const raw = await readFile(filePath, 'utf8');
+  return JSON.parse(raw) as Record<string, unknown>;
+}
+
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as {
     studentId?: string;
@@ -27,9 +49,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const filePath = join(process.cwd(), 'data', 'students', `${studentId}.json`);
-    const raw = await readFile(filePath, 'utf8');
-    const student = JSON.parse(raw) as Record<string, unknown>;
+    const student = getStudentFromEnv(studentId) || (await getStudentFromFile(studentId));
 
     if (student.accessCode !== accessCode) {
       return NextResponse.json({ error: '学员 ID 或访问码不正确。' }, { status: 401 });
