@@ -379,21 +379,31 @@ function SkillTree({ groups }: { groups: NonNullable<StudentData['skillTree']> }
 function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
   const levelStyle = {
     bronze: {
-      badge: 'border-amber-700/30 bg-amber-50 text-amber-800',
-      mark: 'bg-amber-600',
+      badge: 'border-amber-200 bg-[#fff8ed]',
+      mark: 'from-amber-700 via-amber-500 to-orange-300',
+      ring: 'border-amber-200',
     },
     silver: {
-      badge: 'border-slate-300 bg-slate-50 text-slate-700',
-      mark: 'bg-slate-400',
+      badge: 'border-slate-200 bg-[#f8fafc]',
+      mark: 'from-slate-500 via-slate-300 to-white',
+      ring: 'border-slate-200',
     },
     gold: {
-      badge: 'border-yellow-500/40 bg-yellow-50 text-yellow-800',
-      mark: 'bg-yellow-500',
+      badge: 'border-yellow-200 bg-[#fffbe8]',
+      mark: 'from-yellow-700 via-yellow-400 to-amber-100',
+      ring: 'border-yellow-200',
     },
     locked: {
-      badge: 'border-slate-200 bg-slate-50 text-slate-400',
-      mark: 'bg-slate-300',
+      badge: 'border-slate-200 bg-slate-50 opacity-75',
+      mark: 'from-slate-300 via-slate-200 to-slate-100',
+      ring: 'border-slate-200',
     },
+  };
+  const levelText = {
+    bronze: '铜',
+    silver: '银',
+    gold: '金',
+    locked: '锁',
   };
 
   return (
@@ -405,14 +415,22 @@ function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
         return (
           <article key={item.id} className={`rounded-lg border p-4 ${style.badge}`}>
             <div className="flex items-start gap-3">
-              <div className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${style.mark}`}>
-                <div className="h-3.5 w-3.5 rounded-full bg-white/90" />
+              <div
+                className={`mt-1 flex h-12 w-12 shrink-0 items-center justify-center border bg-white p-1 ${style.ring}`}
+                style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
+              >
+                <div
+                  className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${style.mark} text-sm font-semibold text-white shadow-inner`}
+                  style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
+                >
+                  <span className="drop-shadow-sm">{item.status === 'locked' ? levelText.locked : item.category.slice(0, 1)}</span>
+                </div>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-semibold text-slate-950">{item.title}</div>
                   <div className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600">
-                    {item.category}
+                    {item.category} · {levelText[item.level]}
                   </div>
                 </div>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
