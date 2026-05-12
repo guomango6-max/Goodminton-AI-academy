@@ -557,22 +557,9 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
     );
   }, [checkedHomework, draftKey, lessonInput, matchInput]);
 
-  function copySubmission() {
-    void navigator.clipboard.writeText(JSON.stringify(submissionPreview, null, 2));
-    setSubmissionStatus('已复制 JSON，可以发给教练。');
-  }
-
-  function downloadSubmission() {
-    const file = new Blob([`${JSON.stringify(submissionPreview, null, 2)}\n`], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(file);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${student.studentId}-submission-${student.lastUpdated}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    setSubmissionStatus('已生成提交 JSON 文件。');
+  function submitStudentReview() {
+    window.localStorage.setItem(`${draftKey}-submitted`, JSON.stringify(submissionPreview));
+    setSubmissionStatus('已提交。教练端接入后，这里会直接进入后台记录。');
   }
 
   return (
@@ -804,33 +791,21 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
             </Section>
           </div>
 
-          <Section title="提交预览">
-            <div className="mb-4 flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <Section title="提交">
+            <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <div className="text-sm font-semibold text-slate-900">学生提交包</div>
-                <div className="mt-1 text-sm text-slate-500">包含课后总结、比赛复盘和家庭作业勾选状态。</div>
+                <div className="text-sm font-semibold text-slate-900">提交本次反馈</div>
+                <div className="mt-1 text-sm text-slate-500">包含课后总结、比赛复盘和家庭作业完成状态。</div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={copySubmission}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800"
-                >
-                  复制 JSON
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadSubmission}
-                  className="rounded-md bg-[#7e9be8] px-3 py-2 text-sm font-medium text-white"
-                >
-                  下载 JSON
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={submitStudentReview}
+                className="rounded-md bg-[#7e9be8] px-5 py-2 text-sm font-medium text-white"
+              >
+                提交
+              </button>
             </div>
-            {submissionStatus ? <div className="mb-3 text-sm text-slate-600">{submissionStatus}</div> : null}
-            <pre className="max-h-72 overflow-auto rounded-md bg-slate-950 p-4 text-xs leading-5 text-slate-100">
-              {JSON.stringify(submissionPreview, null, 2)}
-            </pre>
+            {submissionStatus ? <div className="mt-3 text-sm text-slate-600">{submissionStatus}</div> : null}
           </Section>
         </div>
       </div>
