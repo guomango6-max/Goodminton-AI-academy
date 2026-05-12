@@ -389,15 +389,27 @@
       "group": "战术",
       "nodes": [
         {
-          "label": "前四拍计划",
+          "label": "空间战术",
           "status": "done"
         },
         {
-          "label": "比分压力处理",
+          "label": "时间战术",
           "status": "active"
         },
         {
-          "label": "连续回合复盘",
+          "label": "节奏战术",
+          "status": "locked"
+        },
+        {
+          "label": "线路战术",
+          "status": "locked"
+        },
+        {
+          "label": "对人战术",
+          "status": "locked"
+        },
+        {
+          "label": "阵型战术",
           "status": "locked"
         }
       ]
