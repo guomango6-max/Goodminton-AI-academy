@@ -202,19 +202,42 @@ function ProgressBar({ value }: { value: number }) {
 }
 
 function displayRank(level: string, progress: number) {
-  if (/A|王者|第\s*[7-8]\s*档/.test(level) || progress >= 85) {
-    return '王者';
+  if (/V|荣耀王者/.test(level)) {
+    return '荣耀王者';
   }
 
-  if (/B|大师|第\s*[5-6]\s*档/.test(level) || progress >= 70) {
-    return '大师';
+  if (/A1|最强王者/.test(level)) {
+    return '最强王者';
   }
 
-  if (/C2|钻石|第\s*[3-4]\s*档/.test(level) || progress >= 55) {
+  if (/A2|星耀/.test(level)) {
+    return '星耀';
+  }
+
+  if (/B1|钻石|第\s*6\s*档/.test(level)) {
     return '钻石';
   }
 
-  return '白金';
+  if (/B2|铂金|白金|第\s*5\s*档/.test(level)) {
+    return '铂金';
+  }
+
+  if (/C1|黄金|第\s*[3-4]\s*档/.test(level)) {
+    return '黄金';
+  }
+
+  if (/C2|D|白银|第\s*2\s*档/.test(level)) {
+    return '白银';
+  }
+
+  if (progress >= 95) return '荣耀王者';
+  if (progress >= 88) return '最强王者';
+  if (progress >= 80) return '星耀';
+  if (progress >= 72) return '钻石';
+  if (progress >= 64) return '铂金';
+  if (progress >= 52) return '黄金';
+  if (progress >= 40) return '白银';
+  return '青铜';
 }
 
 function AbilityHex({ items }: { items: Array<{ label: string; value: number }> }) {
