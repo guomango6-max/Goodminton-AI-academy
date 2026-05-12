@@ -13,6 +13,26 @@ function stripPrivateFields(student: Record<string, unknown>) {
   return publicStudent;
 }
 
+function parseStudentData(raw: string) {
+  return JSON.parse(raw) as Record<string, unknown>;
+}
+
+function getStudentFromSingleEnv(studentId: string) {
+  const envKey = `GOODMINTON_STUDENT_${studentId.replaceAll('-', '_').toUpperCase()}_B64`;
+  const raw = process.env[envKey];
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return parseStudentData(Buffer.from(raw, 'base64').toString('utf8'));
+  } catch (error) {
+    console.error('[student-data-single-env-parse-error]', error);
+    return null;
+  }
+}
+
 function getStudentFromEnv(studentId: string) {
   const raw =
     process.env.GOODMINTON_STUDENT_DATA_B64
@@ -59,7 +79,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const student = getStudentFromEnv(studentId) || (await getStudentFromFile(studentId));
+    const student = getStudentFromSingleEnv(studentId) || getStudentFromEnv(studentId) || (await getStudentFromFile(studentId));
 
     if (student.accessCode !== accessCode) {
       return NextResponse.json({ error: '学员 ID 或访问码不正确。' }, { status: 401 });
