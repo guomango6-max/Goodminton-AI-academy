@@ -199,6 +199,22 @@ function ProgressBar({ value }: { value: number }) {
   );
 }
 
+function displayRank(level: string, progress: number) {
+  if (/A|王者|第\s*[7-8]\s*档/.test(level) || progress >= 85) {
+    return '王者';
+  }
+
+  if (/B|大师|第\s*[5-6]\s*档/.test(level) || progress >= 70) {
+    return '大师';
+  }
+
+  if (/C2|钻石|第\s*[3-4]\s*档/.test(level) || progress >= 55) {
+    return '钻石';
+  }
+
+  return '白金';
+}
+
 function AbilityHex({ items }: { items: Array<{ label: string; value: number }> }) {
   const center = 100;
   const maxRadius = 76;
@@ -456,6 +472,7 @@ function LessonLog({ lessons }: { lessons: NonNullable<StudentData['lessonHistor
 
 function StudentDashboard({ student, onLogout }: { student: StudentData; onLogout: () => void }) {
   const draftKey = `goodminton-student-draft-${student.studentId}`;
+  const rank = displayRank(student.level, student.progress);
   const [initialDraft] = useState(() => readStudentDraft(draftKey));
   const [reviewedItems, setReviewedItems] = useState<string[]>([]);
   const [checkedHomework, setCheckedHomework] = useState<string[]>(
@@ -550,7 +567,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
                   <div className="text-xs text-slate-500">等级</div>
-                  <div className="mt-1 text-sm font-semibold">{student.level}</div>
+                  <div className="mt-1 text-sm font-semibold">{rank}</div>
                 </div>
                 <div>
                   <div className="text-xs text-slate-500">进度</div>
