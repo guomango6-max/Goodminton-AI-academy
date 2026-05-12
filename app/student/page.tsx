@@ -242,7 +242,7 @@ function displayRank(level: string, progress: number) {
 
 function AbilityHex({ items }: { items: Array<{ label: string; value: number }> }) {
   const center = 100;
-  const maxRadius = 72;
+  const maxRadius = 82;
   const points = items.map((item, index) => {
     const angle = (-90 + index * 60) * (Math.PI / 180);
     const level = Math.min(8, Math.max(1, item.value));
@@ -257,17 +257,17 @@ function AbilityHex({ items }: { items: Array<{ label: string; value: number }> 
   const polygon = points.map((point) => `${point.x},${point.y}`).join(' ');
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[260px_1fr] lg:items-center">
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <svg viewBox="0 0 200 200" className="mx-auto h-56 w-56">
-          {[0.33, 0.66, 1].map((scale) => {
+    <div className="grid gap-8 lg:grid-cols-[360px_1fr] lg:items-center">
+      <div className="flex min-h-[330px] items-center justify-center">
+        <svg viewBox="0 0 200 200" className="h-80 w-80 max-w-full">
+          {[0.25, 0.5, 0.75, 1].map((scale) => {
             const ring = items
               .map((_, index) => {
                 const angle = (-90 + index * 60) * (Math.PI / 180);
                 return `${center + Math.cos(angle) * maxRadius * scale},${center + Math.sin(angle) * maxRadius * scale}`;
               })
               .join(' ');
-            return <polygon key={scale} points={ring} fill="none" stroke="#e2e8f0" strokeWidth="1" />;
+            return <polygon key={scale} points={ring} fill="none" stroke="#e2e8f0" strokeWidth="0.9" />;
           })}
           {items.map((_, index) => {
             const angle = (-90 + index * 60) * (Math.PI / 180);
@@ -283,21 +283,35 @@ function AbilityHex({ items }: { items: Array<{ label: string; value: number }> 
               />
             );
           })}
-          <polygon points={polygon} fill="rgba(126,155,232,0.2)" stroke="#7e9be8" strokeWidth="2" />
+          <polygon points={polygon} fill="rgba(126,155,232,0.24)" stroke="#7e9be8" strokeWidth="2.4" />
           {points.map((point) => (
-            <circle key={point.label} cx={point.x} cy={point.y} r="3.5" fill="#7e9be8" />
+            <circle key={point.label} cx={point.x} cy={point.y} r="4" fill="#7e9be8" stroke="white" strokeWidth="2" />
           ))}
         </svg>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3">
-        {items.map((item) => (
-          <div key={item.label} className="rounded-md border border-slate-200 bg-white px-3 py-2">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-sm font-medium text-slate-800">{item.label}</span>
-              <span className="text-base font-semibold text-slate-950">{item.value}</span>
+      <div className="space-y-3">
+        {items.map((item) => {
+          const level = Math.min(8, Math.max(1, item.value));
+          return (
+            <div key={item.label} className="rounded-md border border-slate-200 bg-white px-4 py-3">
+              <div className="mb-2 flex items-baseline justify-between gap-3">
+                <span className="text-sm font-medium text-slate-800">{item.label}</span>
+                <span className="text-sm font-semibold text-slate-950">{level} / 8</span>
+              </div>
+              <div className="grid grid-cols-8 gap-1.5">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className={
+                      'h-2.5 rounded-full ' +
+                      (index < level ? 'bg-[#7e9be8]' : 'bg-slate-200')
+                    }
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
