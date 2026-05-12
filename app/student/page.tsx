@@ -27,6 +27,18 @@ type KnowledgeLink = {
   weight: string;
 };
 
+type Achievement = {
+  id: string;
+  title: string;
+  category: string;
+  level: 'bronze' | 'silver' | 'gold' | 'locked';
+  status: 'earned' | 'in_progress' | 'locked';
+  description: string;
+  progress: number;
+  target: number;
+  earnedAt?: string;
+};
+
 type StudentData = {
   studentId: string;
   name: string;
@@ -76,6 +88,7 @@ type StudentData = {
       status: 'done' | 'active' | 'locked';
     }>;
   }>;
+  achievements?: Achievement[];
   lessonHistory?: Array<{
     id?: string;
     date: string;
@@ -347,6 +360,65 @@ function SkillTree({ groups }: { groups: NonNullable<StudentData['skillTree']> }
   );
 }
 
+function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
+  const levelStyle = {
+    bronze: {
+      badge: 'border-amber-700/30 bg-amber-50 text-amber-800',
+      mark: 'bg-amber-600',
+    },
+    silver: {
+      badge: 'border-slate-300 bg-slate-50 text-slate-700',
+      mark: 'bg-slate-400',
+    },
+    gold: {
+      badge: 'border-yellow-500/40 bg-yellow-50 text-yellow-800',
+      mark: 'bg-yellow-500',
+    },
+    locked: {
+      badge: 'border-slate-200 bg-slate-50 text-slate-400',
+      mark: 'bg-slate-300',
+    },
+  };
+
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {achievements.map((item) => {
+        const style = levelStyle[item.level];
+        const percent = Math.min(100, Math.round((item.progress / Math.max(item.target, 1)) * 100));
+
+        return (
+          <article key={item.id} className={`rounded-lg border p-4 ${style.badge}`}>
+            <div className="flex items-start gap-3">
+              <div className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${style.mark}`}>
+                <div className="h-3.5 w-3.5 rounded-full bg-white/90" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-semibold text-slate-950">{item.title}</div>
+                  <div className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600">
+                    {item.category}
+                  </div>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                <div className="mt-3">
+                  <div className="mb-1 flex justify-between text-xs text-slate-500">
+                    <span>{item.status === 'earned' ? '已获得' : item.status === 'in_progress' ? '进行中' : '未解锁'}</span>
+                    <span>
+                      {item.progress}/{item.target}
+                    </span>
+                  </div>
+                  <ProgressBar value={percent} />
+                </div>
+                {item.earnedAt ? <div className="mt-2 text-xs text-slate-500">获得时间：{item.earnedAt}</div> : null}
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
 function LessonLog({ lessons }: { lessons: NonNullable<StudentData['lessonHistory']> }) {
   return (
     <div className="max-h-96 overflow-auto rounded-md bg-white">
@@ -556,6 +628,12 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
               })}
             </div>
           </Section>
+
+          {student.achievements?.length ? (
+            <Section title="成就和勋章">
+              <AchievementBadges achievements={student.achievements} />
+            </Section>
+          ) : null}
 
           {student.abilityMatrix?.length ? (
             <Section title="能力矩阵">

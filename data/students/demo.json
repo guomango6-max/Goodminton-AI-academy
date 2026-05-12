@@ -402,6 +402,60 @@
       ]
     }
   ],
+  "achievements": [
+    {
+      "id": "first-review",
+      "title": "首条复盘",
+      "category": "习惯",
+      "level": "bronze",
+      "status": "earned",
+      "description": "完成第一次课后总结，把课堂感觉转成可追踪记录。",
+      "progress": 1,
+      "target": 1,
+      "earnedAt": "2026-04-20"
+    },
+    {
+      "id": "homework-streak",
+      "title": "作业连续完成",
+      "category": "自律",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "连续三次完成家庭作业，证明训练习惯开始稳定。",
+      "progress": 2,
+      "target": 3
+    },
+    {
+      "id": "serve-return-guard",
+      "title": "接发守护者",
+      "category": "技术",
+      "level": "bronze",
+      "status": "earned",
+      "description": "接发后第一拍能主动保护中路，不再只把球打过去。",
+      "progress": 3,
+      "target": 3,
+      "earnedAt": "2026-05-12"
+    },
+    {
+      "id": "footwork-base",
+      "title": "步法底盘",
+      "category": "身体",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "启动、移动、回动和调整开始形成稳定连接。",
+      "progress": 4,
+      "target": 6
+    },
+    {
+      "id": "pressure-calm",
+      "title": "平分冷静",
+      "category": "心理",
+      "level": "locked",
+      "status": "locked",
+      "description": "在平分或领先时保持清晰选择，先稳住第一拍质量。",
+      "progress": 0,
+      "target": 2
+    }
+  ],
   "lessonHistory": [
     {
       "id": "lesson-2026-04-20",

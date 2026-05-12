@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { NextResponse } from 'next/server';
 
 function normalizeStudentId(value: unknown) {
@@ -18,15 +19,17 @@ function parseStudentData(raw: string) {
 }
 
 function getStudentFromSingleEnv(studentId: string) {
-  const envKey = `GOODMINTON_STUDENT_${studentId.replaceAll('-', '_').toUpperCase()}_B64`;
-  const raw = process.env[envKey];
+  const envBase = `GOODMINTON_STUDENT_${studentId.replaceAll('-', '_').toUpperCase()}`;
+  const rawGzip = process.env[`${envBase}_GZ_B64`];
+  const raw = rawGzip || process.env[`${envBase}_B64`];
 
   if (!raw) {
     return null;
   }
 
   try {
-    return parseStudentData(Buffer.from(raw, 'base64').toString('utf8'));
+    const data = Buffer.from(raw, 'base64');
+    return parseStudentData(rawGzip ? gunzipSync(data).toString('utf8') : data.toString('utf8'));
   } catch (error) {
     console.error('[student-data-single-env-parse-error]', error);
     return null;
