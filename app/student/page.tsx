@@ -389,6 +389,49 @@ function SkillTree({ groups }: { groups: NonNullable<StudentData['skillTree']> }
   );
 }
 
+function AchievementIcon({ category, locked }: { category: string; locked: boolean }) {
+  const icon = locked ? 'locked' : category;
+
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      {icon === '习惯' ? (
+        <>
+          <path d="M7 8.5A6 6 0 0 1 18 10" />
+          <path d="M18 6.5V10h-3.5" />
+          <path d="M17 15.5A6 6 0 0 1 6 14" />
+          <path d="M6 17.5V14h3.5" />
+        </>
+      ) : icon === '自律' ? (
+        <>
+          <path d="M7 12.5 10.5 16 17.5 8" />
+          <path d="M12 3.5 19 7v5.5c0 4.2-2.8 6.8-7 8-4.2-1.2-7-3.8-7-8V7l7-3.5Z" />
+        </>
+      ) : icon === '技术' ? (
+        <>
+          <path d="M12 3.5 19.5 12 12 20.5 4.5 12 12 3.5Z" />
+          <path d="M8 12h8" />
+          <path d="M12 8v8" />
+        </>
+      ) : icon === '身体' ? (
+        <>
+          <path d="M13 3 6.5 13h5L10.8 21 17.5 10h-5L13 3Z" />
+        </>
+      ) : icon === '心理' ? (
+        <>
+          <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />
+          <path d="M9.5 12h5" />
+        </>
+      ) : (
+        <>
+          <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10" />
+          <path d="M7 10h10v9H7z" />
+          <path d="M12 14v2" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
   const levelStyle = {
     bronze: {
@@ -433,10 +476,10 @@ function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
                 style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
               >
                 <div
-                  className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${style.mark} text-sm font-semibold text-white shadow-inner`}
+                  className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${style.mark} text-white shadow-inner`}
                   style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
                 >
-                  <span className="drop-shadow-sm">{item.status === 'locked' ? levelText.locked : item.category.slice(0, 1)}</span>
+                  <AchievementIcon category={item.category} locked={item.status === 'locked'} />
                 </div>
               </div>
               <div className="min-w-0 flex-1">
