@@ -245,9 +245,11 @@ function AbilityHex({ items }: { items: Array<{ label: string; value: number }> 
   const maxRadius = 72;
   const points = items.map((item, index) => {
     const angle = (-90 + index * 60) * (Math.PI / 180);
-    const radius = maxRadius * (item.value / 100);
+    const level = Math.min(8, Math.max(1, item.value));
+    const radius = maxRadius * (level / 8);
     return {
       ...item,
+      value: level,
       x: center + Math.cos(angle) * radius,
       y: center + Math.sin(angle) * radius,
     };

@@ -142,27 +142,27 @@
   "abilityMatrix": [
     {
       "label": "身体",
-      "value": 50
+      "value": 4
     },
     {
       "label": "心理",
-      "value": 50
+      "value": 4
     },
     {
       "label": "比赛",
-      "value": 50
+      "value": 4
     },
     {
       "label": "技术",
-      "value": 50
+      "value": 4
     },
     {
       "label": "战术",
-      "value": 50
+      "value": 4
     },
     {
       "label": "步法",
-      "value": 50
+      "value": 4
     }
   ],
   "skillTree": [
