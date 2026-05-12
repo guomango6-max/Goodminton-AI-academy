@@ -9,11 +9,26 @@
     "title": "接发后第一拍保护",
     "description": "现在不是学更多，而是把正确的东西做稳定。审查时重点看：这个知识点从哪里来、和课堂问题怎样连接、下一次训练要验证什么。",
     "path": [
-      { "label": "启动", "active": true },
-      { "label": "移动", "active": true },
-      { "label": "调整", "active": true },
-      { "label": "确认", "active": false },
-      { "label": "恢复", "active": false }
+      {
+        "label": "启动",
+        "active": true
+      },
+      {
+        "label": "移动",
+        "active": true
+      },
+      {
+        "label": "调整",
+        "active": true
+      },
+      {
+        "label": "确认",
+        "active": false
+      },
+      {
+        "label": "恢复",
+        "active": false
+      }
     ],
     "pathProgress": 60
   },
@@ -22,12 +37,33 @@
     "description": "6 分钟。先把身体姿态、第一步方向和接发后的保护范围做稳。"
   },
   "activity": [
-    { "label": "训练记录", "value": "4", "note": "本周已完成" },
-    { "label": "反馈节点", "value": "12", "note": "已建立链接" },
-    { "label": "待审素材", "value": "8", "note": "提炼样稿" },
-    { "label": "下一解锁", "value": "网前", "note": "第二拍压迫" }
+    {
+      "label": "训练记录",
+      "value": "4",
+      "note": "本周已完成"
+    },
+    {
+      "label": "反馈节点",
+      "value": "12",
+      "note": "已建立链接"
+    },
+    {
+      "label": "待审素材",
+      "value": "8",
+      "note": "提炼样稿"
+    },
+    {
+      "label": "下一解锁",
+      "value": "网前",
+      "note": "第二拍压迫"
+    }
   ],
-  "tags": ["学习", "反馈", "接发", "步法"],
+  "tags": [
+    "学习",
+    "反馈",
+    "接发",
+    "步法"
+  ],
   "reviewQueue": [
     {
       "title": "接发后第一拍保护",
@@ -49,10 +85,26 @@
     }
   ],
   "knowledgeLinks": [
-    { "from": "原矿", "to": "接发后第一拍保护", "weight": "强" },
-    { "from": "课堂反馈", "to": "启动方向判断", "weight": "强" },
-    { "from": "家庭练习", "to": "调整后再出手", "weight": "中" },
-    { "from": "视频审查", "to": "补位意识", "weight": "新" }
+    {
+      "from": "原矿",
+      "to": "接发后第一拍保护",
+      "weight": "强"
+    },
+    {
+      "from": "课堂反馈",
+      "to": "启动方向判断",
+      "weight": "强"
+    },
+    {
+      "from": "家庭练习",
+      "to": "调整后再出手",
+      "weight": "中"
+    },
+    {
+      "from": "视频审查",
+      "to": "补位意识",
+      "weight": "新"
+    }
   ],
   "recentFeedback": [
     "启动时机已经明显更稳定。",
@@ -65,9 +117,21 @@
     "studentReflection": "接发后能更早意识到第一拍要保护中路，但遇到快推时还是容易只看球、不看下一拍。",
     "coachNote": "启动方向比上周清楚，下一步要把第一步和拍面准备连起来。",
     "homework": [
-      { "id": "hw-1", "text": "每天 6 分钟无球启动：听口令做左右启动。", "done": false },
-      { "id": "hw-2", "text": "第一步落地后立刻举拍，保持拍头在胸口前方。", "done": false },
-      { "id": "hw-3", "text": "练完写一句：今天哪一次启动方向最清楚。", "done": false }
+      {
+        "id": "hw-1",
+        "text": "每天 6 分钟无球启动：听口令做左右启动。",
+        "done": false
+      },
+      {
+        "id": "hw-2",
+        "text": "第一步落地后立刻举拍，保持拍头在胸口前方。",
+        "done": false
+      },
+      {
+        "id": "hw-3",
+        "text": "练完写一句：今天哪一次启动方向最清楚。",
+        "done": false
+      }
     ]
   },
   "matchReview": {
@@ -77,107 +141,264 @@
     "nextAdjustment": "领先或平分时，接发后第一拍先保护中路，再考虑抢网。"
   },
   "abilityMatrix": [
-    { "label": "身体", "value": 66 },
-    { "label": "心理", "value": 62 },
-    { "label": "比赛", "value": 58 },
-    { "label": "技术", "value": 70 },
-    { "label": "战术", "value": 63 },
-    { "label": "步法", "value": 68 }
+    {
+      "label": "身体",
+      "value": 66
+    },
+    {
+      "label": "心理",
+      "value": 62
+    },
+    {
+      "label": "比赛",
+      "value": 58
+    },
+    {
+      "label": "技术",
+      "value": 70
+    },
+    {
+      "label": "战术",
+      "value": 63
+    },
+    {
+      "label": "步法",
+      "value": 68
+    }
   ],
   "skillTree": [
     {
       "group": "发接发",
       "nodes": [
-        { "label": "反手发小球", "status": "done" },
-        { "label": "反手偷后场", "status": "active" },
-        { "label": "接发放网", "status": "done" },
-        { "label": "接发推扑", "status": "active" },
-        { "label": "接发挑球", "status": "active" },
-        { "label": "接偷后场发球", "status": "locked" }
+        {
+          "label": "反手发小球",
+          "status": "done"
+        },
+        {
+          "label": "反手偷后场",
+          "status": "active"
+        },
+        {
+          "label": "接发放网",
+          "status": "done"
+        },
+        {
+          "label": "接发推扑",
+          "status": "active"
+        },
+        {
+          "label": "接发挑球",
+          "status": "active"
+        },
+        {
+          "label": "接偷后场发球",
+          "status": "locked"
+        }
       ]
     },
     {
       "group": "前场",
       "nodes": [
-        { "label": "放网", "status": "done" },
-        { "label": "搓球", "status": "active" },
-        { "label": "推球", "status": "active" },
-        { "label": "挑球", "status": "active" },
-        { "label": "扑球", "status": "locked" },
-        { "label": "停顿/假动作", "status": "locked" }
+        {
+          "label": "放网",
+          "status": "done"
+        },
+        {
+          "label": "搓球",
+          "status": "active"
+        },
+        {
+          "label": "推球",
+          "status": "active"
+        },
+        {
+          "label": "挑球",
+          "status": "active"
+        },
+        {
+          "label": "扑球",
+          "status": "locked"
+        },
+        {
+          "label": "停顿/假动作",
+          "status": "locked"
+        }
       ]
     },
     {
       "group": "中场",
       "nodes": [
-        { "label": "平抽", "status": "active" },
-        { "label": "挡网/挡杀", "status": "done" },
-        { "label": "接杀挑球", "status": "active" },
-        { "label": "反拍正抽", "status": "locked" }
+        {
+          "label": "平抽",
+          "status": "active"
+        },
+        {
+          "label": "挡网/挡杀",
+          "status": "done"
+        },
+        {
+          "label": "接杀挑球",
+          "status": "active"
+        },
+        {
+          "label": "反拍正抽",
+          "status": "locked"
+        }
       ]
     },
     {
       "group": "正手后场",
       "nodes": [
-        { "label": "正手高远球", "status": "done" },
-        { "label": "正手杀球", "status": "active" },
-        { "label": "点杀", "status": "locked" },
-        { "label": "正手劈吊", "status": "active" },
-        { "label": "双脚跳杀", "status": "locked" },
-        { "label": "中国跳杀", "status": "locked" }
+        {
+          "label": "正手高远球",
+          "status": "done"
+        },
+        {
+          "label": "正手杀球",
+          "status": "active"
+        },
+        {
+          "label": "点杀",
+          "status": "locked"
+        },
+        {
+          "label": "正手劈吊",
+          "status": "active"
+        },
+        {
+          "label": "双脚跳杀",
+          "status": "locked"
+        },
+        {
+          "label": "中国跳杀",
+          "status": "locked"
+        }
       ]
     },
     {
       "group": "头顶后场",
       "nodes": [
-        { "label": "头顶高远球", "status": "active" },
-        { "label": "头顶吊球", "status": "active" },
-        { "label": "头顶杀球", "status": "locked" },
-        { "label": "突击跳杀", "status": "locked" }
+        {
+          "label": "头顶高远球",
+          "status": "active"
+        },
+        {
+          "label": "头顶吊球",
+          "status": "active"
+        },
+        {
+          "label": "头顶杀球",
+          "status": "locked"
+        },
+        {
+          "label": "突击跳杀",
+          "status": "locked"
+        }
       ]
     },
     {
       "group": "反手后场",
       "nodes": [
-        { "label": "反手高远球", "status": "locked" },
-        { "label": "反手吊球", "status": "locked" },
-        { "label": "反手杀球", "status": "locked" }
+        {
+          "label": "反手高远球",
+          "status": "locked"
+        },
+        {
+          "label": "反手吊球",
+          "status": "locked"
+        },
+        {
+          "label": "反手杀球",
+          "status": "locked"
+        }
       ]
     },
     {
       "group": "步法",
       "nodes": [
-        { "label": "启动", "status": "done" },
-        { "label": "移动", "status": "active" },
-        { "label": "衔接", "status": "active" },
-        { "label": "确认", "status": "locked" },
-        { "label": "回动和调整", "status": "active" }
+        {
+          "label": "启动",
+          "status": "done"
+        },
+        {
+          "label": "移动",
+          "status": "active"
+        },
+        {
+          "label": "衔接",
+          "status": "active"
+        },
+        {
+          "label": "确认",
+          "status": "locked"
+        },
+        {
+          "label": "回动",
+          "status": "active"
+        },
+        {
+          "label": "调整",
+          "status": "active"
+        }
       ]
     },
     {
       "group": "心理",
       "nodes": [
-        { "label": "认知灵活度", "status": "active" },
-        { "label": "自我效能感", "status": "active" },
-        { "label": "情绪调节能力", "status": "done" },
-        { "label": "意志力与坚韧性", "status": "locked" }
+        {
+          "label": "认知灵活度",
+          "status": "active"
+        },
+        {
+          "label": "自我效能感",
+          "status": "active"
+        },
+        {
+          "label": "情绪调节能力",
+          "status": "done"
+        },
+        {
+          "label": "意志力与坚韧性",
+          "status": "locked"
+        }
       ]
     },
     {
       "group": "身体",
       "nodes": [
-        { "label": "敏捷", "status": "active" },
-        { "label": "协调", "status": "done" },
-        { "label": "耐力", "status": "locked" },
-        { "label": "速度", "status": "active" }
+        {
+          "label": "敏捷",
+          "status": "active"
+        },
+        {
+          "label": "协调",
+          "status": "done"
+        },
+        {
+          "label": "耐力",
+          "status": "locked"
+        },
+        {
+          "label": "速度",
+          "status": "active"
+        }
       ]
     },
     {
       "group": "战术",
       "nodes": [
-        { "label": "前四拍计划", "status": "done" },
-        { "label": "比分压力处理", "status": "active" },
-        { "label": "连续回合复盘", "status": "locked" }
+        {
+          "label": "前四拍计划",
+          "status": "done"
+        },
+        {
+          "label": "比分压力处理",
+          "status": "active"
+        },
+        {
+          "label": "连续回合复盘",
+          "status": "locked"
+        }
       ]
     }
   ],
@@ -186,7 +407,11 @@
       "id": "lesson-2026-04-20",
       "date": "2026-04-20",
       "title": "启动方向判断",
-      "mainContent": ["接发准备姿势", "第一步方向", "中路保护范围"],
+      "mainContent": [
+        "接发准备姿势",
+        "第一步方向",
+        "中路保护范围"
+      ],
       "coachNote": "能更早判断来球方向，但启动后拍子准备偏低。",
       "studentNote": "我开始能分清楚是往中路还是边线保护。",
       "homeworkDone": 2,
@@ -196,7 +421,11 @@
       "id": "lesson-2026-05-01",
       "date": "2026-05-01",
       "title": "第一步落点",
-      "mainContent": ["第一步落点", "落地举拍", "快球下的身体稳定"],
+      "mainContent": [
+        "第一步落点",
+        "落地举拍",
+        "快球下的身体稳定"
+      ],
       "coachNote": "第一步比以前稳，落地后还需要更快举拍。",
       "studentNote": "我感觉脚下没以前乱，但快球还是会慌。",
       "homeworkDone": 3,
@@ -206,7 +435,11 @@
       "id": "lesson-2026-05-12",
       "date": "2026-05-12",
       "title": "接发后第一拍保护",
-      "mainContent": ["接发后第一拍", "保护中路", "下一拍预判"],
+      "mainContent": [
+        "接发后第一拍",
+        "保护中路",
+        "下一拍预判"
+      ],
       "coachNote": "启动方向更清楚，下一步要把第一步和拍面准备连起来。",
       "studentNote": "知道要保护中路，但实战里还会慢半拍。",
       "homeworkDone": 1,
@@ -214,9 +447,24 @@
     }
   ],
   "growthPath": [
-    { "date": "2026-04-20", "stage": "启动方向判断", "ability": "比赛", "score": 52 },
-    { "date": "2026-05-01", "stage": "第一步落点", "ability": "比赛", "score": 56 },
-    { "date": "2026-05-12", "stage": "第一拍保护", "ability": "比赛", "score": 58 }
+    {
+      "date": "2026-04-20",
+      "stage": "启动方向判断",
+      "ability": "比赛",
+      "score": 52
+    },
+    {
+      "date": "2026-05-01",
+      "stage": "第一步落点",
+      "ability": "比赛",
+      "score": 56
+    },
+    {
+      "date": "2026-05-12",
+      "stage": "第一拍保护",
+      "ability": "比赛",
+      "score": 58
+    }
   ],
   "lastUpdated": "2026-05-12"
 }

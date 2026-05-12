@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -54,6 +54,12 @@ const copy = {
   },
 };
 
+const heroImages = [
+  '/badminton-analysis-1.png',
+  '/badminton-analysis-2.png',
+  '/badminton-analysis-3.png',
+];
+
 export default function Home() {
   const { lang, toggle } = useLang();
   const t = copy[lang];
@@ -62,6 +68,15 @@ export default function Home() {
   const [accessCode, setAccessCode] = useState('');
   const [studentError, setStudentError] = useState('');
   const [studentLoading, setStudentLoading] = useState(false);
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setHeroImageIndex((index) => (index + 1) % heroImages.length);
+    }, 4500);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   async function handleStudentLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -162,10 +177,10 @@ export default function Home() {
 
           <div className="animate-fade-up delay-2 group relative overflow-hidden rounded-3xl border border-black/8 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)] md:col-span-4 md:row-span-4">
             <Image
-              src="/wiki-life-hero.jpg"
+              src={heroImages[heroImageIndex]}
               alt={t.imageAlt}
               width={2048}
-              height={1110}
+              height={1152}
               priority
               className="h-full min-h-[280px] w-full object-cover transition-all duration-700 group-hover:scale-105"
             />

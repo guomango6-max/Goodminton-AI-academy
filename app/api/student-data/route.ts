@@ -14,13 +14,23 @@ function stripPrivateFields(student: Record<string, unknown>) {
 }
 
 function getStudentFromEnv(studentId: string) {
-  const raw = process.env.GOODMINTON_STUDENT_DATA_JSON;
+  const raw =
+    process.env.GOODMINTON_STUDENT_DATA_B64
+      ? Buffer.from(process.env.GOODMINTON_STUDENT_DATA_B64, 'base64').toString('utf8')
+      : process.env.GOODMINTON_STUDENT_DATA_JSON;
 
   if (!raw) {
     return null;
   }
 
-  const data = JSON.parse(raw) as Record<string, Record<string, unknown>> | Array<Record<string, unknown>>;
+  let data: Record<string, Record<string, unknown>> | Array<Record<string, unknown>>;
+
+  try {
+    data = JSON.parse(raw) as Record<string, Record<string, unknown>> | Array<Record<string, unknown>>;
+  } catch (error) {
+    console.error('[student-data-env-parse-error]', error);
+    return null;
+  }
 
   if (Array.isArray(data)) {
     return data.find((student) => student.studentId === studentId) || null;
