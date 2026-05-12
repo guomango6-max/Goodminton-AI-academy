@@ -283,9 +283,9 @@ function AbilityHex({ items }: { items: Array<{ label: string; value: number }> 
               />
             );
           })}
-          <polygon points={polygon} fill="rgba(166,216,144,0.3)" stroke="#9fd47f" strokeWidth="2.4" />
+          <polygon points={polygon} fill="rgba(126,155,232,0.24)" stroke="#7e9be8" strokeWidth="2.4" />
           {points.map((point) => (
-            <circle key={point.label} cx={point.x} cy={point.y} r="4" fill="#9fd47f" stroke="white" strokeWidth="2" />
+            <circle key={point.label} cx={point.x} cy={point.y} r="4" fill="#7e9be8" stroke="white" strokeWidth="2" />
           ))}
         </svg>
       </div>
