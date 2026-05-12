@@ -440,6 +440,23 @@ function AchievementIcon({ category, locked }: { category: string; locked: boole
           <path d="M13 12h3" />
           <path d="M8 15h3" />
         </>
+      ) : icon === '比赛' ? (
+        <>
+          <path d="M8 4h8v3a4 4 0 0 1-8 0V4Z" />
+          <path d="M6 5H4v1.5A3.5 3.5 0 0 0 8 10" />
+          <path d="M18 5h2v1.5a3.5 3.5 0 0 1-4 3.5" />
+          <path d="M12 11v5" />
+          <path d="M9 20h6" />
+          <path d="M10 16h4v4h-4z" />
+        </>
+      ) : icon === '练球' ? (
+        <>
+          <circle cx="8" cy="8" r="3" />
+          <path d="M13 13 20 6" />
+          <path d="M15 5h5v5" />
+          <path d="M6 15h10" />
+          <path d="M6 19h7" />
+        </>
       ) : (
         <>
           <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10" />

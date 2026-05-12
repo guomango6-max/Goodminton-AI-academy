@@ -403,6 +403,26 @@
   ],
   "achievements": [
     {
+      "id": "match-maniac",
+      "title": "比赛狂",
+      "category": "比赛",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "愿意把比赛当成训练场，从实战里发现问题。",
+      "progress": 0,
+      "target": 1
+    },
+    {
+      "id": "training-grinder",
+      "title": "练球达人",
+      "category": "练球",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "持续完成练习任务，把动作从知道练到稳定。",
+      "progress": 0,
+      "target": 5
+    },
+    {
       "id": "learning-note",
       "title": "学习笔记",
       "category": "学习",
