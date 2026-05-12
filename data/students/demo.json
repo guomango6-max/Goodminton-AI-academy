@@ -405,6 +405,39 @@
   ],
   "achievements": [
     {
+      "id": "learning-note",
+      "title": "学习笔记",
+      "category": "学习",
+      "level": "bronze",
+      "status": "earned",
+      "description": "能把课堂重点用自己的话记录下来。",
+      "progress": 1,
+      "target": 1,
+      "earnedAt": "2026-04-20"
+    },
+    {
+      "id": "attitude-ready",
+      "title": "训练态度",
+      "category": "态度",
+      "level": "silver",
+      "status": "earned",
+      "description": "训练中愿意试错、愿意复盘，不只追求打赢一拍。",
+      "progress": 2,
+      "target": 2,
+      "earnedAt": "2026-05-12"
+    },
+    {
+      "id": "attendance-line",
+      "title": "稳定出勤",
+      "category": "出勤",
+      "level": "silver",
+      "status": "earned",
+      "description": "保持稳定上课节奏，让训练积累不断线。",
+      "progress": 3,
+      "target": 3,
+      "earnedAt": "2026-05-12"
+    },
+    {
       "id": "first-review",
       "title": "首条复盘",
       "category": "习惯",

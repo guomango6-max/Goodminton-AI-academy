@@ -421,6 +421,25 @@ function AchievementIcon({ category, locked }: { category: string; locked: boole
           <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />
           <path d="M9.5 12h5" />
         </>
+      ) : icon === '学习' ? (
+        <>
+          <path d="M5 5.5h9a3 3 0 0 1 3 3v10H8a3 3 0 0 1-3-3v-10Z" />
+          <path d="M8 9h6" />
+          <path d="M8 12h5" />
+        </>
+      ) : icon === '态度' ? (
+        <>
+          <path d="M12 3.5 14.6 8.8l5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" />
+        </>
+      ) : icon === '出勤' ? (
+        <>
+          <path d="M7 4v3" />
+          <path d="M17 4v3" />
+          <path d="M5 7h14v12H5z" />
+          <path d="M8 12h3" />
+          <path d="M13 12h3" />
+          <path d="M8 15h3" />
+        </>
       ) : (
         <>
           <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10" />
