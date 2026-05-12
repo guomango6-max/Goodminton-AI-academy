@@ -403,6 +403,176 @@
   ],
   "achievements": [
     {
+      "id": "class-focus",
+      "title": "课堂专注",
+      "category": "学习",
+      "level": "bronze",
+      "status": "in_progress",
+      "description": "上课时能抓住本节课最重要的一个点。",
+      "progress": 1,
+      "target": 1
+    },
+    {
+      "id": "question-asker",
+      "title": "主动提问",
+      "category": "学习",
+      "level": "bronze",
+      "status": "in_progress",
+      "description": "能把不明白的地方说出来，帮助教练调整反馈。",
+      "progress": 1,
+      "target": 2
+    },
+    {
+      "id": "feedback-loop",
+      "title": "反馈闭环",
+      "category": "学习",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "课堂、作业、复盘能连成一个循环。",
+      "progress": 1,
+      "target": 3
+    },
+    {
+      "id": "no-excuse",
+      "title": "不找借口",
+      "category": "态度",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "遇到失误先找可改动作，而不是只归因给手感。",
+      "progress": 0,
+      "target": 2
+    },
+    {
+      "id": "coachable",
+      "title": "听得进改得动",
+      "category": "态度",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "能把教练反馈转成下一拍动作变化。",
+      "progress": 0,
+      "target": 4
+    },
+    {
+      "id": "attendance-streak",
+      "title": "连续到课",
+      "category": "出勤",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "连续保持出勤，让训练节奏不断档。",
+      "progress": 1,
+      "target": 4
+    },
+    {
+      "id": "serve-return-hunter",
+      "title": "发接发猎手",
+      "category": "技术",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "发接发阶段开始有主动选择。",
+      "progress": 1,
+      "target": 3
+    },
+    {
+      "id": "net-pressure",
+      "title": "网前压迫",
+      "category": "技术",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "网前不只保守过渡，开始制造压力。",
+      "progress": 1,
+      "target": 5
+    },
+    {
+      "id": "midcourt-shield",
+      "title": "中场护盾",
+      "category": "技术",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "中场平抽、挡杀和接杀有稳定基础。",
+      "progress": 1,
+      "target": 3
+    },
+    {
+      "id": "forehand-cannon",
+      "title": "正手后场炮台",
+      "category": "技术",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "正手后场开始具备进攻和变化能力。",
+      "progress": 1,
+      "target": 4
+    },
+    {
+      "id": "overhead-runner",
+      "title": "头顶突击",
+      "category": "技术",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "头顶区能完成移动后的击球选择。",
+      "progress": 1,
+      "target": 3
+    },
+    {
+      "id": "backhand-survivor",
+      "title": "反手脱困",
+      "category": "技术",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "反手后场开始具备脱困能力。",
+      "progress": 1,
+      "target": 2
+    },
+    {
+      "id": "footwork-engine",
+      "title": "步法引擎",
+      "category": "步法",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "启动、移动、衔接、回动逐步连成系统。",
+      "progress": 1,
+      "target": 5
+    },
+    {
+      "id": "speed-switch",
+      "title": "速度开关",
+      "category": "身体",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "能在快慢节奏之间切换身体状态。",
+      "progress": 50,
+      "target": 100
+    },
+    {
+      "id": "mental-anchor",
+      "title": "心理锚点",
+      "category": "心理",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "比分波动时能回到一个清晰动作重点。",
+      "progress": 50,
+      "target": 100
+    },
+    {
+      "id": "pattern-reader",
+      "title": "线路阅读者",
+      "category": "战术",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "能读出对手常用线路和下一拍意图。",
+      "progress": 50,
+      "target": 100
+    },
+    {
+      "id": "three-game-memory",
+      "title": "三局记忆",
+      "category": "比赛",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "打完三局后能留下清楚的经验和调整点。",
+      "progress": 0,
+      "target": 1
+    },
+    {
       "id": "match-maniac",
       "title": "比赛狂",
       "category": "比赛",
