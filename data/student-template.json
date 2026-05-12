@@ -409,8 +409,18 @@
       "level": "bronze",
       "status": "in_progress",
       "description": "完成第一次课后总结，把课堂感觉转成可追踪记录。",
-      "progress": 0,
+      "progress": 1,
       "target": 1
+    },
+    {
+      "id": "review-streak",
+      "title": "复盘连续性",
+      "category": "习惯",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "连续留下课后反馈，让训练问题能被追踪。",
+      "progress": 1,
+      "target": 3
     },
     {
       "id": "homework-streak",
@@ -423,6 +433,16 @@
       "target": 3
     },
     {
+      "id": "warmup-ready",
+      "title": "课前准备",
+      "category": "自律",
+      "level": "bronze",
+      "status": "in_progress",
+      "description": "能在上课前完成自检和准备，减少进入状态的时间。",
+      "progress": 0,
+      "target": 2
+    },
+    {
       "id": "skill-collector",
       "title": "技术采集者",
       "category": "技术",
@@ -433,24 +453,74 @@
       "target": 3
     },
     {
+      "id": "front-court-touch",
+      "title": "网前手感",
+      "category": "技术",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "前场放、搓、推、挑开始形成可选择的处理方式。",
+      "progress": 1,
+      "target": 4
+    },
+    {
+      "id": "back-court-engine",
+      "title": "后场发动机",
+      "category": "技术",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "后场击球不再只靠手臂，开始建立完整发力链条。",
+      "progress": 2,
+      "target": 4
+    },
+    {
       "id": "footwork-base",
       "title": "步法底盘",
-      "category": "身体",
+      "category": "步法",
       "level": "silver",
-      "status": "locked",
+      "status": "in_progress",
       "description": "启动、移动、回动和调整开始形成稳定连接。",
-      "progress": 0,
+      "progress": 1,
       "target": 6
+    },
+    {
+      "id": "body-spark",
+      "title": "身体火花",
+      "category": "身体",
+      "level": "bronze",
+      "status": "in_progress",
+      "description": "敏捷、协调、速度或耐力中至少两项进入训练状态。",
+      "progress": 1,
+      "target": 2
     },
     {
       "id": "pressure-calm",
       "title": "平分冷静",
       "category": "心理",
-      "level": "locked",
+      "level": "gold",
       "status": "locked",
       "description": "在平分或领先时保持清晰选择，先稳住第一拍质量。",
-      "progress": 0,
+      "progress": 1,
+      "target": 3
+    },
+    {
+      "id": "tactic-lens",
+      "title": "战术镜头",
+      "category": "战术",
+      "level": "silver",
+      "status": "in_progress",
+      "description": "能从单个回合里看出发接发、线路和站位选择。",
+      "progress": 1,
       "target": 2
+    },
+    {
+      "id": "match-memory",
+      "title": "比赛记忆",
+      "category": "比赛",
+      "level": "gold",
+      "status": "in_progress",
+      "description": "把一场比赛中可复用的经验沉淀下来。",
+      "progress": 0,
+      "target": 1
     }
   ],
   "lessonHistory": [

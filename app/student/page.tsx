@@ -463,48 +463,50 @@ function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
   };
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {achievements.map((item) => {
-        const style = levelStyle[item.level];
-        const percent = Math.min(100, Math.round((item.progress / Math.max(item.target, 1)) * 100));
+    <div className="max-h-[520px] overflow-y-auto pr-2">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {achievements.map((item) => {
+          const style = levelStyle[item.level];
+          const percent = Math.min(100, Math.round((item.progress / Math.max(item.target, 1)) * 100));
 
-        return (
-          <article key={item.id} className={`rounded-lg border p-4 ${style.badge}`}>
-            <div className="flex items-start gap-3">
-              <div
-                className={`mt-1 flex h-12 w-12 shrink-0 items-center justify-center border bg-white p-1 ${style.ring}`}
-                style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
-              >
+          return (
+            <article key={item.id} className={`rounded-lg border p-4 ${style.badge}`}>
+              <div className="flex items-start gap-3">
                 <div
-                  className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${style.mark} text-white shadow-inner`}
+                  className={`mt-1 flex h-12 w-12 shrink-0 items-center justify-center border bg-white p-1 ${style.ring}`}
                   style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
                 >
-                  <AchievementIcon category={item.category} locked={item.status === 'locked'} />
-                </div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-slate-950">{item.title}</div>
-                  <div className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600">
-                    {item.category} · {levelText[item.level]}
+                  <div
+                    className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${style.mark} text-white shadow-inner`}
+                    style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
+                  >
+                    <AchievementIcon category={item.category} locked={item.status === 'locked'} />
                   </div>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
-                <div className="mt-3">
-                  <div className="mb-1 flex justify-between text-xs text-slate-500">
-                    <span>{item.status === 'earned' ? '已获得' : item.status === 'in_progress' ? '进行中' : '未解锁'}</span>
-                    <span>
-                      {item.progress}/{item.target}
-                    </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-slate-950">{item.title}</div>
+                    <div className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600">
+                      {item.category} · {levelText[item.level]}
+                    </div>
                   </div>
-                  <ProgressBar value={percent} />
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                  <div className="mt-3">
+                    <div className="mb-1 flex justify-between text-xs text-slate-500">
+                      <span>{item.status === 'earned' ? '已获得' : item.status === 'in_progress' ? '进行中' : '未解锁'}</span>
+                      <span>
+                        {item.progress}/{item.target}
+                      </span>
+                    </div>
+                    <ProgressBar value={percent} />
+                  </div>
+                  {item.earnedAt ? <div className="mt-2 text-xs text-slate-500">获得时间：{item.earnedAt}</div> : null}
                 </div>
-                {item.earnedAt ? <div className="mt-2 text-xs text-slate-500">获得时间：{item.earnedAt}</div> : null}
               </div>
-            </div>
-          </article>
-        );
-      })}
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }
