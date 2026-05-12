@@ -76,6 +76,7 @@ type StudentData = {
     score: string;
     whatWorked: string;
     nextAdjustment: string;
+    experience?: string;
   };
   abilityMatrix?: Array<{
     label: string;
@@ -121,6 +122,7 @@ type StudentDraft = {
     score?: string;
     whatWorked?: string;
     nextAdjustment?: string;
+    experience?: string;
   };
 };
 
@@ -217,7 +219,7 @@ function displayRank(level: string, progress: number) {
 
 function AbilityHex({ items }: { items: Array<{ label: string; value: number }> }) {
   const center = 100;
-  const maxRadius = 76;
+  const maxRadius = 72;
   const points = items.map((item, index) => {
     const angle = (-90 + index * 60) * (Math.PI / 180);
     const radius = maxRadius * (item.value / 100);
@@ -225,60 +227,49 @@ function AbilityHex({ items }: { items: Array<{ label: string; value: number }> 
       ...item,
       x: center + Math.cos(angle) * radius,
       y: center + Math.sin(angle) * radius,
-      labelX: center + Math.cos(angle) * 92,
-      labelY: center + Math.sin(angle) * 92,
     };
   });
   const polygon = points.map((point) => `${point.x},${point.y}`).join(' ');
 
   return (
-    <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-      <svg viewBox="0 0 200 200" className="mx-auto h-56 w-56">
-        {[0.33, 0.66, 1].map((scale) => {
-          const ring = items
-            .map((_, index) => {
-              const angle = (-90 + index * 60) * (Math.PI / 180);
-              return `${center + Math.cos(angle) * maxRadius * scale},${center + Math.sin(angle) * maxRadius * scale}`;
-            })
-            .join(' ');
-          return <polygon key={scale} points={ring} fill="none" stroke="#e2e8f0" strokeWidth="1" />;
-        })}
-        {items.map((_, index) => {
-          const angle = (-90 + index * 60) * (Math.PI / 180);
-          return (
-            <line
-              key={index}
-              x1={center}
-              y1={center}
-              x2={center + Math.cos(angle) * maxRadius}
-              y2={center + Math.sin(angle) * maxRadius}
-              stroke="#e2e8f0"
-              strokeWidth="1"
-            />
-          );
-        })}
-        <polygon points={polygon} fill="rgba(126,155,232,0.2)" stroke="#7e9be8" strokeWidth="2" />
-        {points.map((point) => (
-          <g key={point.label}>
-            <circle cx={point.x} cy={point.y} r="3.5" fill="#7e9be8" />
-            <text
-              x={point.labelX}
-              y={point.labelY}
-              textAnchor={point.labelX > center + 8 ? 'start' : point.labelX < center - 8 ? 'end' : 'middle'}
-              dominantBaseline="middle"
-              className="fill-slate-600 text-[10px]"
-            >
-              {point.label}
-            </text>
-          </g>
-        ))}
-      </svg>
-      <div className="space-y-3">
+    <div className="grid gap-6 lg:grid-cols-[260px_1fr] lg:items-center">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <svg viewBox="0 0 200 200" className="mx-auto h-56 w-56">
+          {[0.33, 0.66, 1].map((scale) => {
+            const ring = items
+              .map((_, index) => {
+                const angle = (-90 + index * 60) * (Math.PI / 180);
+                return `${center + Math.cos(angle) * maxRadius * scale},${center + Math.sin(angle) * maxRadius * scale}`;
+              })
+              .join(' ');
+            return <polygon key={scale} points={ring} fill="none" stroke="#e2e8f0" strokeWidth="1" />;
+          })}
+          {items.map((_, index) => {
+            const angle = (-90 + index * 60) * (Math.PI / 180);
+            return (
+              <line
+                key={index}
+                x1={center}
+                y1={center}
+                x2={center + Math.cos(angle) * maxRadius}
+                y2={center + Math.sin(angle) * maxRadius}
+                stroke="#e2e8f0"
+                strokeWidth="1"
+              />
+            );
+          })}
+          <polygon points={polygon} fill="rgba(126,155,232,0.2)" stroke="#7e9be8" strokeWidth="2" />
+          {points.map((point) => (
+            <circle key={point.label} cx={point.x} cy={point.y} r="3.5" fill="#7e9be8" />
+          ))}
+        </svg>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
         {items.map((item) => (
-          <div key={item.label}>
-            <div className="mb-1 flex justify-between text-sm">
-              <span className="font-medium text-slate-800">{item.label}</span>
-              <span className="text-slate-500">{item.value}</span>
+          <div key={item.label} className="rounded-md border border-slate-200 bg-white p-3">
+            <div className="mb-2 flex items-baseline justify-between gap-3">
+              <span className="text-sm font-medium text-slate-800">{item.label}</span>
+              <span className="text-lg font-semibold text-slate-950">{item.value}</span>
             </div>
             <ProgressBar value={item.value} />
           </div>
@@ -510,6 +501,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
     score: initialDraft?.matchInput?.score || student.matchReview?.score || '',
     whatWorked: initialDraft?.matchInput?.whatWorked || student.matchReview?.whatWorked || '',
     nextAdjustment: initialDraft?.matchInput?.nextAdjustment || student.matchReview?.nextAdjustment || '',
+    experience: initialDraft?.matchInput?.experience || student.matchReview?.experience || '',
   });
 
   function markReviewed(label: string) {
@@ -774,6 +766,15 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     onChange={(event) => setMatchInput((value) => ({ ...value, nextAdjustment: event.target.value }))}
                     className="mt-2 min-h-20 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-900"
                     placeholder="写下这场之后最想改进的地方。"
+                  />
+                </label>
+                <label className="block">
+                  <div className="text-sm font-medium">积累的经验</div>
+                  <textarea
+                    value={matchInput.experience}
+                    onChange={(event) => setMatchInput((value) => ({ ...value, experience: event.target.value }))}
+                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-900"
+                    placeholder="这场比赛以后，下次可以直接复用的一条经验。"
                   />
                 </label>
               </div>
