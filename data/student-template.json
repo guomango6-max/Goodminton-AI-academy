@@ -307,6 +307,10 @@
           "status": "locked"
         },
         {
+          "label": "反手抽球",
+          "status": "locked"
+        },
+        {
           "label": "反手杀球",
           "status": "locked"
         }

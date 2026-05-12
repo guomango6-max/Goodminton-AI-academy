@@ -302,10 +302,14 @@
       "nodes": [
         {
           "label": "反手高远球",
-          "status": "locked"
+          "status": "active"
         },
         {
           "label": "反手吊球",
+          "status": "locked"
+        },
+        {
+          "label": "反手抽球",
           "status": "locked"
         },
         {
