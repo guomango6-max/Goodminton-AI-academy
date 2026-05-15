@@ -9,7 +9,10 @@
       "experience": "二十多年羽毛球教学经验",
       "specialties": ["成人训练", "青少年训练", "技术诊断", "比赛复盘"],
       "contactHref": "https://wa.me/358413134358",
-      "image": "/coaches/coach-mango.jpg"
+      "image": "/coaches/coach-mango.jpg",
+      "trainingImage": "/coaches/advanced-coach-training-2017.jpg",
+      "trainingTitle": "2017年全国高级羽毛球教练集训班",
+      "trainingSummary": "持续参加高水平教练交流、学习与提升，把专业训练方法转化为适合成人和青少年学员的课堂实践。"
     }
   ],
   "en": [
@@ -22,7 +25,10 @@
       "experience": "20+ years of badminton coaching",
       "specialties": ["Adult training", "Youth training", "Technique diagnosis", "Match review"],
       "contactHref": "https://wa.me/358413134358",
-      "image": "/coaches/coach-mango.jpg"
+      "image": "/coaches/coach-mango.jpg",
+      "trainingImage": "/coaches/advanced-coach-training-2017.jpg",
+      "trainingTitle": "2017 National Advanced Badminton Coach Training",
+      "trainingSummary": "Ongoing high-level coach exchange and training, turning professional methods into practical lessons for adult and youth players."
     }
   ]
 }

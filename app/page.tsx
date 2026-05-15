@@ -38,6 +38,9 @@ type CoachProfile = {
   specialties: string[];
   contactHref: string;
   image: string;
+  trainingImage?: string;
+  trainingTitle?: string;
+  trainingSummary?: string;
 };
 
 const heroFeature: Record<Lang, ArticlePost> = {
@@ -208,6 +211,9 @@ const coachFallback: Record<Lang, CoachProfile[]> = {
       specialties: ['成人训练', '青少年训练', '技术诊断', '比赛复盘'],
       contactHref: 'https://wa.me/358413134358',
       image: '/coaches/coach-mango.jpg',
+      trainingImage: '/coaches/advanced-coach-training-2017.jpg',
+      trainingTitle: '2017年全国高级羽毛球教练集训班',
+      trainingSummary: '持续参加高水平教练交流、学习与提升，把专业训练方法转化为适合成人和青少年学员的课堂实践。',
     },
   ],
   en: [
@@ -222,6 +228,9 @@ const coachFallback: Record<Lang, CoachProfile[]> = {
       specialties: ['Adult training', 'Youth training', 'Technique diagnosis', 'Match review'],
       contactHref: 'https://wa.me/358413134358',
       image: '/coaches/coach-mango.jpg',
+      trainingImage: '/coaches/advanced-coach-training-2017.jpg',
+      trainingTitle: '2017 National Advanced Badminton Coach Training',
+      trainingSummary: 'Ongoing high-level coach exchange and training, turning professional methods into practical lessons for adult and youth players.',
     },
   ],
 };
@@ -232,7 +241,7 @@ const copy = {
     nav: [
       ['新闻', '#articles'],
       ['技术', '#articles'],
-      ['学员', '#student-portal'],
+      ['学员', '#student-showcase'],
       ['教练', '#coach'],
     ],
     bookTraining: '预约训练',
@@ -284,7 +293,7 @@ const copy = {
     nav: [
       ['News', '#articles'],
       ['Technique', '#articles'],
-      ['Students', '#student-portal'],
+      ['Students', '#student-showcase'],
       ['Coaches', '#coach'],
     ],
     bookTraining: 'Book training',
@@ -754,6 +763,29 @@ export default function Home() {
                   >
                     {t.coachContact}
                   </a>
+
+                  {coach.trainingImage ? (
+                    <figure className="mt-7 overflow-hidden rounded-[8px] border border-[#e0dacb] bg-white">
+                      <div className="relative aspect-[3/2] overflow-hidden bg-[#e6e1d4]">
+                        <Image
+                          src={coach.trainingImage}
+                          alt={coach.trainingTitle || coach.name}
+                          fill
+                          sizes="(min-width: 1024px) 650px, 100vw"
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,24,32,0.01),rgba(16,24,32,0.16))]" aria-hidden="true" />
+                      </div>
+                      <figcaption className="p-4">
+                        {coach.trainingTitle ? (
+                          <p className="text-[15px] font-semibold text-[#101820]">{coach.trainingTitle}</p>
+                        ) : null}
+                        {coach.trainingSummary ? (
+                          <p className="cjk-wrap mt-2 text-[14px] leading-6 text-[#52636b]">{coach.trainingSummary}</p>
+                        ) : null}
+                      </figcaption>
+                    </figure>
+                  ) : null}
                 </div>
               </div>
             </div>
