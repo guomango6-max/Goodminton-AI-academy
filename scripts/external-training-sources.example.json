@@ -1,0 +1,35 @@
+{
+  "sources": [
+    {
+      "name": "Example badminton RSS",
+      "type": "rss",
+      "url": "https://example.com/badminton-training.xml",
+      "keywords": [
+        "badminton",
+        "training",
+        "technique",
+        "footwork",
+        "correction",
+        "drill",
+        "羽毛球",
+        "训练",
+        "纠错",
+        "步法",
+        "发力"
+      ]
+    },
+    {
+      "name": "Manual article list",
+      "type": "urls",
+      "urls": [
+        "https://example.com/badminton-smash-technique"
+      ],
+      "keywords": [
+        "badminton",
+        "training",
+        "羽毛球",
+        "训练"
+      ]
+    }
+  ]
+}

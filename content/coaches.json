@@ -1,0 +1,26 @@
+{
+  "zh": [
+    {
+      "id": "mango",
+      "name": "芒果教练",
+      "role": "Goodminton Academy 教练",
+      "summary": "教练介绍展示位。上线后可替换为正式履历、训练理念、执教经历和课程方向。",
+      "specialties": ["技术诊断", "训练计划", "比赛复盘"],
+      "contactHref": "https://wa.me/358413134358",
+      "image": "/badminton-hero.png",
+      "status": "placeholder"
+    }
+  ],
+  "en": [
+    {
+      "id": "mango",
+      "name": "Coach Mango",
+      "role": "Goodminton Academy Coach",
+      "summary": "Coach profile placeholder. Replace with official bio, coaching philosophy, experience, and lesson focus when ready.",
+      "specialties": ["Technique diagnosis", "Training planning", "Match review"],
+      "contactHref": "https://wa.me/358413134358",
+      "image": "/badminton-hero.png",
+      "status": "placeholder"
+    }
+  ]
+}

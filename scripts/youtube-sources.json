@@ -1,0 +1,58 @@
+{
+  "sources": [
+    {
+      "name": "badminton-insight",
+      "url": "https://www.youtube.com/@badmintoninsight/videos",
+      "limit": 8,
+      "langs": "zh-Hans,zh-Hant,zh,en",
+      "enabled": true,
+      "priority": "high",
+      "notes": "High coaching density: technique, tactics, drills."
+    },
+    {
+      "name": "tobias-wadenka",
+      "url": "https://www.youtube.com/@TobiasWadenka/videos",
+      "limit": 8,
+      "langs": "zh-Hans,zh-Hant,zh,en",
+      "enabled": true,
+      "priority": "high",
+      "notes": "Coach-led drills, footwork, game-based training."
+    },
+    {
+      "name": "shuttle-life",
+      "url": "https://www.youtube.com/@ShuttleLife/videos",
+      "limit": 6,
+      "langs": "zh-Hans,zh-Hant,zh,en",
+      "enabled": true,
+      "priority": "high",
+      "notes": "Large tutorial archive; keep limit moderate."
+    },
+    {
+      "name": "badminton-famly",
+      "url": "https://www.youtube.com/@BadmintonFamly/videos",
+      "limit": 6,
+      "langs": "zh-Hans,zh-Hant,zh,en",
+      "enabled": true,
+      "priority": "medium",
+      "notes": "Technique and tactical education, mixed with community content."
+    },
+    {
+      "name": "bg-badminton",
+      "url": "https://www.youtube.com/@bgbadminton/videos",
+      "limit": 5,
+      "langs": "zh-Hans,zh-Hant,zh,en",
+      "enabled": true,
+      "priority": "medium",
+      "notes": "Coaching-focused, lower upload volume."
+    },
+    {
+      "name": "badminton-world-tv",
+      "url": "https://www.youtube.com/@bwftv/videos",
+      "limit": 3,
+      "langs": "zh-Hans,zh-Hant,zh,en",
+      "enabled": false,
+      "priority": "low",
+      "notes": "Match footage and interviews; enable only for tactical case review."
+    }
+  ]
+}

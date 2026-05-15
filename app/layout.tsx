@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { LangProvider } from "./components/LangContext";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Goodminton Academy",
+  metadataBase: new URL("https://goodminton-academy.vercel.app"),
+  title: {
+    default: "Goodminton Academy",
+    template: "%s | Goodminton Academy",
+  },
   description:
-    "Badminton coaching, training feedback, and focused AI-assisted conversations with Goodminton Academy.",
+    "羽毛球训练反馈、学员成长图谱和 AI 辅助咨询入口。",
+  applicationName: "Goodminton Academy",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Goodminton Academy",
+    description: "羽毛球训练反馈、学员成长图谱和 AI 辅助咨询入口。",
+    url: "/",
+    siteName: "Goodminton Academy",
+    images: [{ url: "/badminton-hero.png", width: 1776, height: 900 }],
+    locale: "zh_CN",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -25,10 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="zh-CN"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="zh-CN" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <LangProvider>{children}</LangProvider>
       </body>

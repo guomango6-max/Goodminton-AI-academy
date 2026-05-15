@@ -1,11 +1,15 @@
 import { createOpenAI } from '@ai-sdk/openai';
-import { streamText, convertToModelMessages, UIMessage } from 'ai';
+import { APICallError, streamText, convertToModelMessages, UIMessage } from 'ai';
 import { appendFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { NextResponse } from 'next/server';
+
+const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
+const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
 
 const deepseek = createOpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: 'https://api.deepseek.com/v1',
+  baseURL: DEEPSEEK_BASE_URL,
 });
 
 function getLastUserText(messages: UIMessage[]) {
@@ -122,6 +126,38 @@ async function logFeedback({ messages, role, lang }: { messages: UIMessage[]; ro
   }
 }
 
+function getDeepSeekErrorMessage(error: unknown, lang: 'zh' | 'en') {
+  if (APICallError.isInstance(error)) {
+    if (error.statusCode === 401) {
+      return lang === 'zh'
+        ? 'DeepSeek API Key 无效或未生效，请检查 Vercel 环境变量 DEEPSEEK_API_KEY。'
+        : 'DeepSeek API key is invalid. Please check the DEEPSEEK_API_KEY environment variable.';
+    }
+
+    if (error.statusCode === 402) {
+      return lang === 'zh'
+        ? 'DeepSeek 免费额度或余额不足，请在 DeepSeek 控制台检查额度。'
+        : 'DeepSeek quota or balance is insufficient. Please check your DeepSeek console.';
+    }
+
+    if (error.statusCode === 429) {
+      return lang === 'zh'
+        ? 'DeepSeek 请求太频繁，请稍等一会儿再试。'
+        : 'DeepSeek is rate limiting requests. Please try again shortly.';
+    }
+
+    if (error.statusCode && error.statusCode >= 500) {
+      return lang === 'zh'
+        ? 'DeepSeek 服务暂时繁忙，请稍后再试。'
+        : 'DeepSeek is temporarily unavailable. Please try again later.';
+    }
+  }
+
+  return lang === 'zh'
+    ? '聊天服务暂时不可用，请稍后再试。'
+    : 'Chat service is temporarily unavailable. Please try again later.';
+}
+
 const systemPrompts = {
   student: {
     zh: `你是 Goodminton Academy 的学员反馈顾问。学员来这里主要是**反馈**——课程感受、训练进度、困惑、建议。
@@ -169,9 +205,21 @@ Tone: professional but relaxed, like a knowledgeable playing partner giving you 
 };
 
 export async function POST(req: Request) {
-  const { messages, role, lang }: { messages: UIMessage[]; role?: string; lang?: string } =
-    await req.json();
+  const body = (await req.json().catch(() => null)) as {
+    messages?: UIMessage[];
+    role?: string;
+    lang?: string;
+  } | null;
 
+  if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
+    return NextResponse.json({ error: 'messages must be a non-empty array.' }, { status: 400 });
+  }
+
+  if (!process.env.DEEPSEEK_API_KEY) {
+    return NextResponse.json({ error: 'Chat service is not configured.' }, { status: 503 });
+  }
+
+  const { messages, role, lang } = body;
   const modelMessages = await convertToModelMessages(messages);
 
   const langKey = lang === 'en' ? 'en' : 'zh';
@@ -179,9 +227,28 @@ export async function POST(req: Request) {
   await logFeedback({ messages, role: roleKey, lang: langKey });
   const systemPrompt = systemPrompts[roleKey][langKey];
 
-  return streamText({
-    model: deepseek.chat('deepseek-chat'),
-    system: systemPrompt,
-    messages: modelMessages,
-  }).toUIMessageStreamResponse();
+  try {
+    const result = streamText({
+      model: deepseek.chat(DEEPSEEK_MODEL),
+      system: systemPrompt,
+      messages: modelMessages,
+      maxRetries: 1,
+      onError({ error }) {
+        console.error('[deepseek-chat-stream-error]', {
+          model: DEEPSEEK_MODEL,
+          statusCode: APICallError.isInstance(error) ? error.statusCode : undefined,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      },
+    });
+
+    return result.toUIMessageStreamResponse({
+      onError(error) {
+        return getDeepSeekErrorMessage(error, langKey);
+      },
+    });
+  } catch (error) {
+    console.error('[deepseek-chat-error]', error);
+    return NextResponse.json({ error: getDeepSeekErrorMessage(error, langKey) }, { status: 502 });
+  }
 }

@@ -1,0 +1,100 @@
+{
+  "updated": "2026-05-12",
+  "policy": "Candidates are discovery leads. Promote a source to external-training-sources.json enabled=true only after dry-run shows useful training/correction material with low noise.",
+  "priority_sources": [
+    {
+      "name": "Badminton Insight",
+      "type": "rss/youtube",
+      "status": "active",
+      "reason": "High coaching density and repeatable tutorial output."
+    },
+    {
+      "name": "Shuttle Smash",
+      "type": "rss",
+      "status": "active",
+      "reason": "Useful article archive; currently monitored with low maxItems."
+    },
+    {
+      "name": "Tobias Wadenka",
+      "type": "youtube",
+      "status": "active-candidate",
+      "reason": "Coach-led drills and game-based training; handled through youtube-sources.json."
+    },
+    {
+      "name": "Shuttle Life",
+      "type": "youtube",
+      "status": "active-candidate",
+      "reason": "Large practical tutorial archive; handled through youtube-sources.json."
+    },
+    {
+      "name": "Badminton Famly",
+      "type": "website/youtube",
+      "status": "active-candidate",
+      "reason": "Useful tactics and technique archive; mixed with community/commercial content."
+    }
+  ],
+  "trial_sources": [
+    {
+      "name": "Paul Stewart Badminton Coach",
+      "url": "https://badminton-coach.co.uk/badminton-coach-blog/feed/",
+      "status": "disabled-after-trial",
+      "reason": "Latest feed items did not pass training keyword filter. Keep for periodic manual review."
+    },
+    {
+      "name": "Badminton Centre Blog",
+      "url": "https://www.badmintoncentre.co.uk/blog-feed.xml",
+      "status": "disabled-after-trial",
+      "reason": "Dry-run returned motivational/nutrition/basic material; not enough correction density."
+    },
+    {
+      "name": "Altitude Badminton Blog",
+      "url": "https://www.altitudebadminton.com/blog-feed.xml",
+      "status": "disabled-after-trial",
+      "reason": "Dry-run returned journey/basic material; keep known high-value pages as seeds."
+    },
+    {
+      "name": "Badminton Gurukul Blog",
+      "url": "https://badmintongurukul.com/blog/feed/",
+      "status": "disabled-404",
+      "reason": "RSS endpoint returned 404 during trial."
+    },
+    {
+      "name": "Diemo Ruhnow Badminton Training",
+      "url": "https://badminton-training.com/technique-wiki/technique/",
+      "status": "seed-page",
+      "reason": "High-value technique archive; use as a seed page, not a high-frequency source."
+    },
+    {
+      "name": "Western Badminton footwork article",
+      "url": "https://www.westernbadminton.com.au/blog/post-footwork.html",
+      "status": "seed-page",
+      "reason": "Practical drill content; one-time extraction candidate."
+    }
+  ],
+  "chinese_platforms": [
+    {
+      "name": "爱羽客",
+      "discovery": "Brave Chinese platform discovery",
+      "status": "search-first",
+      "reason": "Use search result URLs first; promote pages after readability check."
+    },
+    {
+      "name": "中羽在线 / 中羽网",
+      "discovery": "Brave Chinese platform discovery",
+      "status": "search-first",
+      "reason": "Forum and article material needs noise filtering; useful for tactics and equipment-neutral discussions."
+    },
+    {
+      "name": "知乎",
+      "discovery": "Brave Chinese platform discovery",
+      "status": "search-first",
+      "reason": "Question/answer quality varies; extract only concrete training methods and coach reasoning."
+    },
+    {
+      "name": "小红书 / 抖音 / 快手 / 优酷",
+      "discovery": "Brave Chinese platform discovery",
+      "status": "lead-only",
+      "reason": "Use as lead discovery. Do not treat search snippets as training truth; video/manual review required."
+    }
+  ]
+}

@@ -8,8 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-system-sans);
+  --font-mono: var(--font-system-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,11 +22,23 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), "PingFang SC", "Hiragino Sans GB",
-    "Microsoft YaHei", sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Source Han Sans SC", "Noto Sans SC", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Source Han Sans SC", "Noto Sans SC", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
 .fresh-grain {
@@ -63,6 +75,20 @@ body {
 
 .text-render-crisp {
   text-rendering: geometricPrecision;
+}
+
+.goodminton-zh .cjk-wrap {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 639px) {
+  .goodminton-zh .cjk-wrap {
+    width: min(300px, calc(100vw - 40px));
+    max-width: min(300px, calc(100vw - 40px)) !important;
+  }
 }
 
 @keyframes fade-up {

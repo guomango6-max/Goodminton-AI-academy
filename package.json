@@ -6,7 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "training:note": "node scripts/create-training-note.mjs",
+    "training:inbox": "node scripts/create-training-note.mjs --inbox",
+    "training:fetch": "node scripts/fetch-external-training-sources.mjs",
+    "training:youtube": "node scripts/fetch-youtube-transcripts.mjs",
+    "training:youtube-audio": "node scripts/fetch-youtube-audio-transcripts.mjs",
+    "articles:hot": "node scripts/fetch-hot-articles.mjs",
+    "articles:hot:dry": "node scripts/fetch-hot-articles.mjs --dry-run",
+    "articles:hot:install-task": "powershell -ExecutionPolicy Bypass -File scripts/install-hot-articles-task.ps1",
+    "qa:hot": "node scripts/fetch-hot-qa-prompts.mjs",
+    "qa:hot:dry": "node scripts/fetch-hot-qa-prompts.mjs --dry-run",
+    "qa:hot:install-task": "powershell -ExecutionPolicy Bypass -File scripts/install-qa-prompts-task.ps1"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.58",

@@ -1,0 +1,24 @@
+{
+  "zh": [
+    {
+      "id": "featured-student-placeholder",
+      "name": "获奖学员展示位",
+      "achievement": "待更新奖项",
+      "season": "2026",
+      "summary": "用于未来展示获奖学员、比赛成绩和成长故事。这里只放公开展示信息，不读取学员私人训练档案。",
+      "image": "/article-learning.png",
+      "status": "placeholder"
+    }
+  ],
+  "en": [
+    {
+      "id": "featured-student-placeholder",
+      "name": "Featured Student Placeholder",
+      "achievement": "Award to be updated",
+      "season": "2026",
+      "summary": "Reserved for award-winning students, competition results, and growth stories. This endpoint only serves public showcase data.",
+      "image": "/article-learning.png",
+      "status": "placeholder"
+    }
+  ]
+}

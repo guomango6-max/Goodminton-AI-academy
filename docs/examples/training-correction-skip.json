@@ -1,0 +1,20 @@
+{
+  "decision": "skip",
+  "skipReason": "比赛新闻，没有明确训练方法或动作纠错价值。",
+  "title": "",
+  "topic": "",
+  "technique": "",
+  "level": "通用",
+  "source": "https://example.com/news",
+  "published": "2026-05-10",
+  "author": "",
+  "summary": "",
+  "coreProblem": "",
+  "commonErrors": [],
+  "causes": [],
+  "corrections": [],
+  "drills": [],
+  "coachCues": [],
+  "standards": [],
+  "tags": []
+}

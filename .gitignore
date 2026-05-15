@@ -48,6 +48,7 @@ next-env.d.ts
 /training-fetch-state.json
 /scripts/training-automation.env.ps1
 /scripts/external-training-sources.json
+/scripts/bin/
 /data/student-review/
 /data/students/*.json
 !/data/students/demo.json

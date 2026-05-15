@@ -8,6 +8,14 @@ function normalizeStudentId(value: unknown) {
   return value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
 }
 
+const STUDENT_LOGIN_ALIASES: Record<string, { studentId: string; accessCode: string }> = {
+  gyw: { studentId: 'guo-yiwei', accessCode: '1122' },
+  lcr: { studentId: 'li-chenrun', accessCode: '2233' },
+  sxy: { studentId: 'sheng-xinyi', accessCode: '3344' },
+  xmj: { studentId: 'xue-meijiao', accessCode: '4455' },
+  yjn: { studentId: 'yang-jingnan', accessCode: '4837' },
+};
+
 function stripPrivateFields(student: Record<string, unknown>) {
   const publicStudent = { ...student };
   delete publicStudent.accessCode;
@@ -18,6 +26,11 @@ function parseStudentData(raw: string) {
   return JSON.parse(raw) as Record<string, unknown>;
 }
 
+const singleStudentCache = new Map<string, Record<string, unknown>>();
+const fileStudentCache = new Map<string, Record<string, unknown>>();
+let envStudentCacheRaw = '';
+let envStudentCache: Record<string, Record<string, unknown>> | Array<Record<string, unknown>> | null = null;
+
 function getStudentFromSingleEnv(studentId: string) {
   const envBase = `GOODMINTON_STUDENT_${studentId.replaceAll('-', '_').toUpperCase()}`;
   const rawGzip = process.env[`${envBase}_GZ_B64`];
@@ -27,9 +40,15 @@ function getStudentFromSingleEnv(studentId: string) {
     return null;
   }
 
+  const cacheKey = rawGzip ? `${studentId}:gz:${rawGzip}` : `${studentId}:b64:${raw}`;
+  const cached = singleStudentCache.get(cacheKey);
+  if (cached) return cached;
+
   try {
     const data = Buffer.from(raw, 'base64');
-    return parseStudentData(rawGzip ? gunzipSync(data).toString('utf8') : data.toString('utf8'));
+    const student = parseStudentData(rawGzip ? gunzipSync(data).toString('utf8') : data.toString('utf8'));
+    singleStudentCache.set(cacheKey, student);
+    return student;
   } catch (error) {
     console.error('[student-data-single-env-parse-error]', error);
     return null;
@@ -46,26 +65,34 @@ function getStudentFromEnv(studentId: string) {
     return null;
   }
 
-  let data: Record<string, Record<string, unknown>> | Array<Record<string, unknown>>;
-
-  try {
-    data = JSON.parse(raw) as Record<string, Record<string, unknown>> | Array<Record<string, unknown>>;
-  } catch (error) {
-    console.error('[student-data-env-parse-error]', error);
-    return null;
+  if (envStudentCacheRaw !== raw || !envStudentCache) {
+    try {
+      envStudentCache = JSON.parse(raw) as Record<string, Record<string, unknown>> | Array<Record<string, unknown>>;
+      envStudentCacheRaw = raw;
+    } catch (error) {
+      envStudentCache = null;
+      envStudentCacheRaw = '';
+      console.error('[student-data-env-parse-error]', error);
+      return null;
+    }
   }
 
-  if (Array.isArray(data)) {
-    return data.find((student) => student.studentId === studentId) || null;
+  if (Array.isArray(envStudentCache)) {
+    return envStudentCache.find((student) => student.studentId === studentId) || null;
   }
 
-  return data[studentId] || null;
+  return envStudentCache[studentId] || null;
 }
 
 async function getStudentFromFile(studentId: string) {
+  const cached = fileStudentCache.get(studentId);
+  if (cached) return cached;
+
   const filePath = join(process.cwd(), 'data', 'students', `${studentId}.json`);
   const raw = await readFile(filePath, 'utf8');
-  return JSON.parse(raw) as Record<string, unknown>;
+  const student = JSON.parse(raw) as Record<string, unknown>;
+  fileStudentCache.set(studentId, student);
+  return student;
 }
 
 export async function POST(req: Request) {
@@ -82,9 +109,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    const student = getStudentFromSingleEnv(studentId) || getStudentFromEnv(studentId) || (await getStudentFromFile(studentId));
+    const alias = STUDENT_LOGIN_ALIASES[studentId];
+    const lookupStudentId = alias?.studentId || studentId;
+    const expectedAccessCode = alias?.accessCode;
+    const student =
+      getStudentFromSingleEnv(lookupStudentId) || getStudentFromEnv(lookupStudentId) || (await getStudentFromFile(lookupStudentId));
 
-    if (student.accessCode !== accessCode) {
+    if ((expectedAccessCode || student.accessCode) !== accessCode) {
       return NextResponse.json({ error: '学员 ID 或访问码不正确。' }, { status: 401 });
     }
 

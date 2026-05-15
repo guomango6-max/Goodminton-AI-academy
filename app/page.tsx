@@ -1,236 +1,475 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ContactFooter from './components/ContactFooter';
 import { useLang } from './components/LangContext';
 
-const copy = {
+type Lang = 'zh' | 'en';
+
+type ArticlePost = {
+  title: string;
+  date: string;
+  category: string;
+  excerpt: string;
+  image: string;
+  href?: string;
+};
+
+const heroFeature: Record<Lang, ArticlePost> = {
   zh: {
-    eyebrow: 'Goodminton Academy',
-    heading: '明德 · 新民 · 至善',
-    intro: '',
-    studentTitle: '我是学员',
-    studentDesc: '输入学员 ID 和访问码，直接进入自己的训练页面。',
-    studentCta: '登录进入',
-    studentIdLabel: '学员 ID',
-    studentIdPlaceholder: '例如 demo',
-    accessCodeLabel: '访问码',
-    accessCodePlaceholder: '由教练提供',
-    loadingStudent: '正在读取...',
-    friendTitle: '我是球友',
-    friendDesc: '聊约球、比赛分析和战术选择，把一次对话变成更清晰的行动。',
-    friendCta: '开始聊天',
-    subtitle: 'AI 教室',
-    philosophyKicker: 'GOOD intentions. MINimal steps. consistent TONe.',
-    philosophyItems: ['梯度向上', '步长变小', '路径积分'],
-    studentMeta: 'Feedback / Training / Lesson',
-    friendMeta: 'Tactics / Match / Play',
-    imageAlt: '旧书墙图片，象征训练知识库和长期积累',
+    title: '开放式学习：人工智能正在改变什么',
+    date: '2026年5月15日',
+    category: '精选',
+    excerpt: 'Goodminton Academy 把教练观察、学员感受、训练动作和比赛片段合在一个入口里。重点不是把内容写得更多，而是让每个纠错点都能被下一次训练继续使用。',
+    image: '/badminton-hero.png',
   },
   en: {
-    eyebrow: 'Goodminton Academy',
-    heading: 'Clearer, kinder, more useful badminton coaching.',
-    intro: 'Choose an entry point to share training feedback or start a focused conversation about technique, tactics, and lessons.',
-    studentTitle: "I'm a Student",
-    studentDesc: 'Enter your student ID and access code to open your training page directly.',
-    studentCta: 'Log in',
-    studentIdLabel: 'Student ID',
-    studentIdPlaceholder: 'e.g. demo',
-    accessCodeLabel: 'Access code',
-    accessCodePlaceholder: 'Provided by coach',
-    loadingStudent: 'Loading...',
-    friendTitle: "I'm a Player",
-    friendDesc: 'Talk games, match analysis, and tactical choices, then turn the conversation into clearer action.',
-    friendCta: 'Start chatting',
-    subtitle: 'AI Coach',
-    philosophyKicker: 'Goodminton',
-    philosophyItems: ['Upward gradient', 'smaller steps', 'path integration'],
-    studentMeta: 'Feedback / Training / Lesson',
-    friendMeta: 'Tactics / Match / Play',
-    imageAlt: 'Old books on shelves, suggesting a training knowledge base and long-term accumulation',
+    title: 'Open learning: what artificial intelligence is changing',
+    date: 'May 15, 2026',
+    category: 'Featured story',
+    excerpt: 'AI is not a replacement for the coach. It connects lesson observation, post-training review, and the next practice focus.',
+    image: '/article-chat.png',
   },
 };
+
+const posts: Record<Lang, ArticlePost[]> = {
+  zh: [
+    {
+      title: '接杀防守怎么练：挡网、抽挡和挑后场的选择',
+      date: '2026年5月16日',
+      category: '接杀防守',
+      excerpt: '接杀不是把球挡回去就结束，而是根据对手站位、来球速度和搭档位置，决定下一拍是挡网、抽挡还是挑后场。',
+      image: '/article-megaphone.svg',
+    },
+    {
+      title: '2026夏训怎么安排：从兴趣营到可追踪训练',
+      date: '2026年5月15日',
+      category: '青少年训练',
+      excerpt: '近期多个羽毛球夏令营都强调结构化训练、分龄分级和比赛练习，适合整理成可复盘的暑期训练路径。',
+      image: '/article-free.svg',
+    },
+    {
+      title: 'AI能看懂挥拍吗：业余训练反馈的新入口',
+      date: '2026年5月14日',
+      category: 'AI训练',
+      excerpt: '近期可穿戴设备与挥拍评估研究正在把“教练看动作”变成更细颗粒度的数据反馈，适合转化为课后复盘工具。',
+      image: '/article-megaphone.svg',
+    },
+  ],
+  en: [
+    {
+      title: 'Smash defence choices: block, drive, or lift',
+      date: 'May 16, 2026',
+      category: 'Smash defence',
+      excerpt: 'Smash defence is not just getting the shuttle back. Choose block, drive, or lift based on opponent shape, speed, and partner position.',
+      image: '/article-megaphone.svg',
+    },
+    {
+      title: '2026 summer training: from camp energy to trackable progress',
+      date: 'May 15, 2026',
+      category: 'Youth training',
+      excerpt: 'Recent badminton summer programs highlight structured coaching, age grouping, skill levels, and match play that can become a reviewable training path.',
+      image: '/article-free.svg',
+    },
+    {
+      title: 'Can AI read a badminton stroke? A new feedback layer for amateur players',
+      date: 'May 14, 2026',
+      category: 'AI coaching',
+      excerpt: 'Recent wearable and stroke-evaluation work points toward finer feedback after training, especially for players without constant expert coaching.',
+      image: '/article-megaphone.svg',
+    },
+  ],
+};
+
+const copy = {
+  zh: {
+    brand: 'Goodminton Academy',
+    nav: [
+      ['新闻', '#articles'],
+      ['技术', '#articles'],
+      ['学员', '#student-portal'],
+      ['教练', '#coach'],
+    ],
+    bookTraining: '预约训练',
+    heroKicker: '成人与青少年羽毛球训练',
+    title: 'Goodminton Academy',
+    mission: '让热爱有方向，进步有反馈，成长有路径。',
+    heroAlt: '羽毛球和战术箭头组成的 Goodminton Academy 训练视觉',
+    primaryCta: '联系教练',
+    secondaryCta: '进入问答 QA',
+    studentTitle: '学员入口',
+    studentDesc: '输入教练给你的学员凭证，进入自己的训练页面。',
+    studentIdLabel: '学员凭证',
+    studentIdPlaceholder: '请键入学生ID或demo',
+    studentCta: '进入',
+    loadingStudent: '正在读取...',
+    validatingStudent: '正在验证凭证...',
+    openingStudent: '正在进入学员图谱...',
+    emptyStudent: '请输入学员凭证。',
+    timeoutStudent: '读取超时，请检查网络后重试。',
+    articlesKicker: '训练文章',
+    articlesTitle: '训练栏目',
+    articlesDesc: '用短文章记录技术、战术、反馈和复盘，让每一次训练都能被下一次继续使用。',
+    readMore: 'Read more',
+    coachKicker: '教练',
+    coachName: '芒果教练',
+    coachDesc: '用清晰的训练目标、可追踪的反馈和可复盘的成长路径，帮助学员把热爱变成稳定进步。',
+    coachPoints: ['技术诊断', '训练计划', '比赛复盘'],
+    qaTitle: '体验运动领域最优秀的AI驱动工具。',
+    qaDesc: '把训练问题、比赛选择和课堂反馈放进一次清晰对话里。',
+    qaCta: '打开问答 QA',
+    qaStudent: '学员入口',
+    qaFriend: 'AI答疑',
+    qaFeedback: '训练反馈',
+    featuredAlt: '羽毛球和战术箭头组成的 Goodminton Academy 博客封面',
+    featuredTitle: '用 AI 训练档案，把一次课变成长期进步',
+    featuredReadMore: '继续阅读',
+  },
+  en: {
+    brand: 'Goodminton Academy',
+    nav: [
+      ['News', '#articles'],
+      ['Technique', '#articles'],
+      ['Students', '#student-portal'],
+      ['Coaches', '#coach'],
+    ],
+    bookTraining: 'Book training',
+    heroKicker: 'Badminton training for adults and teens',
+    title: 'Goodminton Academy',
+    mission: 'GOOD intentions. Minimal steps. Consistent tone.',
+    heroAlt: 'Goodminton Academy training visual with a shuttle and tactical arrows',
+    primaryCta: 'Contact coach',
+    secondaryCta: 'Open Q&A',
+    studentTitle: 'Student portal',
+    studentDesc: 'Open your training page.',
+    studentIdLabel: 'Student credential',
+    studentIdPlaceholder: 'Enter demo or student ID',
+    studentCta: 'Enter',
+    loadingStudent: 'Loading...',
+    validatingStudent: 'Checking credential...',
+    openingStudent: 'Opening student map...',
+    emptyStudent: 'Please enter your student credential.',
+    timeoutStudent: 'Request timed out. Please check your connection and try again.',
+    articlesKicker: 'Training notes',
+    articlesTitle: 'Clear methods for better practice',
+    articlesDesc: 'Short notes on technique, tactics, feedback, and review so each session carries into the next.',
+    readMore: 'Read more',
+    coachKicker: 'Coach',
+    coachName: 'Coach Mango',
+    coachDesc:
+      'Clear training goals, trackable feedback, and reviewable growth paths help players turn passion into steady progress.',
+    coachPoints: ['Technique diagnosis', 'Training plan', 'Match review'],
+    qaTitle: 'Experience the best AI-powered tool for sports training.',
+    qaDesc: 'Turn training questions, match choices, and lesson feedback into one focused conversation.',
+    qaCta: 'Open Q&A',
+    qaStudent: 'Student portal',
+    qaFriend: 'AI Q&A',
+    qaFeedback: 'Training feedback',
+    featuredAlt: 'Goodminton Academy blog cover with a shuttle and tactical arrows',
+    featuredTitle: 'Use AI training records to turn one lesson into long-term progress',
+    featuredReadMore: 'Continue reading',
+  },
+};
+
+function MangoLogo() {
+  return (
+    <span
+      className="flex h-11 w-11 items-center justify-center rounded-[10px] border border-[#bdebd8] bg-[linear-gradient(135deg,#e9fbf3,#ffffff)] shadow-[0_1px_0_rgba(255,255,255,0.9)_inset]"
+      aria-hidden="true"
+    >
+      <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+        <path
+          d="M9.8 34.5C7.7 17.5 13.6 7.4 22.1 16.1c5.1 5.2 8.5 13.5 9.9 16.1 1.4-2.6 4.8-10.9 9.9-16.1 8.5-8.7 14.4 1.4 12.3 18.4-2.1 17-10.5 25.3-17.4 17.1-2.5-3-3.9-6.5-4.8-9.1-.9 2.6-2.3 6.1-4.8 9.1-6.9 8.2-15.3-.1-17.4-17.1Z"
+          stroke="#bdebd8"
+          strokeWidth="7.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M9.8 34.5C7.7 17.5 13.6 7.4 22.1 16.1c5.1 5.2 8.5 13.5 9.9 16.1 1.4-2.6 4.8-10.9 9.9-16.1 8.5-8.7 14.4 1.4 12.3 18.4-2.1 17-10.5 25.3-17.4 17.1-2.5-3-3.9-6.5-4.8-9.1-.9 2.6-2.3 6.1-4.8 9.1-6.9 8.2-15.3-.1-17.4-17.1Z"
+          stroke="#14bf96"
+          strokeWidth="4.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function MissionText({ lang }: { lang: 'zh' | 'en' }) {
+  if (lang === 'zh') {
+    return <>让热爱有方向，进步有反馈，成长有路径。</>;
+  }
+
+  return (
+    <>
+      <strong className="font-semibold text-[#0e6f4d]">GOOD</strong> intentions.{' '}
+      <strong className="font-semibold text-[#0e6f4d]">MIN</strong>imal steps. Consistent{' '}
+      <strong className="font-semibold text-[#0e6f4d]">TON</strong>e.
+    </>
+  );
+}
 
 export default function Home() {
   const { lang, toggle } = useLang();
   const t = copy[lang];
+  const featured = heroFeature[lang];
+  const [articlePosts, setArticlePosts] = useState<Record<Lang, ArticlePost[]>>(posts);
+  const articleList = articlePosts[lang];
   const router = useRouter();
   const [studentId, setStudentId] = useState('');
-  const [accessCode, setAccessCode] = useState('');
   const [studentError, setStudentError] = useState('');
+  const [studentStatus, setStudentStatus] = useState('');
   const [studentLoading, setStudentLoading] = useState(false);
 
-  async function handleStudentLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadArticles() {
+      try {
+        const response = await fetch('/api/articles');
+        const payload = (await response.json()) as Partial<Record<Lang, ArticlePost[]>>;
+
+        if (response.ok && payload.zh?.length && payload.en?.length && isMounted) {
+          setArticlePosts({ zh: payload.zh.slice(0, 3), en: payload.en.slice(0, 3) });
+        }
+      } catch {
+        // Keep the built-in fallback posts if local article loading fails.
+      }
+    }
+
+    void loadArticles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function parseStudentCredential(value: string) {
+    const credential = value.trim().toLowerCase();
+    if (credential === 'demo') {
+      return { studentId: 'demo', accessCode: '1234' };
+    }
+    const matchedAccessCode = credential.match(/-(\d{3,})$/);
+    if (matchedAccessCode) {
+      return {
+        studentId: credential.slice(0, -matchedAccessCode[0].length),
+        accessCode: matchedAccessCode[1],
+      };
+    }
+    return { studentId: credential, accessCode: '' };
+  }
+
+  async function loginStudent(rawCredential: string) {
+    if (studentLoading) return;
+
+    const trimmedCredential = rawCredential.trim();
+    if (!trimmedCredential) {
+      setStudentError(t.emptyStudent);
+      setStudentStatus('');
+      return;
+    }
+
     setStudentError('');
+    setStudentStatus(t.validatingStudent);
     setStudentLoading(true);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
 
     try {
+      const credential = parseStudentCredential(trimmedCredential);
       const response = await fetch('/api/student-data', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ studentId, accessCode }),
+        body: JSON.stringify(credential),
+        signal: controller.signal,
       });
-      const payload = (await response.json()) as { student?: unknown; error?: string };
+      const payload = (await response.json().catch(() => ({}))) as { student?: unknown; error?: string };
 
       if (!response.ok || !payload.student) {
         throw new Error(payload.error || (lang === 'zh' ? '读取失败。' : 'Failed to load student data.'));
       }
 
+      setStudentStatus(t.openingStudent);
       window.sessionStorage.setItem('goodminton-student-current', JSON.stringify(payload.student));
       router.push('/student');
     } catch (requestError) {
       setStudentError(
-        requestError instanceof Error
-          ? requestError.message
-          : lang === 'zh'
-            ? '读取失败。'
-            : 'Failed to load student data.',
+        requestError instanceof DOMException && requestError.name === 'AbortError'
+          ? t.timeoutStudent
+          : requestError instanceof Error
+            ? requestError.message
+            : lang === 'zh'
+              ? '读取失败。'
+              : 'Failed to load student data.',
       );
+      setStudentStatus('');
     } finally {
+      window.clearTimeout(timeout);
       setStudentLoading(false);
     }
   }
 
-  return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f1f2f4] text-slate-900">
-      {/* ambient background — court grid + soft tint */}
-      <div className="court-lines-light pointer-events-none absolute inset-0 opacity-70" />
-      <div className="pointer-events-none absolute -left-32 top-40 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 bottom-20 h-80 w-80 rounded-full bg-lime-200/40 blur-3xl" />
+  async function handleStudentLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await loginStudent(studentId);
+  }
 
-      <header className="fixed top-4 left-0 right-0 z-50 animate-fade-up">
-        <div className="mx-auto flex w-[min(1120px,calc(100%-24px))] items-center gap-3 rounded-2xl border border-black/8 bg-white/70 px-4 py-3 backdrop-blur-xl shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)]">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-700/30 bg-emerald-700/8">
-            <span className="text-base font-semibold text-emerald-800">G</span>
+  return (
+    <div className={`min-h-screen overflow-x-hidden bg-[#fbfaf6] text-[#21242c] ${lang === 'zh' ? 'goodminton-zh' : ''}`}>
+      <header className="sticky top-0 z-40 border-b border-[#e6e1d4] bg-[#fbfaf6]/92 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-[1180px] items-center gap-5 px-5 py-4">
+          <Link href="/" className="flex min-w-0 items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#14bf96]">
+            <MangoLogo />
+            <span className="truncate text-[17px] font-medium tracking-[-0.005em] text-[#121212]">{t.brand}</span>
+          </Link>
+          <nav className="ml-3 hidden items-center gap-7 text-[14px] font-medium text-[#4f5961] lg:flex" aria-label="Primary navigation">
+            {t.nav.map(([label, href]) => (
+              <a key={label} href={href} className="transition-colors hover:text-[#121212] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#14bf96]">
+                {label}
+              </a>
+            ))}
+          </nav>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggle}
+              className="h-10 shrink-0 rounded-[8px] border border-[#d8d0bf] bg-white px-3 text-sm font-semibold text-[#40525b] transition-colors hover:border-[#9fb7a7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14bf96]"
+            >
+              {lang === 'zh' ? 'EN' : '中文'}
+            </button>
+            <a
+              href="https://wa.me/358413134358"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden h-10 items-center rounded-[8px] bg-[#14bf96] px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-18px_rgba(20,191,150,0.8)] transition-colors hover:bg-[#10a985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14bf96] sm:inline-flex"
+            >
+              {t.bookTraining}
+            </a>
           </div>
-          <div>
-            <h1 className="text-base font-semibold tracking-tight text-slate-900">Goodminton Academy</h1>
-            <p className="text-xs text-slate-500">{t.subtitle}</p>
-          </div>
-          <button
-            onClick={toggle}
-            className="ml-auto h-9 rounded-md border border-black/10 bg-white/60 px-3 text-sm font-medium text-slate-700 transition-colors hover:border-emerald-700/40 hover:text-emerald-800"
-          >
-            {lang === 'zh' ? 'EN' : '中文'}
-          </button>
         </div>
       </header>
 
-      <main className="relative mx-auto w-full max-w-6xl px-3 pb-10 pt-24 sm:px-5">
-        <section className="grid min-h-[calc(100vh-7rem)] grid-cols-1 gap-4 md:grid-cols-12 md:grid-rows-6">
-          <div className="card-hover-light animate-fade-up delay-1 relative overflow-hidden rounded-3xl border border-black/8 bg-gradient-to-br from-white via-white to-emerald-50/60 p-7 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)] md:col-span-8 md:row-span-4 md:p-10">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-emerald-300/30 blur-3xl" />
-            <div className="pointer-events-none absolute right-8 top-8 text-emerald-700/40" aria-hidden>
-              <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-                <circle cx="14" cy="42" r="6" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M18 38 L46 12 M22 36 L48 16 M16 32 L42 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                <path d="M44 10 L50 6 M46 14 L52 10 M40 8 L46 4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.7" />
-              </svg>
+      <main>
+        <section id="student-portal" className="mx-auto grid w-full max-w-[1180px] scroll-mt-20 gap-10 px-5 pb-10 pt-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:pb-12 lg:pt-14">
+          <div className="min-w-0">
+            <h1 className="max-w-[820px] text-[44px] font-medium leading-[1.05] tracking-[-0.018em] text-[#101820] sm:text-[62px]">
+              {t.title}
+            </h1>
+            <p className="cjk-wrap mt-6 max-w-[720px] text-[18px] leading-8 text-[#52636b]">
+              <MissionText lang={lang} />
+            </p>
+
+            <div className="mt-10 border-t border-[#e0dacb] pt-10">
+              <article className="grid gap-7 lg:grid-cols-[410px_minmax(0,1fr)] lg:items-center">
+                <div className="relative aspect-[16/9] overflow-hidden rounded-[8px] bg-[#b9c6a3]">
+                  <Image src={featured.image} alt={t.featuredAlt} fill sizes="(min-width: 1024px) 410px, 100vw" className="object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-[#16845f]">{featured.category}</p>
+                  <h2 className="cjk-wrap mt-4 max-w-[520px] text-[32px] font-semibold leading-tight tracking-[-0.015em] text-[#101820]">
+                    {t.featuredTitle}
+                  </h2>
+                  <p className="mt-3 text-[14px] font-semibold text-[#64737a]">{featured.date}</p>
+                  <p className="cjk-wrap mt-5 max-w-[520px] text-[16px] leading-8 text-[#52636b]">{featured.excerpt}</p>
+                  <a
+                    href="#articles"
+                    className="mt-6 inline-flex h-10 items-center gap-2 rounded-[6px] border border-[#cfe8d9] bg-white px-4 text-[14px] font-semibold text-[#1f4a38] transition-colors hover:border-[#14bf96]"
+                  >
+                    {t.featuredReadMore}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </div>
+              </article>
             </div>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-800">{t.eyebrow}</p>
-            <h2
-              className={`mt-4 max-w-2xl font-semibold leading-[1.1] text-slate-900 ${
-                lang === 'zh' ? 'hero-zh text-4xl sm:text-6xl tracking-wide' : 'text-4xl sm:text-6xl'
-              }`}
+          </div>
+
+          <aside className="space-y-6 lg:pt-14">
+            <form
+              onSubmit={handleStudentLogin}
+              className="border-t border-[#d8d0bf] pt-7"
             >
-              {t.heading}
-            </h2>
-            <div className="mt-8 inline-grid grid-cols-3 gap-x-8 gap-y-2 text-emerald-800">
-              <p className="text-[11px] font-medium uppercase tracking-[0.22em]">
-                <strong className="font-semibold">GOOD</strong> intentions
-              </p>
-              <p className="text-[11px] font-medium uppercase tracking-[0.22em]">
-                <strong className="font-semibold">MIN</strong>imal steps
-              </p>
-              <p className="text-[11px] font-medium uppercase tracking-[0.22em]">
-                consistent <strong className="font-semibold">TON</strong>e
-              </p>
-              {t.philosophyItems.map((item) => (
-                <p
-                  key={item}
-                  className={`text-sm font-medium ${lang === 'zh' ? 'tracking-[0.18em]' : 'tracking-normal'}`}
-                >
-                  {item}
-                </p>
-              ))}
-            </div>
-          </div>
-
-          <div className="animate-fade-up delay-2 group relative overflow-hidden rounded-3xl border border-black/8 bg-white shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)] md:col-span-4 md:row-span-4">
-            <Image
-              src="/wiki-life-hero.jpg"
-              alt={t.imageAlt}
-              width={2048}
-              height={1110}
-              priority
-              className="h-full min-h-[280px] w-full object-cover transition-all duration-700 group-hover:scale-105"
-            />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent" />
-          </div>
-
-          <form
-            onSubmit={handleStudentLogin}
-            className="card-hover-light animate-fade-up delay-3 group relative overflow-hidden rounded-3xl border border-black/8 bg-white p-6 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.15)] md:col-span-6 md:row-span-2"
-          >
-            <div className="pointer-events-none absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-emerald-200/0 blur-2xl transition-all duration-500 group-hover:bg-emerald-200/60" />
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{t.studentMeta}</p>
-            <h3 className="mt-4 text-2xl font-semibold text-slate-900">{t.studentTitle}</h3>
-            <p className="mt-3 max-w-md text-sm leading-7 text-slate-600">{t.studentDesc}</p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-              <label className="block text-xs font-medium text-slate-600">
-                {t.studentIdLabel}
+              <label className="block text-[13px] font-semibold text-[#40525b]">
+                <span className="sr-only">{t.studentIdLabel}</span>
                 <input
                   value={studentId}
-                  onChange={(event) => setStudentId(event.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none transition-colors focus:border-emerald-700 focus:bg-white"
+                  onChange={(event) => {
+                    setStudentId(event.target.value);
+                    setStudentError('');
+                    setStudentStatus('');
+                  }}
+                  className="mt-2 h-12 w-full rounded-[8px] border border-[#cfe8d9] bg-white px-3 text-[15px] text-[#101820] outline-none transition-colors placeholder:text-[#8a969b] focus:border-[#14bf96] focus:ring-2 focus:ring-[#14bf96]/20"
                   placeholder={t.studentIdPlaceholder}
                   autoComplete="username"
-                />
-              </label>
-              <label className="block text-xs font-medium text-slate-600">
-                {t.accessCodeLabel}
-                <input
-                  value={accessCode}
-                  onChange={(event) => setAccessCode(event.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none transition-colors focus:border-emerald-700 focus:bg-white"
-                  placeholder={t.accessCodePlaceholder}
-                  type="password"
-                  autoComplete="current-password"
+                  autoCapitalize="none"
+                  spellCheck={false}
                 />
               </label>
               <button
                 type="submit"
-                disabled={studentLoading}
-                className="mt-5 h-10 rounded-md border border-emerald-700/30 bg-emerald-700/8 px-4 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-700 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:mt-[22px]"
+                disabled={studentLoading || !studentId.trim()}
+                className="mt-3 h-12 w-full rounded-[8px] bg-[#d8e8dc] px-4 text-[15px] font-semibold text-[#527364] transition-colors hover:bg-[#cbe2d3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14bf96] disabled:cursor-not-allowed disabled:bg-[#d8e8dc] disabled:text-[#768c7d]"
               >
                 {studentLoading ? t.loadingStudent : t.studentCta}
               </button>
-            </div>
-            {studentError ? <div className="mt-3 text-sm text-red-600">{studentError}</div> : null}
-          </form>
+              {studentStatus ? <p className="mt-3 text-[14px] text-[#64737a]">{studentStatus}</p> : null}
+              {studentError ? <p className="mt-3 text-[14px] text-[#b42318]">{studentError}</p> : null}
+            </form>
 
-          <Link
-            href="/friend"
-            className="card-hover-light animate-fade-up delay-4 group relative overflow-hidden rounded-3xl border border-black/8 bg-white p-6 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.15)] md:col-span-6 md:row-span-2"
-          >
-            <div className="pointer-events-none absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-lime-200/0 blur-2xl transition-all duration-500 group-hover:bg-lime-200/60" />
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{t.friendMeta}</p>
-            <h3 className="mt-4 text-2xl font-semibold text-slate-900">{t.friendTitle}</h3>
-            <p className="mt-3 max-w-md text-sm leading-7 text-slate-600">{t.friendDesc}</p>
-            <div className="mt-6 inline-flex items-center gap-2 rounded-md border border-black/10 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-colors group-hover:border-emerald-700/30 group-hover:text-emerald-800">
-              {t.friendCta}
-              <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-            </div>
-          </Link>
-
+            <section className="rounded-[8px] border border-[#dfe7dc] bg-white p-5 shadow-[0_18px_40px_-32px_rgba(18,18,18,0.28)]">
+              <MangoLogo />
+              <h2 className="mt-5 text-[25px] font-semibold leading-tight tracking-[-0.01em] text-[#101820]">
+                {lang === 'zh' ? (
+                  <>
+                    体验运动领域最优秀的<span className="whitespace-nowrap">AI</span>驱动工具。
+                  </>
+                ) : (
+                  t.qaTitle
+                )}
+              </h2>
+              <div className="mt-6 grid gap-3">
+                <Link href="/friend" className="inline-flex h-11 items-center justify-center rounded-[6px] bg-[#dff4ea] px-4 text-[14px] font-semibold text-[#1f4a38] transition-colors hover:bg-[#cbeedd]">
+                  {t.qaFriend}
+                </Link>
+              </div>
+            </section>
+          </aside>
         </section>
+
+        <section id="articles" className="border-y border-[#e6e1d4] bg-white/55 pb-20 pt-8">
+          <div className="mx-auto w-full max-w-[1180px] px-5">
+            <h2 className="text-[28px] font-semibold leading-tight tracking-[-0.015em] text-[#101820]">{t.articlesTitle}</h2>
+
+            <div className="mt-8 grid gap-7 md:grid-cols-3">
+              {articleList.map((post) => (
+                <article
+                  key={post.title}
+                  className="border-t border-[#d8d0bf] pt-6"
+                >
+                  <p className="text-[13px] font-semibold text-[#16845f]">{post.category}</p>
+                  <h3 className="cjk-wrap mt-4 text-[24px] font-semibold leading-tight tracking-[-0.01em] text-[#101820]">
+                    {post.title}
+                  </h3>
+                  <p className="mt-3 text-[13px] font-semibold text-[#64737a]">{post.date}</p>
+                  <p className="cjk-wrap mt-5 text-[16px] leading-7 text-[#52636b]">{post.excerpt}</p>
+                  <a href={post.href || '#student-portal'} className="mt-5 inline-flex text-[14px] font-semibold text-[#16845f] hover:text-[#0e5a40]">
+                    {lang === 'zh' ? '继续阅读' : t.readMore}
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
       </main>
 
-      <ContactFooter lang={lang} />
+      <div id="coach" className="scroll-mt-20">
+        <ContactFooter lang={lang} />
+      </div>
     </div>
   );
 }

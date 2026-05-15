@@ -126,6 +126,28 @@ type StudentDraft = {
   };
 };
 
+type StudentSubmissionLog = {
+  id: string;
+  studentId: string;
+  studentName: string;
+  submittedAt: string;
+  lessonSummary: {
+    date?: string;
+    title?: string;
+    studentReflection: string;
+    question: string;
+    confidence: number;
+    completedHomework: string[];
+  };
+  matchReview: {
+    match: string;
+    score: string;
+    whatWorked: string;
+    nextAdjustment: string;
+    experience: string;
+  };
+};
+
 function readStudentDraft(key: string): StudentDraft | null {
   if (typeof window === 'undefined') {
     return null;
@@ -142,6 +164,26 @@ function readStudentDraft(key: string): StudentDraft | null {
   } catch {
     window.localStorage.removeItem(key);
     return null;
+  }
+}
+
+function readStudentSubmissionLogs(key: string): StudentSubmissionLog[] {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  const savedLogs = window.localStorage.getItem(key);
+
+  if (!savedLogs) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(savedLogs);
+    return Array.isArray(parsed) ? (parsed as StudentSubmissionLog[]) : [];
+  } catch {
+    window.localStorage.removeItem(key);
+    return [];
   }
 }
 
@@ -170,8 +212,8 @@ function Pill({ children, active }: { children: React.ReactNode; active?: boolea
       className={
         'rounded-full border px-3 py-1.5 text-xs font-medium ' +
         (active
-          ? 'border-emerald-700 bg-emerald-50 text-emerald-800'
-          : 'border-slate-200 bg-white text-slate-600')
+          ? 'border-[#14bf96] bg-[#e9fbf3] text-[#0e6f4d]'
+          : 'border-[#dfe7dc] bg-white text-slate-600')
       }
     >
       {children}
@@ -179,12 +221,12 @@ function Pill({ children, active }: { children: React.ReactNode; active?: boolea
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3">
+    <section id={id} className="scroll-mt-6 overflow-hidden rounded-lg border border-[#dfe7dc] bg-[#fffdf8] shadow-sm">
+      <div className="flex items-center justify-between border-b border-[#dfe7dc] bg-[#f4f8f1] px-5 py-3">
         <div className="text-sm font-semibold text-slate-900">{title}</div>
-        <div className="text-xs text-slate-500">学员数据</div>
+        <div className="text-xs text-[#16845f]">学员数据</div>
       </div>
       <div className="p-5">
         {children}
@@ -195,9 +237,82 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ProgressBar({ value }: { value: number }) {
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-      <div className="h-full rounded-full bg-[#7e9be8]" style={{ width: `${value}%` }} />
+    <div className="h-2 w-full overflow-hidden rounded-full bg-[#dff5e9]">
+      <div className="h-full rounded-full bg-[#16845f]" style={{ width: `${value}%` }} />
     </div>
+  );
+}
+
+function GoodmintonMark() {
+  return (
+    <div className="flex h-11 w-11 items-center justify-center rounded-[8px] border border-[#bdebd8] bg-[linear-gradient(135deg,#e9fbf3,#ffffff)] shadow-[0_1px_0_rgba(255,255,255,0.9)_inset]">
+      <svg width="32" height="32" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path
+          d="M9.8 34.5C7.7 17.5 13.6 7.4 22.1 16.1c5.1 5.2 8.5 13.5 9.9 16.1 1.4-2.6 4.8-10.9 9.9-16.1 8.5-8.7 14.4 1.4 12.3 18.4-2.1 17-10.5 25.3-17.4 17.1-2.5-3-3.9-6.5-4.8-9.1-.9 2.6-2.3 6.1-4.8 9.1-6.9 8.2-15.3-.1-17.4-17.1Z"
+          stroke="#bdebd8"
+          strokeWidth="7.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M9.8 34.5C7.7 17.5 13.6 7.4 22.1 16.1c5.1 5.2 8.5 13.5 9.9 16.1 1.4-2.6 4.8-10.9 9.9-16.1 8.5-8.7 14.4 1.4 12.3 18.4-2.1 17-10.5 25.3-17.4 17.1-2.5-3-3.9-6.5-4.8-9.1-.9 2.6-2.3 6.1-4.8 9.1-6.9 8.2-15.3-.1-17.4-17.1Z"
+          stroke="#14bf96"
+          strokeWidth="4.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
+function StudentSideNav({ student }: { student: StudentData }) {
+  const items = [
+    ['O', '总览'],
+    ['C', '当前任务'],
+    ['A', '个人能力'],
+    ['B', '成就勋章'],
+    ['L', '训练记录'],
+    ['R', '比赛复盘'],
+  ];
+
+  return (
+    <aside className="sticky top-0 grid h-screen grid-rows-[auto_1fr_auto] border-r border-[#e6e1d4] bg-[#fbfaf6]/95 max-lg:static max-lg:h-auto">
+      <div className="grid min-h-32 content-center gap-3 border-b border-[#e6e1d4] p-5">
+        <GoodmintonMark />
+        <div>
+          <h1 className="text-xl font-semibold leading-tight tracking-[-0.015em] text-slate-950">
+            {student.name}
+            <br />
+            学员图谱
+          </h1>
+          <p className="mt-1 text-xs text-slate-500">Goodminton progress system</p>
+        </div>
+      </div>
+      <nav className="py-2 max-lg:grid max-lg:grid-cols-3 max-sm:grid-cols-2">
+        {items.map(([icon, label], index) => (
+          <a
+            key={label}
+            href={`#student-section-${index}`}
+            className={
+              'grid grid-cols-[34px_1fr] items-center gap-2 border-l-4 px-5 py-3 text-sm font-semibold transition ' +
+              (index === 0
+                ? 'border-[#14bf96] bg-[#e9fbf3] text-[#0e6f4d]'
+                : 'border-transparent text-slate-500 hover:bg-[#f4f8f1]')
+            }
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-lg bg-white text-[11px] text-[#16845f]">{icon}</span>
+            <span>{label}</span>
+          </a>
+        ))}
+      </nav>
+      <div className="flex items-center justify-between border-t border-[#e6e1d4] p-5 text-sm text-slate-500">
+        <span className="grid h-7 w-7 place-items-center rounded-full bg-[#dff5e9] font-semibold text-[#0e6f4d]">
+          {student.name.slice(0, 1)}
+        </span>
+        <span>{student.studentId}</span>
+      </div>
+    </aside>
   );
 }
 
@@ -240,28 +355,129 @@ function displayRank(level: string, progress: number) {
   return '青铜';
 }
 
+const CANONICAL_ABILITY = [
+  { label: '技术', value: 6 },
+  { label: '步法', value: 6 },
+  { label: '战术', value: 5 },
+  { label: '身体', value: 6 },
+  { label: '心理', value: 7 },
+  { label: '态度', value: 7 },
+];
+
+const MINDMAP_SKILLS = [
+  {
+    group: '技术',
+    level: 6,
+    nodes: [
+      { label: '发接发', level: 5, leaves: [['发小区', 5], ['发平高', 4], ['搓放', 4], ['推压', 5], ['切抹', 3], ['防偷后场', 4]] },
+      { label: '前场', level: 4, leaves: [['搓放', 4], ['勾对角', 3], ['扑杀', 4], ['封网', 5], ['挡网', 4], ['前场第二拍', 4]] },
+      { label: '后场', level: 6, leaves: [['正手高远球', 6], ['正手平高球', 5], ['正手劈吊', 4], ['正手滑板', 3], ['正手杀球', 5], ['正手软压', 4], ['正手点杀', 4], ['头顶高远球', 5], ['头顶平高球', 4], ['头顶滑板吊球', 3], ['头顶劈吊', 4], ['头顶杀球', 4], ['反手高远球', 3], ['反手劈吊', 2], ['反手滑板吊', 2], ['反手抽球', 4]] },
+      { label: '中场', level: 5, leaves: [['平抽', 5], ['挡网', 4], ['反抽', 4], ['推压', 5], ['拦截', 4], ['腰部带动', 4]] },
+    ],
+  },
+  {
+    group: '步法',
+    level: 6,
+    nodes: [
+      { label: '启动', level: 5 },
+      { label: '移动', level: 5, leaves: [['交叉步', 5], ['并步', 5], ['垫步', 4], ['蹬跨步', 5], ['跳腾步', 3], ['中国跳', 3], ['马来步', 3], ['李矛步', 2], ['双脚跳', 4]] },
+      { label: '衔接', level: 4 },
+      { label: '调整', level: 4 },
+      { label: '确认', level: 3 },
+      { label: '回动', level: 4 },
+    ],
+  },
+  {
+    group: '战术',
+    level: 5,
+    nodes: [
+      { label: '空间战术', level: 5 },
+      { label: '时间战术', level: 4 },
+      { label: '节奏战术', level: 4 },
+      { label: '线路战术', level: 4 },
+      { label: '对人战术', level: 3 },
+      { label: '阵型战术', level: 3 },
+    ],
+  },
+  {
+    group: '身体',
+    level: 6,
+    nodes: [
+      { label: '力量', level: 5 },
+      { label: '速度', level: 4 },
+      { label: '敏捷', level: 4 },
+      { label: '耐力', level: 4 },
+      { label: '平衡', level: 5 },
+      { label: '协调', level: 5 },
+    ],
+  },
+  {
+    group: '心理',
+    level: 7,
+    nodes: [
+      { label: '抗压能力', level: 6 },
+      { label: '恢复速度', level: 5 },
+      { label: '平静沟通', level: 5 },
+      { label: '专注保持', level: 5 },
+      { label: '决策勇气', level: 4 },
+      { label: '复盘诚实', level: 5 },
+    ],
+  },
+  {
+    group: '态度',
+    level: 7,
+    nodes: [
+      { label: '反馈具体', level: 6 },
+      { label: '愿意试错', level: 6 },
+      { label: '训练自觉', level: 5 },
+      { label: '认真负责', level: 6 },
+      { label: '准时完成', level: 5 },
+      { label: '主动沟通', level: 5 },
+    ],
+  },
+];
+
+function normalizeAbilityItems(items: Array<{ label: string; value: number }>) {
+  const hasPercentScale = items.some((item) => item.value > 8);
+  if (hasPercentScale) return CANONICAL_ABILITY;
+
+  const aliases = new Map(items.map((item) => [item.label === '比赛' ? '态度' : item.label, item.value]));
+  return CANONICAL_ABILITY.map((item) => ({
+    label: item.label,
+    value: Math.min(8, Math.max(1, Math.round(aliases.get(item.label) || item.value))),
+  }));
+}
+
 function AbilityHex({ items }: { items: Array<{ label: string; value: number }> }) {
-  const center = 100;
-  const maxRadius = 82;
-  const points = items.map((item, index) => {
+  const normalized = normalizeAbilityItems(items);
+  const center = 120;
+  const maxRadius = 74;
+  const labelRadius = 105;
+  const points = normalized.map((item, index) => {
     const angle = (-90 + index * 60) * (Math.PI / 180);
-    const level = Math.min(8, Math.max(1, item.value));
-    const radius = maxRadius * (level / 8);
+    const radius = maxRadius * (item.value / 8);
     return {
       ...item,
-      value: level,
       x: center + Math.cos(angle) * radius,
       y: center + Math.sin(angle) * radius,
     };
   });
   const polygon = points.map((point) => `${point.x},${point.y}`).join(' ');
+  const labelPoints = normalized.map((item, index) => {
+    const angle = (-90 + index * 60) * (Math.PI / 180);
+    const x = center + Math.cos(angle) * labelRadius;
+    const y = center + Math.sin(angle) * labelRadius;
+    const anchor: 'start' | 'end' | 'middle' =
+      Math.cos(angle) > 0.35 ? 'start' : Math.cos(angle) < -0.35 ? 'end' : 'middle';
+    return { ...item, x, y, anchor };
+  });
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[360px_1fr] lg:items-center">
-      <div className="flex min-h-[330px] items-center justify-center">
-        <svg viewBox="0 0 200 200" className="h-80 w-80 max-w-full">
+    <div className="grid gap-6 lg:grid-cols-[340px_1fr] lg:items-center">
+      <div className="flex min-h-[300px] items-center justify-center">
+        <svg viewBox="0 0 240 240" className="h-[300px] w-[300px] max-w-full overflow-visible">
           {[0.25, 0.5, 0.75, 1].map((scale) => {
-            const ring = items
+            const ring = normalized
               .map((_, index) => {
                 const angle = (-90 + index * 60) * (Math.PI / 180);
                 return `${center + Math.cos(angle) * maxRadius * scale},${center + Math.sin(angle) * maxRadius * scale}`;
@@ -269,7 +485,7 @@ function AbilityHex({ items }: { items: Array<{ label: string; value: number }> 
               .join(' ');
             return <polygon key={scale} points={ring} fill="none" stroke="#e2e8f0" strokeWidth="0.9" />;
           })}
-          {items.map((_, index) => {
+          {normalized.map((_, index) => {
             const angle = (-90 + index * 60) * (Math.PI / 180);
             return (
               <line
@@ -283,31 +499,44 @@ function AbilityHex({ items }: { items: Array<{ label: string; value: number }> 
               />
             );
           })}
-          <polygon points={polygon} fill="rgba(126,155,232,0.24)" stroke="#7e9be8" strokeWidth="2.4" />
+          <polygon points={polygon} fill="rgba(20,191,150,0.18)" stroke="#16845f" strokeWidth="2.4" />
           {points.map((point) => (
-            <circle key={point.label} cx={point.x} cy={point.y} r="4" fill="#7e9be8" stroke="white" strokeWidth="2" />
+            <circle key={point.label} cx={point.x} cy={point.y} r="4" fill="#16845f" stroke="white" strokeWidth="2" />
+          ))}
+          {labelPoints.map((point) => (
+            <text
+              key={point.label}
+              x={point.x}
+              y={point.y}
+              textAnchor={point.anchor}
+              dominantBaseline="middle"
+              className="fill-slate-700"
+            >
+              <tspan x={point.x} dy="-6" className="text-[10px] font-semibold">
+                {point.label}
+              </tspan>
+              <tspan x={point.x} dy="14" className="fill-slate-950 text-[12px] font-semibold">
+                {point.value} / 8
+              </tspan>
+            </text>
           ))}
         </svg>
       </div>
-      <div className="space-y-3">
-        {items.map((item) => {
-          const level = Math.min(8, Math.max(1, item.value));
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {normalized.map((item) => {
+          const level = item.value;
+          const percent = (level / 8) * 100;
           return (
-            <div key={item.label} className="rounded-md border border-slate-200 bg-white px-4 py-3">
-              <div className="mb-2 flex items-baseline justify-between gap-3">
-                <span className="text-sm font-medium text-slate-800">{item.label}</span>
-                <span className="text-sm font-semibold text-slate-950">{level} / 8</span>
+            <div key={item.label} className="rounded-xl border border-slate-200 bg-white/90 px-3 py-2 shadow-[0_8px_20px_-18px_rgba(15,23,42,0.45)]">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold tracking-wide text-slate-800">{item.label}</span>
+                <span className="rounded-full bg-[#e9fbf3] px-2 py-0.5 text-[11px] font-semibold text-[#0e6f4d]">{level}/8</span>
               </div>
-              <div className="grid grid-cols-8 gap-1.5">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className={
-                      'h-2.5 rounded-full ' +
-                      (index < level ? 'bg-[#9fd47f]' : 'bg-slate-200')
-                    }
-                  />
-                ))}
+              <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#b9d2a1] via-[#14bf96] to-[#16845f]"
+                  style={{ width: `${percent}%` }}
+                />
               </div>
             </div>
           );
@@ -317,89 +546,80 @@ function AbilityHex({ items }: { items: Array<{ label: string; value: number }> 
   );
 }
 
-function SkillTree({ groups }: { groups: NonNullable<StudentData['skillTree']> }) {
-  const [selectedGroup, setSelectedGroup] = useState(groups[0]?.group || '');
-  const chartItems = groups.map((group) => {
-    const doneCount = group.nodes.filter((node) => node.status === 'done').length;
-    const hasActive = group.nodes.some((node) => node.status === 'active');
-    const activeLevel = Math.min(8, Math.max(1, doneCount + (hasActive ? 1 : 0)));
-    const activeNode = group.nodes.find((node) => node.status === 'active') || group.nodes[doneCount - 1];
-    return { group, activeLevel, activeNode };
-  });
-  const activeGroup = groups.find((group) => group.group === selectedGroup) || groups[0];
+function SkillTree() {
+  const [selectedGroup, setSelectedGroup] = useState(MINDMAP_SKILLS[0].group);
+  const activeGroup = MINDMAP_SKILLS.find((group) => group.group === selectedGroup) || MINDMAP_SKILLS[0];
+  const [selectedNode, setSelectedNode] = useState(activeGroup.nodes[0].label);
+  const activeNode = activeGroup.nodes.find((node) => node.label === selectedNode) || activeGroup.nodes[0];
+
+  function selectGroup(group: typeof MINDMAP_SKILLS[number]) {
+    setSelectedGroup(group.group);
+    setSelectedNode(group.nodes[0].label);
+  }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[240px_1fr] lg:items-start">
-      <div>
-        <div className="text-3xl font-semibold tracking-tight text-slate-950">技能柱形图</div>
+    <div className="grid min-h-[620px] gap-4 lg:grid-cols-[220px_180px_180px_1fr] lg:items-center">
+      <div className="flex items-center justify-center lg:justify-start">
+        <div className="rounded-2xl border border-[#cfe8d9] bg-[#dff5e9] px-8 py-6 text-2xl font-semibold tracking-[-0.015em] text-slate-950 shadow-sm">
+          技能树
+        </div>
       </div>
 
-      <div className="overflow-x-auto pb-2">
-        <div className="min-w-[760px]">
-          <div className="flex h-64 items-end justify-between gap-3 border-b border-slate-200 px-2">
-            {chartItems.map(({ group, activeLevel }) => (
-              <div key={group.group} className="flex h-full w-16 shrink-0 flex-col items-center justify-end">
-                <div className="flex h-44 w-8 items-end overflow-hidden rounded-t-sm bg-[#dbe6ff]">
-                  <div
-                    className="w-full rounded-t-sm bg-[#7e9be8]/90"
-                    style={{ height: `${(activeLevel / 8) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex justify-between gap-3 px-2">
-            {chartItems.map(({ group }) => (
-              <div key={group.group} className="w-16 shrink-0 text-center">
-                <button
-                  type="button"
-                  onClick={() => setSelectedGroup(group.group)}
-                  className={
-                    'min-h-8 rounded-full border px-2.5 py-1 text-xs font-medium leading-4 ' +
-                    (group.group === activeGroup?.group
-                      ? 'border-[#7e9be8] bg-[#dbe6ff] text-[#4969c9]'
-                      : 'border-slate-200 bg-white text-slate-700')
-                  }
-                >
-                  {group.group}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {activeGroup ? (
-          <div className="mt-5 rounded-lg border border-slate-200 bg-white p-4">
-            <div className="mb-3 text-sm font-semibold text-slate-900">{activeGroup.group} · 具体技术</div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {activeGroup.nodes.map((node, index) => (
-                <div key={node.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-medium text-slate-800">{node.label}</div>
-                    <span
-                      className={
-                        'rounded-full px-2 py-1 text-xs ' +
-                        (node.status === 'done'
-                          ? 'bg-[#dbe6ff] text-slate-700'
-                          : node.status === 'active'
-                            ? 'bg-white text-slate-800 ring-1 ring-[#7e9be8]'
-                            : 'bg-slate-100 text-slate-400')
-                      }
-                    >
-                      {node.status === 'done' ? '已掌握' : node.status === 'active' ? '当前' : '未解锁'}
-                    </span>
-                  </div>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                    <div
-                      className="h-full rounded-full bg-[#7e9be8]"
-                      style={{ width: `${((index + 1) / 8) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+      <div className="grid gap-3">
+        {MINDMAP_SKILLS.map((group) => (
+          <button
+            key={group.group}
+            type="button"
+            onClick={() => selectGroup(group)}
+            className={
+              'rounded-2xl border px-4 py-3 text-left shadow-sm transition ' +
+              (group.group === activeGroup.group
+                ? 'border-[#14bf96] bg-[#e9fbf3] text-slate-950'
+                : 'border-[#dfe7dc] bg-white text-slate-700')
+            }
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-lg font-semibold tracking-[-0.01em]">{group.group}</span>
+              <span className="rounded-full bg-white/70 px-2 py-1 text-xs font-semibold text-[#16845f]">{group.level}/8</span>
             </div>
-          </div>
-        ) : null}
+            <div className="mt-1 text-xs text-slate-600">{group.nodes.length} 个主项</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-3">
+        {activeGroup.nodes.map((node) => (
+          <button
+            key={node.label}
+            type="button"
+            onClick={() => setSelectedNode(node.label)}
+            className={
+              'rounded-2xl border px-4 py-3 text-left shadow-sm transition ' +
+              (node.label === activeNode.label
+                ? 'border-[#14bf96] bg-[#f4f8f1] text-slate-950'
+                : 'border-[#dfe7dc] bg-white text-slate-700')
+            }
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-base font-semibold tracking-[-0.01em]">{node.label}</span>
+              <span className="rounded-full bg-white/70 px-2 py-1 text-xs font-semibold text-[#16845f]">{node.level}/8</span>
+            </div>
+            <div className="mt-1 text-xs text-slate-600">{node.leaves?.length ? `${node.leaves.length} 个细分` : '细分评估'}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="grid content-center gap-2">
+        {activeNode.leaves?.length ? (
+          activeNode.leaves.map(([label, level]) => (
+            <div key={label} className="flex min-h-8 w-max min-w-[136px] max-w-[210px] items-center justify-between gap-3 rounded-xl border border-[#cfe8d9] bg-[#f4f8f1] px-3 py-1.5 text-xs text-slate-700 shadow-sm">
+              <span>{label}</span>
+              <b className="text-[#16845f]">{level}/8</b>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">{activeNode.label} · {activeNode.level}/8</div>
+        )}
       </div>
     </div>
   );
@@ -409,7 +629,7 @@ function AchievementIcon({ category, locked }: { category: string; locked: boole
   const icon = locked ? 'locked' : category;
 
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="relative z-10 h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       {icon === '习惯' ? (
         <>
           <path d="M7 8.5A6 6 0 0 1 18 10" />
@@ -484,29 +704,115 @@ function AchievementIcon({ category, locked }: { category: string; locked: boole
   );
 }
 
-function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
-  const levelStyle = {
-    bronze: {
-      badge: 'border-amber-200 bg-[#fff8ed]',
-      mark: 'from-amber-700 via-amber-500 to-orange-300',
-      ring: 'border-amber-200',
+function achievementTone(category: string, status: Achievement['status']) {
+  const normalizedCategory = category === '技能' ? '技术' : category;
+  const tones: Record<string, { card: string; icon: string; dot: string }> = {
+    技术: {
+      card: 'border-emerald-100 bg-emerald-50/70',
+      icon: 'from-emerald-100 via-lime-100 to-emerald-200 text-emerald-800 ring-emerald-200',
+      dot: 'bg-emerald-400',
     },
-    silver: {
-      badge: 'border-slate-200 bg-[#f8fafc]',
-      mark: 'from-slate-500 via-slate-300 to-white',
-      ring: 'border-slate-200',
+    步法: {
+      card: 'border-sky-100 bg-sky-50/70',
+      icon: 'from-sky-100 via-cyan-100 to-blue-200 text-sky-800 ring-sky-200',
+      dot: 'bg-sky-400',
     },
-    gold: {
-      badge: 'border-yellow-200 bg-[#fffbe8]',
-      mark: 'from-yellow-700 via-yellow-400 to-amber-100',
-      ring: 'border-yellow-200',
+    战术: {
+      card: 'border-indigo-100 bg-indigo-50/70',
+      icon: 'from-indigo-100 via-blue-100 to-violet-200 text-indigo-800 ring-indigo-200',
+      dot: 'bg-indigo-400',
     },
-    locked: {
-      badge: 'border-slate-200 bg-slate-50 opacity-75',
-      mark: 'from-slate-300 via-slate-200 to-slate-100',
-      ring: 'border-slate-200',
+    身体: {
+      card: 'border-orange-100 bg-orange-50/70',
+      icon: 'from-orange-100 via-amber-100 to-yellow-200 text-orange-800 ring-orange-200',
+      dot: 'bg-orange-400',
+    },
+    心理: {
+      card: 'border-rose-100 bg-rose-50/70',
+      icon: 'from-rose-100 via-pink-100 to-red-100 text-rose-800 ring-rose-200',
+      dot: 'bg-rose-400',
+    },
+    态度: {
+      card: 'border-amber-100 bg-amber-50/70',
+      icon: 'from-amber-100 via-yellow-100 to-lime-100 text-amber-800 ring-amber-200',
+      dot: 'bg-amber-400',
+    },
+    趣味: {
+      card: 'border-fuchsia-100 bg-fuchsia-50/70',
+      icon: 'from-fuchsia-100 via-pink-100 to-purple-100 text-fuchsia-800 ring-fuchsia-200',
+      dot: 'bg-fuchsia-400',
+    },
+    安全: {
+      card: 'border-slate-200 bg-slate-50/80',
+      icon: 'from-slate-100 via-zinc-100 to-stone-200 text-slate-700 ring-slate-200',
+      dot: 'bg-slate-400',
     },
   };
+  const tone = tones[normalizedCategory] || tones.态度;
+
+  if (status === 'locked') {
+    return {
+      card: 'border-slate-200 bg-slate-50/75 text-slate-400',
+      icon: 'from-slate-100 via-slate-100 to-slate-200 text-slate-400 ring-slate-200',
+      dot: 'bg-slate-300',
+    };
+  }
+
+  if (status === 'in_progress') {
+    return {
+      ...tone,
+      card: `${tone.card} text-slate-700`,
+    };
+  }
+
+  return {
+    ...tone,
+    card: `${tone.card} text-slate-950 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.55)]`,
+  };
+}
+
+function achievementProfileField(category: string) {
+  const map: Record<string, string> = {
+    技能: '技术',
+    技术: '技术',
+    步法: '步法',
+    战术: '战术',
+    身体: '身体',
+    心理: '心理',
+    态度: '态度',
+    双打: '战术',
+    安全: '态度',
+    习惯: '训练记录',
+    自律: '训练记录',
+    出勤: '训练记录',
+    学习: '训练记录',
+    比赛: '比赛复盘',
+    练球: '训练记录',
+    趣味: '学生档案',
+  };
+  return map[category] || '学生档案';
+}
+
+const FALLBACK_ACHIEVEMENTS: Achievement[] = [
+  { id: 'fallback-start', title: '启动', category: '步法', level: 'gold', status: 'earned', description: '启动反应进入训练档案。', progress: 1, target: 1 },
+  { id: 'fallback-racket-high', title: '拍头高', category: '技能', level: 'gold', status: 'earned', description: '拍头高度进入技术档案。', progress: 1, target: 1 },
+  { id: 'fallback-calm', title: '不怕落后', category: '心理', level: 'gold', status: 'earned', description: '比分落后时继续执行。', progress: 1, target: 1 },
+  { id: 'fallback-small', title: '小动作', category: '技能', level: 'silver', status: 'earned', description: '前场动作缩短。', progress: 1, target: 1 },
+  { id: 'fallback-detective', title: '三问侦探', category: '战术', level: 'silver', status: 'earned', description: '能问出空间、节奏、对人的问题。', progress: 1, target: 1 },
+  { id: 'fallback-deep', title: '深区', category: '技能', level: 'bronze', status: 'in_progress', description: '后场深度继续观察。', progress: 2, target: 4 },
+  { id: 'fallback-return', title: '回中', category: '步法', level: 'bronze', status: 'in_progress', description: '击球后回位。', progress: 2, target: 4 },
+  { id: 'fallback-net', title: '接发上前', category: '战术', level: 'bronze', status: 'in_progress', description: '接发后的前压意识。', progress: 1, target: 4 },
+  { id: 'fallback-core', title: '核心开关', category: '身体', level: 'bronze', status: 'in_progress', description: '核心支撑进入身体档案。', progress: 1, target: 4 },
+  { id: 'fallback-water', title: '水壶准时', category: '趣味', level: 'bronze', status: 'earned', description: '好玩但不严肃评价。', progress: 1, target: 1 },
+  { id: 'fallback-laces', title: '鞋带检查', category: '安全', level: 'bronze', status: 'earned', description: '训练安全习惯。', progress: 1, target: 1 },
+  { id: 'fallback-first-shot', title: '第一拍冷静', category: '心理', level: 'locked', status: 'locked', description: '待解锁。', progress: 0, target: 1 },
+  { id: 'fallback-second-shot', title: '第二拍预判', category: '战术', level: 'locked', status: 'locked', description: '待解锁。', progress: 0, target: 1 },
+  { id: 'fallback-collect', title: '收藏家', category: '趣味', level: 'locked', status: 'locked', description: '待解锁。', progress: 0, target: 1 },
+];
+
+function AchievementMiniBadge({ item, featured }: { item: Achievement; featured?: boolean }) {
+  const profileField = achievementProfileField(item.category);
+  const tone = achievementTone(item.category, item.status);
   const levelText = {
     bronze: '铜',
     silver: '银',
@@ -515,50 +821,61 @@ function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
   };
 
   return (
-    <div className="max-h-[520px] overflow-y-auto pr-2">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {achievements.map((item) => {
-          const style = levelStyle[item.level];
-          const percent = Math.min(100, Math.round((item.progress / Math.max(item.target, 1)) * 100));
+    <article
+      className={`relative grid min-h-[76px] place-items-center gap-1 overflow-hidden rounded-[18px] border px-2 py-2 text-center text-[11px] leading-tight transition hover:-translate-y-0.5 hover:shadow-sm ${tone.card} ${featured ? 'ring-1 ring-white/80' : ''}`}
+      title={`${item.description} · ${profileField}`}
+      data-profile-field={profileField}
+    >
+      {featured ? (
+        <span className={`absolute right-2 top-2 h-2 w-2 rounded-full ${tone.dot}`} aria-label="收藏" />
+      ) : null}
+        <span className={`relative grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-gradient-to-br ring-1 ${tone.icon}`}>
+        <span className="absolute left-1.5 top-1 h-2 w-3 rounded-full bg-white/70 blur-[1px]" />
+        <span className="absolute inset-x-1 bottom-1 h-px bg-black/5" />
+        <AchievementIcon category={item.category} locked={item.status === 'locked'} />
+      </span>
+      <b className="max-w-full truncate text-[11px] font-semibold">{item.title}</b>
+      <span className="text-[9px] uppercase tracking-wide text-slate-500/90">
+        {item.category} · {levelText[item.level]}
+      </span>
+      <span className="rounded-full border border-white/80 bg-white/70 px-1.5 py-0.5 text-[9px] leading-none text-slate-500">
+        {profileField}
+      </span>
+    </article>
+  );
+}
 
-          return (
-            <article key={item.id} className={`rounded-lg border p-4 ${style.badge}`}>
-              <div className="flex items-start gap-3">
-                <div
-                  className={`mt-1 flex h-12 w-12 shrink-0 items-center justify-center border bg-white p-1 ${style.ring}`}
-                  style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
-                >
-                  <div
-                    className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${style.mark} text-white shadow-inner`}
-                    style={{ clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' }}
-                  >
-                    <AchievementIcon category={item.category} locked={item.status === 'locked'} />
-                  </div>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-950">{item.title}</div>
-                    <div className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[11px] text-slate-600">
-                      {item.category} · {levelText[item.level]}
-                    </div>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
-                  <div className="mt-3">
-                    <div className="mb-1 flex justify-between text-xs text-slate-500">
-                      <span>{item.status === 'earned' ? '已获得' : item.status === 'in_progress' ? '进行中' : '未解锁'}</span>
-                      <span>
-                        {item.progress}/{item.target}
-                      </span>
-                    </div>
-                    <ProgressBar value={percent} />
-                  </div>
-                  {item.earnedAt ? <div className="mt-2 text-xs text-slate-500">获得时间：{item.earnedAt}</div> : null}
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
+  const source = achievements.length ? achievements : FALLBACK_ACHIEVEMENTS;
+  const featured = source.filter((item) => item.status === 'earned').slice(0, 5);
+  const featuredIds = new Set(featured.map((item) => item.id));
+  const collection = source.filter((item) => !featuredIds.has(item.id));
+
+  return (
+    <div className="mr-auto grid max-w-[960px] gap-5">
+      <section className="rounded-xl border border-slate-200 bg-white/85 p-4">
+        <div className="mb-3 flex items-end justify-between gap-4">
+          <b className="text-sm text-slate-950">收藏展示</b>
+          <span className="text-xs text-slate-500">一排 5 个小图标，右侧保留空白。</span>
+        </div>
+        <div className="grid grid-cols-5 gap-2.5 max-lg:grid-cols-3 max-sm:grid-cols-2">
+          {featured.map((item) => (
+            <AchievementMiniBadge key={item.id} item={item} featured />
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white/85 p-4">
+        <div className="mb-3 flex items-end justify-between gap-4">
+          <b className="text-sm text-slate-950">成就墙</b>
+          <span className="text-xs text-slate-500">{collection.length} 枚，关联学员档案字段。</span>
+        </div>
+        <div className="grid max-h-[360px] grid-cols-5 gap-2.5 overflow-y-auto pr-1 max-lg:grid-cols-3 max-sm:grid-cols-2">
+          {collection.map((item) => (
+            <AchievementMiniBadge key={item.id} item={item} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -600,7 +917,13 @@ function LessonLog({ lessons }: { lessons: NonNullable<StudentData['lessonHistor
 
 function StudentDashboard({ student, onLogout }: { student: StudentData; onLogout: () => void }) {
   const draftKey = `goodminton-student-draft-${student.studentId}`;
+  const logKey = `goodminton-student-submission-log-${student.studentId}`;
   const rank = displayRank(student.level, student.progress);
+  const contentFrameStyle: React.CSSProperties = {
+    width: 'min(1160px, calc(100% - min(228px, max(0px, 100% - 1160px))))',
+    marginLeft: 'min(228px, max(0px, 100% - 1160px))',
+    marginRight: 'auto',
+  };
   const [initialDraft] = useState(() => readStudentDraft(draftKey));
   const [reviewedItems, setReviewedItems] = useState<string[]>([]);
   const [checkedHomework, setCheckedHomework] = useState<string[]>(
@@ -610,17 +933,18 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
       [],
   );
   const [submissionStatus, setSubmissionStatus] = useState('');
+  const [submissionLogs, setSubmissionLogs] = useState<StudentSubmissionLog[]>(() => readStudentSubmissionLogs(logKey));
   const [lessonInput, setLessonInput] = useState({
-    studentReflection: initialDraft?.lessonInput?.studentReflection || student.lessonSummary?.studentReflection || '',
-    question: initialDraft?.lessonInput?.question || '',
-    confidence: initialDraft?.lessonInput?.confidence || '3',
+    studentReflection: initialDraft?.lessonInput?.studentReflection ?? student.lessonSummary?.studentReflection ?? '',
+    question: initialDraft?.lessonInput?.question ?? '',
+    confidence: initialDraft?.lessonInput?.confidence ?? '3',
   });
   const [matchInput, setMatchInput] = useState({
-    match: initialDraft?.matchInput?.match || student.matchReview?.match || '',
-    score: initialDraft?.matchInput?.score || student.matchReview?.score || '',
-    whatWorked: initialDraft?.matchInput?.whatWorked || student.matchReview?.whatWorked || '',
-    nextAdjustment: initialDraft?.matchInput?.nextAdjustment || student.matchReview?.nextAdjustment || '',
-    experience: initialDraft?.matchInput?.experience || student.matchReview?.experience || '',
+    match: initialDraft?.matchInput?.match ?? student.matchReview?.match ?? '',
+    score: initialDraft?.matchInput?.score ?? student.matchReview?.score ?? '',
+    whatWorked: initialDraft?.matchInput?.whatWorked ?? student.matchReview?.whatWorked ?? '',
+    nextAdjustment: initialDraft?.matchInput?.nextAdjustment ?? student.matchReview?.nextAdjustment ?? '',
+    experience: initialDraft?.matchInput?.experience ?? student.matchReview?.experience ?? '',
   });
 
   function markReviewed(label: string) {
@@ -631,20 +955,30 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
     setCheckedHomework((items) => (items.includes(id) ? items.filter((item) => item !== id) : [...items, id]));
   }
 
-  const submissionPreview = {
-    studentId: student.studentId,
-    studentName: student.name,
-    submittedAt: new Date().toISOString(),
-    lessonSummary: {
-      date: student.lessonSummary?.date,
-      title: student.lessonSummary?.title,
-      studentReflection: lessonInput.studentReflection,
-      question: lessonInput.question,
-      confidence: Number(lessonInput.confidence),
-      completedHomework: checkedHomework,
-    },
-    matchReview: matchInput,
-  };
+  function buildSubmissionLog(): StudentSubmissionLog {
+    const submittedAt = new Date().toISOString();
+    return {
+      id: `${student.studentId}-${submittedAt}`,
+      studentId: student.studentId,
+      studentName: student.name,
+      submittedAt,
+      lessonSummary: {
+        date: student.lessonSummary?.date,
+        title: student.lessonSummary?.title,
+        studentReflection: lessonInput.studentReflection.trim(),
+        question: lessonInput.question.trim(),
+        confidence: Number(lessonInput.confidence),
+        completedHomework: checkedHomework,
+      },
+      matchReview: {
+        match: matchInput.match.trim(),
+        score: matchInput.score.trim(),
+        whatWorked: matchInput.whatWorked.trim(),
+        nextAdjustment: matchInput.nextAdjustment.trim(),
+        experience: matchInput.experience.trim(),
+      },
+    };
+  }
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -658,33 +992,59 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
   }, [checkedHomework, draftKey, lessonInput, matchInput]);
 
   function submitStudentReview() {
-    window.localStorage.setItem(`${draftKey}-submitted`, JSON.stringify(submissionPreview));
-    setSubmissionStatus('已提交。教练端接入后，这里会直接进入后台记录。');
+    const submission = buildSubmissionLog();
+    const nextLogs = [submission, ...submissionLogs].slice(0, 20);
+    const clearedLessonInput = { studentReflection: '', question: '', confidence: '3' };
+    const clearedMatchInput = { match: '', score: '', whatWorked: '', nextAdjustment: '', experience: '' };
+
+    window.localStorage.setItem(`${draftKey}-submitted`, JSON.stringify(submission));
+    window.localStorage.setItem(logKey, JSON.stringify(nextLogs));
+    setSubmissionLogs(nextLogs);
+    setLessonInput(clearedLessonInput);
+    setMatchInput(clearedMatchInput);
+    window.localStorage.setItem(
+      draftKey,
+      JSON.stringify({
+        checkedHomework,
+        lessonInput: clearedLessonInput,
+        matchInput: clearedMatchInput,
+      }),
+    );
+    setSubmissionStatus('已提交，已记录到日志，并清空课后总结和比赛复盘输入框。');
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f8fa] text-slate-900">
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[linear-gradient(90deg,rgba(22,132,95,.045)_1px,transparent_1px),linear-gradient(0deg,rgba(185,210,161,.05)_1px,transparent_1px),#fbfaf6] bg-[length:28px_28px] text-slate-900">
+      <div className="grid min-h-screen grid-cols-[228px_minmax(0,1fr)] max-lg:grid-cols-1">
+        <StudentSideNav student={student} />
+        <div className="min-w-0">
+      <div className="border-b border-[#e6e1d4] bg-[#fbfaf6]/95">
+        <div
+          className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8"
+          style={contentFrameStyle}
+        >
           <div className="text-sm font-semibold">Goodminton Academy</div>
           <div className="text-sm text-slate-400">/</div>
           <div className="text-sm text-slate-600">学员图谱</div>
-          <button onClick={onLogout} className="ml-auto rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium">
+          <button onClick={onLogout} className="ml-auto rounded-md border border-[#cfe8d9] bg-white px-3 py-1.5 text-sm font-medium text-[#0e6f4d]">
             退出
           </button>
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        <header className="mb-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div
+        className="px-4 py-6 sm:px-6 lg:px-8"
+        style={contentFrameStyle}
+      >
+        <header id="student-section-0" className="mb-6 scroll-mt-6 rounded-lg border border-[#dfe7dc] bg-[#fffdf8] p-5 shadow-sm">
           <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
             <div className="flex gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-2xl font-semibold text-white shadow-sm">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[#16845f] text-2xl font-semibold text-white shadow-sm">
                 {student.name.slice(0, 1).toUpperCase()}
               </div>
               <div>
                 <div className="text-sm text-slate-500">Goodminton / 学员图谱 / {student.studentId}</div>
-                <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-950">
+            <h1 className="mt-1 text-3xl font-semibold tracking-[-0.02em] text-slate-950">
                   {student.name} 的训练数据
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
@@ -692,7 +1052,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                 </p>
               </div>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-[#dfe7dc] bg-[#f4f8f1] p-4">
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
                   <div className="text-xs text-slate-500">等级</div>
@@ -719,11 +1079,11 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
         </header>
 
         <div className="space-y-6">
-          <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <section id="student-section-1" className="scroll-mt-6 rounded-md border border-[#dfe7dc] bg-[#fffdf8] p-5 shadow-sm">
             <div className="grid gap-5 lg:grid-cols-[1fr_240px]">
               <div>
                 <div className="text-sm text-slate-500">当前训练</div>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.015em] text-slate-950">
                   {student.stage.title}
                 </h2>
                 <p className="mt-3 text-base leading-7 text-slate-600">{student.stage.description}</p>
@@ -739,13 +1099,13 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                 </div>
               </div>
 
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4">
                 <div className="text-sm text-slate-500">今日最小练习</div>
-                <div className="mt-2 text-xl font-semibold">{student.today.title}</div>
+                <div className="mt-2 text-xl font-semibold tracking-[-0.01em]">{student.today.title}</div>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{student.today.description}</p>
                 <button
                   onClick={() => markReviewed(student.today.title)}
-                  className="mt-5 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900"
+                  className="mt-5 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-medium text-[#0e6f4d]"
                 >
                   {reviewedItems.includes(student.today.title) ? '已审查' : '标记为已审查'}
                 </button>
@@ -760,13 +1120,13 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                 return (
                   <label
                     key={item.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-6 text-slate-700"
+                    className="flex cursor-pointer items-start gap-3 rounded-md border border-[#dfe7dc] bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700"
                   >
                     <input
                       checked={checked}
                       onChange={() => toggleHomework(item.id)}
                       type="checkbox"
-                      className="mt-1 h-4 w-4 rounded border-slate-300 accent-emerald-700"
+                      className="mt-1 h-4 w-4 rounded border-slate-300 accent-[#16845f]"
                     />
                     <span className={checked ? 'text-slate-400 line-through' : ''}>{item.text}</span>
                   </label>
@@ -775,26 +1135,24 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
             </div>
           </Section>
 
-          {student.achievements?.length ? (
-            <Section title="成就和勋章">
-              <AchievementBadges achievements={student.achievements} />
-            </Section>
-          ) : null}
+          <Section id="student-section-3" title="成就和勋章">
+            <AchievementBadges achievements={student.achievements || []} />
+          </Section>
 
           {student.abilityMatrix?.length ? (
-            <Section title="能力矩阵">
+            <Section id="student-section-2" title="能力矩阵">
               <AbilityHex items={student.abilityMatrix} />
             </Section>
           ) : null}
 
           {student.skillTree?.length ? (
             <Section title="技能树">
-              <SkillTree groups={student.skillTree} />
+              <SkillTree />
             </Section>
           ) : null}
 
           {student.lessonHistory?.length ? (
-            <Section title="上课日志">
+            <Section id="student-section-4" title="上课日志">
               <LessonLog lessons={student.lessonHistory} />
             </Section>
           ) : null}
@@ -802,7 +1160,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
           <div className="grid gap-6 lg:grid-cols-2">
             <Section title="课后总结">
               <div className="space-y-4">
-                <div className="rounded-md bg-slate-50 p-4">
+                <div className="rounded-md bg-[#f4f8f1] p-4">
                   <div className="text-sm text-slate-500">{student.lessonSummary?.date}</div>
                   <div className="mt-1 text-lg font-semibold">{student.lessonSummary?.title}</div>
                 </div>
@@ -813,7 +1171,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     onChange={(event) =>
                       setLessonInput((value) => ({ ...value, studentReflection: event.target.value }))
                     }
-                    className="mt-2 min-h-28 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-900"
+                    className="mt-2 min-h-28 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
                     placeholder="用自己的话写，不用写漂亮。"
                   />
                 </label>
@@ -822,7 +1180,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <textarea
                     value={lessonInput.question}
                     onChange={(event) => setLessonInput((value) => ({ ...value, question: event.target.value }))}
-                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-900"
+                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
                     placeholder="例如：为什么我接快推时总是慢半拍？"
                   />
                 </label>
@@ -837,17 +1195,17 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     type="range"
                     min="1"
                     max="5"
-                    className="mt-3 w-full accent-slate-900"
+                    className="mt-3 w-full accent-[#16845f]"
                   />
                 </label>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4">
                   <div className="text-sm font-medium">教练观察</div>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{student.lessonSummary?.coachNote}</p>
                 </div>
               </div>
             </Section>
 
-            <Section title="比赛复盘">
+            <Section id="student-section-5" title="比赛复盘">
               <div className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block">
@@ -855,7 +1213,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     <input
                       value={matchInput.match}
                       onChange={(event) => setMatchInput((value) => ({ ...value, match: event.target.value }))}
-                      className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900"
+                      className="mt-2 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm outline-none focus:border-[#16845f]"
                       placeholder="例如：周末双打练习赛"
                     />
                   </label>
@@ -864,7 +1222,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     <input
                       value={matchInput.score}
                       onChange={(event) => setMatchInput((value) => ({ ...value, score: event.target.value }))}
-                      className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900"
+                      className="mt-2 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm outline-none focus:border-[#16845f]"
                       placeholder="例如：21-18 / 17-21"
                     />
                   </label>
@@ -874,7 +1232,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <textarea
                     value={matchInput.whatWorked}
                     onChange={(event) => setMatchInput((value) => ({ ...value, whatWorked: event.target.value }))}
-                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-900"
+                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
                     placeholder="哪些回合、哪些打法有效？"
                   />
                 </label>
@@ -883,7 +1241,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <textarea
                     value={matchInput.nextAdjustment}
                     onChange={(event) => setMatchInput((value) => ({ ...value, nextAdjustment: event.target.value }))}
-                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-900"
+                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
                     placeholder="写下这场之后最想改进的地方。"
                   />
                 </label>
@@ -892,7 +1250,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <textarea
                     value={matchInput.experience}
                     onChange={(event) => setMatchInput((value) => ({ ...value, experience: event.target.value }))}
-                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-900"
+                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
                     placeholder="这场比赛以后，下次可以直接复用的一条经验。"
                   />
                 </label>
@@ -901,7 +1259,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
           </div>
 
           <Section title="提交">
-            <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="text-sm font-semibold text-slate-900">提交本次反馈</div>
                 <div className="mt-1 text-sm text-slate-500">包含课后总结、比赛复盘和家庭作业完成状态。</div>
@@ -909,13 +1267,49 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
               <button
                 type="button"
                 onClick={submitStudentReview}
-                className="rounded-md bg-[#7e9be8] px-5 py-2 text-sm font-medium text-white"
+                className="rounded-md bg-[#16845f] px-5 py-2 text-sm font-medium text-white"
               >
                 提交
               </button>
             </div>
             {submissionStatus ? <div className="mt-3 text-sm text-slate-600">{submissionStatus}</div> : null}
+            {submissionLogs.length ? (
+              <div className="mt-4 rounded-md border border-slate-200 bg-white p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="text-sm font-semibold text-slate-900">提交日志</div>
+                  <div className="text-xs text-slate-500">保留最近 20 条</div>
+                </div>
+                <div className="space-y-3">
+                  {submissionLogs.slice(0, 5).map((log) => (
+                    <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
+                        <span>课后总结</span>
+                        <span>比赛复盘</span>
+                        <span>作业 {log.lessonSummary.completedHomework.length} 项</span>
+                      </div>
+                      <div className="mt-2 grid gap-2 lg:grid-cols-2">
+                        <div>
+                          <b className="text-slate-900">总结：</b>
+                          <span>
+                            {log.lessonSummary.studentReflection || log.lessonSummary.question || '未填写'}
+                          </span>
+                        </div>
+                        <div>
+                          <b className="text-slate-900">复盘：</b>
+                          <span>
+                            {log.matchReview.match || log.matchReview.whatWorked || log.matchReview.nextAdjustment || '未填写'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </Section>
+        </div>
+      </div>
         </div>
       </div>
     </main>
@@ -932,18 +1326,18 @@ export default function StudentPage() {
 
   if (!student) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f6f8fa] px-4 text-slate-900">
-        <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-md bg-emerald-700 text-sm font-semibold text-white">
-            G
+      <main className="flex min-h-screen items-center justify-center bg-[#fbfaf6] px-4 text-slate-900">
+        <section className="w-full max-w-md rounded-lg border border-[#dfe7dc] bg-[#fffdf8] p-6 text-center shadow-sm">
+          <div className="mx-auto w-fit">
+            <GoodmintonMark />
           </div>
-          <h1 className="mt-5 text-xl font-semibold">请从主页登录</h1>
+          <h1 className="mt-5 text-xl font-semibold tracking-[-0.015em]">请从主页登录</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             学员入口已经移到 Goodminton 主页。登录成功后会直接进入这里。
           </p>
           <Link
             href="/"
-            className="mt-5 inline-flex rounded-md bg-[#7e9be8] px-4 py-2 text-sm font-medium text-white"
+            className="mt-5 inline-flex rounded-md bg-[#16845f] px-4 py-2 text-sm font-medium text-white"
           >
             返回主页
           </Link>

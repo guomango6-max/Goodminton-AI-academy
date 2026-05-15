@@ -5,41 +5,64 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import Link from 'next/link';
 import ContactFooter from './ContactFooter';
+import { Lang, useLang } from './LangContext';
 
 type Prompt = { icon: string; text: string };
+type ChatCopy = {
+  subtitle: string;
+  welcomeTitle: string;
+  welcomeDesc: string;
+  prompts: Prompt[];
+};
 
 interface ChatRoomProps {
   role: 'student' | 'friend';
   accentColor: 'blue' | 'emerald';
   title: string;
-  subtitle: string;
-  welcomeTitle: string;
-  welcomeDesc: string;
-  prompts: Prompt[];
+  copy: Record<Lang, ChatCopy>;
 }
 
 export default function ChatRoom({
   role,
   accentColor,
   title,
-  subtitle,
-  welcomeTitle,
-  welcomeDesc,
-  prompts,
+  copy,
 }: ChatRoomProps) {
-  const { messages, sendMessage, status } = useChat({
+  const { lang } = useLang();
+  const [dynamicPrompts, setDynamicPrompts] = useState<Partial<Record<Lang, Prompt[]>>>({});
+  const t = { ...copy[lang], prompts: dynamicPrompts[lang]?.length ? dynamicPrompts[lang] : copy[lang].prompts };
+  const { messages, sendMessage, status, error, clearError } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
-      body: { role },
+      body: { role, lang },
     }),
   });
 
   const [input, setInput] = useState('');
-  const [isMounted, setIsMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isLoading = status === 'submitted' || status === 'streaming';
+  const ui = {
+    zh: {
+      back: '返回',
+      channel: role === 'student' ? '学员频道' : '球友频道',
+      promptLabel: '可以这样开始',
+      placeholder: role === 'student' ? '写下你的反馈或问题...' : '问我任何关于羽毛球的事...',
+      send: '发送',
+      errorTitle: '聊天暂时不可用',
+      retryHint: '请稍后再试，或联系教练检查 DeepSeek API 配置。',
+    },
+    en: {
+      back: 'Back',
+      channel: role === 'student' ? 'Student room' : 'Player room',
+      promptLabel: 'Start with one of these',
+      placeholder: role === 'student' ? 'Share your feedback or question...' : 'Ask me anything about badminton...',
+      send: 'Send',
+      errorTitle: 'Chat is temporarily unavailable',
+      retryHint: 'Please try again later, or ask the coach to check the DeepSeek API configuration.',
+    },
+  }[lang];
 
   const accent = {
     blue: {
@@ -58,37 +81,66 @@ export default function ChatRoom({
     },
   }[accentColor];
 
-  useEffect(() => setIsMounted(true), []);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    if (role !== 'friend') return;
+
+    let isMounted = true;
+
+    async function loadPrompts() {
+      try {
+        const response = await fetch('/api/qa-prompts');
+        const payload = (await response.json()) as Partial<Record<Lang, Prompt[]>>;
+
+        if (response.ok && isMounted) {
+          setDynamicPrompts(payload);
+        }
+      } catch {
+        // Keep the built-in prompts if local prompt loading fails.
+      }
+    }
+
+    void loadPrompts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [role]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+    clearError();
     sendMessage({ text: input });
     setInput('');
   };
 
-  if (!isMounted) return null;
+  const handlePromptClick = (text: string) => {
+    if (isLoading) return;
+    clearError();
+    sendMessage({ text });
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-5 flex items-center gap-3">
-          <Link href="/" className="text-slate-400 hover:text-slate-600 mr-1 transition-colors" title="返回">
+          <Link href="/" className="text-slate-400 hover:text-slate-600 mr-1 transition-colors" title={ui.back}>
             ←
           </Link>
           <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${accent.header} flex items-center justify-center`}>
-            <span className="text-white font-bold">🏸</span>
+            <span className="text-sm font-bold text-white">G</span>
           </div>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-lg font-bold text-slate-900 leading-none">{title}</h1>
-            <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+            <p className="mt-0.5 truncate text-xs text-slate-500">{t.subtitle}</p>
           </div>
-          <span className={`ml-auto text-xs font-medium px-2.5 py-1 rounded-full ${accent.badge}`}>
-            {role === 'student' ? '学员频道' : '球友频道'}
+          <span className={`ml-auto hidden shrink-0 rounded-full px-2.5 py-1 text-xs font-medium sm:inline-flex ${accent.badge}`}>
+            {ui.channel}
           </span>
         </div>
       </div>
@@ -97,23 +149,26 @@ export default function ChatRoom({
       <div className="flex-1 max-w-4xl w-full mx-auto px-4 py-8 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 text-3xl">
-              {role === 'student' ? '🎓' : '🤝'}
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg border border-slate-200 bg-white text-xl font-bold text-slate-700 shadow-sm">
+              {role === 'student' ? 'S' : 'P'}
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{welcomeTitle}</h2>
-            <p className="text-slate-600 max-w-md mb-8 text-sm leading-relaxed">{welcomeDesc}</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t.welcomeTitle}</h2>
+            <p className="mb-8 max-w-md px-1 text-sm leading-relaxed text-slate-600 [word-break:break-all] sm:[word-break:normal]">
+              {t.welcomeDesc}
+            </p>
 
             <div className="w-full max-w-2xl">
-              <p className="text-xs text-slate-400 uppercase tracking-wider mb-3 font-medium">可以这样开始</p>
+              <p className="text-xs text-slate-400 uppercase tracking-wider mb-3 font-medium">{ui.promptLabel}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {prompts.map((prompt, i) => (
+                {t.prompts.map((prompt, i) => (
                   <button
                     key={i}
-                    onClick={() => sendMessage({ text: prompt.text })}
-                    className={`flex items-start gap-3 text-left px-4 py-3 rounded-xl border border-slate-200 bg-white ${accent.cardHover} hover:shadow-sm transition-all group`}
+                    onClick={() => handlePromptClick(prompt.text)}
+                    disabled={isLoading}
+                    className={`group flex min-w-0 items-start gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-left transition-all hover:shadow-sm ${accent.cardHover}`}
                   >
-                    <span className="text-lg flex-shrink-0 mt-0.5">{prompt.icon}</span>
-                    <span className="text-sm text-slate-600 group-hover:text-slate-900 leading-snug">
+                    <span className="mt-0.5 flex-shrink-0 text-lg">{prompt.icon}</span>
+                    <span className="min-w-0 text-sm leading-snug text-slate-600 [word-break:break-all] group-hover:text-slate-900 sm:[word-break:normal]">
                       {prompt.text}
                     </span>
                   </button>
@@ -160,6 +215,14 @@ export default function ChatRoom({
                 </div>
               </div>
             )}
+            {error ? (
+              <div className="flex justify-start">
+                <div className="max-w-lg rounded-lg rounded-bl-none border border-red-200 bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-700">
+                  <div className="font-semibold">{ui.errorTitle}</div>
+                  <div className="mt-1">{error.message || ui.retryHint}</div>
+                </div>
+              </div>
+            ) : null}
             <div ref={messagesEndRef} />
           </div>
         )}
@@ -168,13 +231,13 @@ export default function ChatRoom({
       {/* Input */}
       <div className="bg-white border-t border-slate-200 shadow-lg">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex gap-3">
+          <div className="flex min-w-0 gap-3">
             <input
               ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={role === 'student' ? '写下你的反馈或问题…' : '问我任何关于羽毛球的事…'}
+              placeholder={ui.placeholder}
               disabled={isLoading}
               className={`flex-1 px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 ${accent.ring} focus:border-transparent disabled:bg-slate-50 disabled:text-slate-500 text-sm`}
             />
@@ -183,13 +246,13 @@ export default function ChatRoom({
               disabled={isLoading || !input.trim()}
               className={`px-6 py-3 rounded-lg ${accent.button} text-white font-medium disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors text-sm`}
             >
-              发送
+              {ui.send}
             </button>
           </div>
         </form>
       </div>
 
-      <ContactFooter />
+      <ContactFooter lang={lang} />
     </div>
   );
 }

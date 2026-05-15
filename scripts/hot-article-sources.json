@@ -1,0 +1,39 @@
+{
+  "sources": [
+    {
+      "name": "Badminton Insight",
+      "type": "rss",
+      "url": "https://badminton-insight.com/feed",
+      "maxItems": 10,
+      "weight": 3
+    },
+    {
+      "name": "BadmintonSkills",
+      "type": "rss",
+      "url": "https://badmintonskills.com/feed",
+      "maxItems": 10,
+      "weight": 3
+    },
+    {
+      "name": "Shuttle Smash",
+      "type": "rss",
+      "url": "https://shuttlesmash.com/feed",
+      "maxItems": 10,
+      "weight": 2
+    },
+    {
+      "name": "BadminSense / arXiv",
+      "type": "arxiv",
+      "url": "https://export.arxiv.org/api/query?search_query=all:badminton&sortBy=submittedDate&sortOrder=descending&max_results=8",
+      "maxItems": 8,
+      "weight": 4
+    },
+    {
+      "name": "r/badminton",
+      "type": "reddit",
+      "url": "https://www.reddit.com/r/badminton/new.json?limit=25",
+      "maxItems": 12,
+      "weight": 2
+    }
+  ]
+}
