@@ -18,6 +18,16 @@ type ArticlePost = {
   href?: string;
 };
 
+type StudentShowcaseItem = {
+  id: string;
+  title: string;
+  achievement: string;
+  season: string;
+  summary: string;
+  image: string;
+  featured?: boolean;
+};
+
 const heroFeature: Record<Lang, ArticlePost> = {
   zh: {
     title: '开放式学习：人工智能正在改变什么',
@@ -84,6 +94,95 @@ const posts: Record<Lang, ArticlePost[]> = {
   ],
 };
 
+const studentShowcaseFallback: Record<Lang, StudentShowcaseItem[]> = {
+  zh: [
+    {
+      id: 'university-team-championship',
+      title: '大学生锦标赛赛场留念',
+      achievement: '第27届中国大学生羽毛球锦标赛',
+      season: '2026',
+      summary: '团队在全国大学生羽毛球赛场合影，记录从训练、参赛到赛后复盘的完整成长经历。',
+      image: '/student-showcase/university-team-championship.jpg',
+      featured: true,
+    },
+    {
+      id: 'medals-certificates',
+      title: '奖杯、奖牌与成绩证书',
+      achievement: '多项赛事荣誉记录',
+      season: '2015-2019',
+      summary: '把一次次参赛结果沉淀为可追踪的成长档案，让努力被看见，也让下一阶段目标更清晰。',
+      image: '/student-showcase/medals-certificates.jpg',
+    },
+    {
+      id: 'junior-medalists',
+      title: '青少年学员领奖时刻',
+      achievement: '青少年组奖牌记录',
+      season: '成长档案',
+      summary: '从日常训练到站上领奖台，记录技术、心态和比赛经验一起成长的瞬间。',
+      image: '/student-showcase/junior-medalists.jpg',
+    },
+    {
+      id: 'podium-first-place',
+      title: '青少年组冠军领奖',
+      achievement: '比赛第一名',
+      season: '2026',
+      summary: '领奖台上的结果来自长期训练中的每一次纠错、坚持和赛后复盘。',
+      image: '/student-showcase/podium-first-place.jpg',
+    },
+    {
+      id: 'podium-team-awards',
+      title: '青少年组多人获奖',
+      achievement: '多人奖牌记录',
+      season: '2026',
+      summary: '把个人进步和团队氛围一起呈现，让更多学员看到可抵达的成长路径。',
+      image: '/student-showcase/podium-team-awards.jpg',
+    },
+  ],
+  en: [
+    {
+      id: 'university-team-championship',
+      title: 'University championship team moment',
+      achievement: '27th China University Badminton Championship',
+      season: '2026',
+      summary: 'A team photo from the national university badminton championship, connecting training, competition, and match review.',
+      image: '/student-showcase/university-team-championship.jpg',
+      featured: true,
+    },
+    {
+      id: 'medals-certificates',
+      title: 'Trophies, medals, and certificates',
+      achievement: 'Competition honor archive',
+      season: '2015-2019',
+      summary: 'Results become part of a trackable growth record, making effort visible and the next goal clearer.',
+      image: '/student-showcase/medals-certificates.jpg',
+    },
+    {
+      id: 'junior-medalists',
+      title: 'Junior medalists',
+      achievement: 'Youth group medal record',
+      season: 'Growth archive',
+      summary: 'From daily practice to the podium, these moments show technique, confidence, and match experience growing together.',
+      image: '/student-showcase/junior-medalists.jpg',
+    },
+    {
+      id: 'podium-first-place',
+      title: 'Junior first-place podium',
+      achievement: 'First place',
+      season: '2026',
+      summary: 'Podium results come from repeated correction, steady practice, and thoughtful match review.',
+      image: '/student-showcase/podium-first-place.jpg',
+    },
+    {
+      id: 'podium-team-awards',
+      title: 'Junior group awards',
+      achievement: 'Multiple medal record',
+      season: '2026',
+      summary: 'Individual progress and team energy together show a growth path that more players can reach.',
+      image: '/student-showcase/podium-team-awards.jpg',
+    },
+  ],
+};
+
 const copy = {
   zh: {
     brand: 'Goodminton Academy',
@@ -127,6 +226,9 @@ const copy = {
     featuredAlt: '羽毛球和战术箭头组成的 Goodminton Academy 博客封面',
     featuredTitle: '用 AI 训练档案，把一次课变成长期进步',
     featuredReadMore: '继续阅读',
+    showcaseKicker: '学员荣耀',
+    showcaseTitle: '从训练场到领奖台',
+    showcaseDesc: '公开展示学员和团队的比赛成绩、奖牌记录与成长瞬间。这里不连接私人训练档案，只呈现可公开分享的荣誉内容。',
   },
   en: {
     brand: 'Goodminton Academy',
@@ -171,6 +273,9 @@ const copy = {
     featuredAlt: 'Goodminton Academy blog cover with a shuttle and tactical arrows',
     featuredTitle: 'Use AI training records to turn one lesson into long-term progress',
     featuredReadMore: 'Continue reading',
+    showcaseKicker: 'Student honors',
+    showcaseTitle: 'From practice court to podium',
+    showcaseDesc: 'A public showcase of student and team achievements, medals, and growth moments. Private training records stay separate.',
   },
 };
 
@@ -219,7 +324,9 @@ export default function Home() {
   const t = copy[lang];
   const featured = heroFeature[lang];
   const [articlePosts, setArticlePosts] = useState<Record<Lang, ArticlePost[]>>(posts);
+  const [studentShowcase, setStudentShowcase] = useState<Record<Lang, StudentShowcaseItem[]>>(studentShowcaseFallback);
   const articleList = articlePosts[lang];
+  const showcaseList = studentShowcase[lang];
   const router = useRouter();
   const [studentId, setStudentId] = useState('');
   const [studentError, setStudentError] = useState('');
@@ -242,7 +349,21 @@ export default function Home() {
       }
     }
 
+    async function loadStudentShowcase() {
+      try {
+        const response = await fetch('/api/student-showcase');
+        const payload = (await response.json()) as Partial<Record<Lang, StudentShowcaseItem[]>>;
+
+        if (response.ok && payload.zh?.length && payload.en?.length && isMounted) {
+          setStudentShowcase({ zh: payload.zh, en: payload.en });
+        }
+      } catch {
+        // Keep the section hidden if public showcase data cannot be loaded.
+      }
+    }
+
     void loadArticles();
+    void loadStudentShowcase();
 
     return () => {
       isMounted = false;
@@ -464,6 +585,50 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {showcaseList.length ? (
+          <section id="student-showcase" className="scroll-mt-20 bg-[#fbfaf6] py-16">
+            <div className="mx-auto w-full max-w-[1180px] px-5">
+              <div className="max-w-2xl">
+                <p className="text-[13px] font-semibold text-[#16845f]">{t.showcaseKicker}</p>
+                <h2 className="mt-3 text-[32px] font-semibold leading-tight tracking-[-0.015em] text-[#101820]">
+                  {t.showcaseTitle}
+                </h2>
+                <p className="cjk-wrap mt-4 text-[16px] leading-8 text-[#52636b]">{t.showcaseDesc}</p>
+              </div>
+
+              <div className="mt-9 grid gap-5 lg:grid-cols-4">
+                {showcaseList.map((item) => (
+                  <article
+                    key={item.id}
+                    className={`overflow-hidden rounded-[8px] border border-[#e0dacb] bg-white shadow-[0_16px_36px_-32px_rgba(16,24,32,0.32)] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_44px_-30px_rgba(16,24,32,0.34)] ${
+                      item.featured ? 'lg:col-span-2 lg:row-span-2' : ''
+                    }`}
+                  >
+                    <div className={`relative overflow-hidden bg-[#d8e8dc] ${item.featured ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        sizes={item.featured ? '(min-width: 1024px) 570px, 100vw' : '(min-width: 1024px) 280px, 100vw'}
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,24,32,0.02),rgba(16,24,32,0.16))]" aria-hidden="true" />
+                    </div>
+                    <div className={item.featured ? 'p-6' : 'p-5'}>
+                      <p className="text-[13px] font-semibold text-[#16845f]">{item.achievement}</p>
+                      <h3 className={`cjk-wrap mt-3 font-semibold leading-tight tracking-[-0.01em] text-[#101820] ${item.featured ? 'text-[26px]' : 'text-[20px]'}`}>
+                        {item.title}
+                      </h3>
+                      <p className="mt-2 text-[13px] font-semibold text-[#64737a]">{item.season}</p>
+                      <p className="cjk-wrap mt-4 text-[15px] leading-7 text-[#52636b]">{item.summary}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
       </main>
 

@@ -1,24 +1,88 @@
 {
   "zh": [
     {
-      "id": "featured-student-placeholder",
-      "name": "获奖学员展示位",
-      "achievement": "待更新奖项",
+      "id": "university-team-championship",
+      "title": "大学生锦标赛赛场留念",
+      "achievement": "第27届中国大学生羽毛球锦标赛",
       "season": "2026",
-      "summary": "用于未来展示获奖学员、比赛成绩和成长故事。这里只放公开展示信息，不读取学员私人训练档案。",
-      "image": "/article-learning.png",
-      "status": "placeholder"
+      "summary": "团队在全国大学生羽毛球赛场合影，记录从训练、参赛到赛后复盘的完整成长经历。",
+      "image": "/student-showcase/university-team-championship.jpg",
+      "featured": true
+    },
+    {
+      "id": "medals-certificates",
+      "title": "奖杯、奖牌与成绩证书",
+      "achievement": "多项赛事荣誉记录",
+      "season": "2015-2019",
+      "summary": "把一次次参赛结果沉淀为可追踪的成长档案，让努力被看见，也让下一阶段目标更清晰。",
+      "image": "/student-showcase/medals-certificates.jpg"
+    },
+    {
+      "id": "junior-medalists",
+      "title": "青少年学员领奖时刻",
+      "achievement": "青少年组奖牌记录",
+      "season": "成长档案",
+      "summary": "从日常训练到站上领奖台，记录技术、心态和比赛经验一起成长的瞬间。",
+      "image": "/student-showcase/junior-medalists.jpg"
+    },
+    {
+      "id": "podium-first-place",
+      "title": "青少年组冠军领奖",
+      "achievement": "比赛第一名",
+      "season": "2026",
+      "summary": "领奖台上的结果来自长期训练中的每一次纠错、坚持和赛后复盘。",
+      "image": "/student-showcase/podium-first-place.jpg"
+    },
+    {
+      "id": "podium-team-awards",
+      "title": "青少年组多人获奖",
+      "achievement": "多人奖牌记录",
+      "season": "2026",
+      "summary": "把个人进步和团队氛围一起呈现，让更多学员看到可抵达的成长路径。",
+      "image": "/student-showcase/podium-team-awards.jpg"
     }
   ],
   "en": [
     {
-      "id": "featured-student-placeholder",
-      "name": "Featured Student Placeholder",
-      "achievement": "Award to be updated",
+      "id": "university-team-championship",
+      "title": "University championship team moment",
+      "achievement": "27th China University Badminton Championship",
       "season": "2026",
-      "summary": "Reserved for award-winning students, competition results, and growth stories. This endpoint only serves public showcase data.",
-      "image": "/article-learning.png",
-      "status": "placeholder"
+      "summary": "A team photo from the national university badminton championship, connecting training, competition, and match review.",
+      "image": "/student-showcase/university-team-championship.jpg",
+      "featured": true
+    },
+    {
+      "id": "medals-certificates",
+      "title": "Trophies, medals, and certificates",
+      "achievement": "Competition honor archive",
+      "season": "2015-2019",
+      "summary": "Results become part of a trackable growth record, making effort visible and the next goal clearer.",
+      "image": "/student-showcase/medals-certificates.jpg"
+    },
+    {
+      "id": "junior-medalists",
+      "title": "Junior medalists",
+      "achievement": "Youth group medal record",
+      "season": "Growth archive",
+      "summary": "From daily practice to the podium, these moments show technique, confidence, and match experience growing together.",
+      "image": "/student-showcase/junior-medalists.jpg"
+    },
+    {
+      "id": "podium-first-place",
+      "title": "Junior first-place podium",
+      "achievement": "First place",
+      "season": "2026",
+      "summary": "Podium results come from repeated correction, steady practice, and thoughtful match review.",
+      "image": "/student-showcase/podium-first-place.jpg"
+    },
+    {
+      "id": "podium-team-awards",
+      "title": "Junior group awards",
+      "achievement": "Multiple medal record",
+      "season": "2026",
+      "summary": "Individual progress and team energy together show a growth path that more players can reach.",
+      "image": "/student-showcase/podium-team-awards.jpg"
     }
   ]
 }
