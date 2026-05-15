@@ -3,24 +3,26 @@
     {
       "id": "mango",
       "name": "芒果教练",
-      "role": "Goodminton Academy 教练",
-      "summary": "教练介绍展示位。上线后可替换为正式履历、训练理念、执教经历和课程方向。",
-      "specialties": ["技术诊断", "训练计划", "比赛复盘"],
+      "role": "重庆青羽训练中心创始人",
+      "summary": "毕业于南京体育学院羽毛球训练专业，从事羽毛球教学二十多年，长期专注成人和青少年训练。训练中重视基本技术、移动节奏、比赛理解和课后反馈，让不同阶段的学员都能看到清晰的进步路径。",
+      "education": "南京体育学院羽毛球训练专业",
+      "experience": "二十多年羽毛球教学经验",
+      "specialties": ["成人训练", "青少年训练", "技术诊断", "比赛复盘"],
       "contactHref": "https://wa.me/358413134358",
-      "image": "/badminton-hero.png",
-      "status": "placeholder"
+      "image": "/coaches/coach-mango.jpg"
     }
   ],
   "en": [
     {
       "id": "mango",
       "name": "Coach Mango",
-      "role": "Goodminton Academy Coach",
-      "summary": "Coach profile placeholder. Replace with official bio, coaching philosophy, experience, and lesson focus when ready.",
-      "specialties": ["Technique diagnosis", "Training planning", "Match review"],
+      "role": "Founder of Chongqing Qingyu Training Center",
+      "summary": "Graduated from Nanjing Sport Institute with a badminton training specialization. With more than 20 years of coaching experience, Coach Mango focuses on adult and youth badminton training, combining technical fundamentals, movement rhythm, match understanding, and post-session feedback.",
+      "education": "Badminton training specialization, Nanjing Sport Institute",
+      "experience": "20+ years of badminton coaching",
+      "specialties": ["Adult training", "Youth training", "Technique diagnosis", "Match review"],
       "contactHref": "https://wa.me/358413134358",
-      "image": "/badminton-hero.png",
-      "status": "placeholder"
+      "image": "/coaches/coach-mango.jpg"
     }
   ]
 }

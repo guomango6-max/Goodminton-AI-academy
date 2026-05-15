@@ -28,6 +28,18 @@ type StudentShowcaseItem = {
   featured?: boolean;
 };
 
+type CoachProfile = {
+  id: string;
+  name: string;
+  role: string;
+  summary: string;
+  education: string;
+  experience: string;
+  specialties: string[];
+  contactHref: string;
+  image: string;
+};
+
 const heroFeature: Record<Lang, ArticlePost> = {
   zh: {
     title: '开放式学习：人工智能正在改变什么',
@@ -183,6 +195,37 @@ const studentShowcaseFallback: Record<Lang, StudentShowcaseItem[]> = {
   ],
 };
 
+const coachFallback: Record<Lang, CoachProfile[]> = {
+  zh: [
+    {
+      id: 'mango',
+      name: '芒果教练',
+      role: '重庆青羽训练中心创始人',
+      summary:
+        '毕业于南京体育学院羽毛球训练专业，从事羽毛球教学二十多年，长期专注成人和青少年训练。训练中重视基本技术、移动节奏、比赛理解和课后反馈，让不同阶段的学员都能看到清晰的进步路径。',
+      education: '南京体育学院羽毛球训练专业',
+      experience: '二十多年羽毛球教学经验',
+      specialties: ['成人训练', '青少年训练', '技术诊断', '比赛复盘'],
+      contactHref: 'https://wa.me/358413134358',
+      image: '/coaches/coach-mango.jpg',
+    },
+  ],
+  en: [
+    {
+      id: 'mango',
+      name: 'Coach Mango',
+      role: 'Founder of Chongqing Qingyu Training Center',
+      summary:
+        'Graduated from Nanjing Sport Institute with a badminton training specialization. With more than 20 years of coaching experience, Coach Mango focuses on adult and youth badminton training, combining technical fundamentals, movement rhythm, match understanding, and post-session feedback.',
+      education: 'Badminton training specialization, Nanjing Sport Institute',
+      experience: '20+ years of badminton coaching',
+      specialties: ['Adult training', 'Youth training', 'Technique diagnosis', 'Match review'],
+      contactHref: 'https://wa.me/358413134358',
+      image: '/coaches/coach-mango.jpg',
+    },
+  ],
+};
+
 const copy = {
   zh: {
     brand: 'Goodminton Academy',
@@ -229,6 +272,12 @@ const copy = {
     showcaseKicker: '学员荣耀',
     showcaseTitle: '从训练场到领奖台',
     showcaseDesc: '公开展示学员和团队的比赛成绩、奖牌记录与成长瞬间。这里不连接私人训练档案，只呈现可公开分享的荣誉内容。',
+    coachSectionKicker: '教练简介',
+    coachSectionTitle: '把训练目标讲清楚，把进步路径做扎实',
+    coachSectionDesc: 'Goodminton Academy 的训练从真实课堂出发，关注动作细节、比赛判断和长期反馈。',
+    coachEducationLabel: '毕业专业',
+    coachExperienceLabel: '教学经验',
+    coachContact: '联系教练',
   },
   en: {
     brand: 'Goodminton Academy',
@@ -276,6 +325,12 @@ const copy = {
     showcaseKicker: 'Student honors',
     showcaseTitle: 'From practice court to podium',
     showcaseDesc: 'A public showcase of student and team achievements, medals, and growth moments. Private training records stay separate.',
+    coachSectionKicker: 'Coach profile',
+    coachSectionTitle: 'Clear goals, steady practice, visible progress',
+    coachSectionDesc: 'Goodminton Academy starts from real lessons and focuses on technique, match decisions, and long-term feedback.',
+    coachEducationLabel: 'Education',
+    coachExperienceLabel: 'Experience',
+    coachContact: 'Contact coach',
   },
 };
 
@@ -325,8 +380,10 @@ export default function Home() {
   const featured = heroFeature[lang];
   const [articlePosts, setArticlePosts] = useState<Record<Lang, ArticlePost[]>>(posts);
   const [studentShowcase, setStudentShowcase] = useState<Record<Lang, StudentShowcaseItem[]>>(studentShowcaseFallback);
+  const [coaches, setCoaches] = useState<Record<Lang, CoachProfile[]>>(coachFallback);
   const articleList = articlePosts[lang];
   const showcaseList = studentShowcase[lang];
+  const coach = coaches[lang][0];
   const router = useRouter();
   const [studentId, setStudentId] = useState('');
   const [studentError, setStudentError] = useState('');
@@ -362,8 +419,22 @@ export default function Home() {
       }
     }
 
+    async function loadCoaches() {
+      try {
+        const response = await fetch('/api/coaches');
+        const payload = (await response.json()) as Partial<Record<Lang, CoachProfile[]>>;
+
+        if (response.ok && payload.zh?.length && payload.en?.length && isMounted) {
+          setCoaches({ zh: payload.zh, en: payload.en });
+        }
+      } catch {
+        // Keep the built-in coach profile if public coach data cannot be loaded.
+      }
+    }
+
     void loadArticles();
     void loadStudentShowcase();
+    void loadCoaches();
 
     return () => {
       isMounted = false;
@@ -630,11 +701,68 @@ export default function Home() {
           </section>
         ) : null}
 
+        {coach ? (
+          <section id="coach" className="scroll-mt-20 border-y border-[#e6e1d4] bg-white/62 py-16">
+            <div className="mx-auto grid w-full max-w-[1180px] gap-9 px-5 lg:grid-cols-[420px_minmax(0,1fr)] lg:items-center">
+              <div className="relative aspect-[5/4] overflow-hidden rounded-[8px] bg-[#e6e1d4] shadow-[0_18px_44px_-34px_rgba(16,24,32,0.34)]">
+                <Image
+                  src={coach.image}
+                  alt={coach.name}
+                  fill
+                  sizes="(min-width: 1024px) 420px, 100vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,24,32,0.02),rgba(16,24,32,0.18))]" aria-hidden="true" />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[13px] font-semibold text-[#16845f]">{t.coachSectionKicker}</p>
+                <h2 className="mt-3 max-w-2xl text-[32px] font-semibold leading-tight tracking-[-0.015em] text-[#101820]">
+                  {t.coachSectionTitle}
+                </h2>
+                <p className="cjk-wrap mt-4 max-w-2xl text-[16px] leading-8 text-[#52636b]">{t.coachSectionDesc}</p>
+
+                <div className="mt-8 rounded-[8px] border border-[#dfe7dc] bg-[#fbfaf6] p-6">
+                  <p className="text-[28px] font-semibold tracking-[-0.015em] text-[#101820]">{coach.name}</p>
+                  <p className="mt-2 text-[15px] font-semibold text-[#16845f]">{coach.role}</p>
+                  <p className="cjk-wrap mt-5 text-[16px] leading-8 text-[#52636b]">{coach.summary}</p>
+
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <div className="border-t border-[#d8d0bf] pt-4">
+                      <p className="text-[13px] font-semibold text-[#64737a]">{t.coachEducationLabel}</p>
+                      <p className="cjk-wrap mt-2 text-[16px] font-semibold leading-7 text-[#101820]">{coach.education}</p>
+                    </div>
+                    <div className="border-t border-[#d8d0bf] pt-4">
+                      <p className="text-[13px] font-semibold text-[#64737a]">{t.coachExperienceLabel}</p>
+                      <p className="cjk-wrap mt-2 text-[16px] font-semibold leading-7 text-[#101820]">{coach.experience}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {coach.specialties.map((item) => (
+                      <span key={item} className="rounded-full border border-[#cfe8d9] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#1f4a38]">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+
+                  <a
+                    href={coach.contactHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-7 inline-flex h-11 items-center justify-center rounded-[6px] bg-[#14bf96] px-5 text-[14px] font-semibold text-white transition-colors hover:bg-[#10a985]"
+                  >
+                    {t.coachContact}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
       </main>
 
-      <div id="coach" className="scroll-mt-20">
-        <ContactFooter lang={lang} />
-      </div>
+      <ContactFooter lang={lang} />
     </div>
   );
 }
