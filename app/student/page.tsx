@@ -153,11 +153,11 @@ const STUDENT_SESSION_EVENT = 'goodminton-student-current-change';
 let cachedCurrentStudentRaw: string | null | undefined;
 let cachedCurrentStudent: StudentData | null = null;
 const QUICK_STUDENT_LOGINS = [
-  { label: '郭一苇', credential: 'gyw' },
-  { label: '李晨润', credential: 'lcr' },
-  { label: '盛欣怡', credential: 'sxy' },
-  { label: '薛美姣', credential: 'xmj' },
-  { label: '杨静南', credential: 'yjn' },
+  { label: '郭一苇', studentId: 'gyw', accessCode: '1122' },
+  { label: '李晨润', studentId: 'lcr', accessCode: '2233' },
+  { label: '盛欣怡', studentId: 'sxy', accessCode: '3344' },
+  { label: '薛美姣', studentId: 'xmj', accessCode: '4455' },
+  { label: '杨静南', studentId: 'yjn', accessCode: '4837' },
 ];
 
 function readStudentDraft(key: string): StudentDraft | null {
@@ -1577,11 +1577,12 @@ export default function StudentPage() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  async function loginStudent(rawCredential: string) {
+  async function loginStudent(rawCredential: string | { studentId: string; accessCode: string }) {
     if (loginLoading) return;
 
-    const trimmedCredential = rawCredential.trim();
-    if (!trimmedCredential) {
+    const credential =
+      typeof rawCredential === 'string' ? parseStudentCredential(rawCredential.trim()) : rawCredential;
+    if (!credential.studentId || !credential.accessCode) {
       setLoginError('请输入学员凭证。');
       setLoginStatus('');
       return;
@@ -1597,7 +1598,7 @@ export default function StudentPage() {
       const response = await fetch('/api/student-data', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(parseStudentCredential(trimmedCredential)),
+        body: JSON.stringify(credential),
         signal: controller.signal,
       });
       const payload = (await response.json().catch(() => ({}))) as { student?: StudentData; error?: string };
@@ -1673,9 +1674,9 @@ export default function StudentPage() {
             <div className="mt-2 grid grid-cols-2 gap-2">
               {QUICK_STUDENT_LOGINS.map((item) => (
                 <button
-                  key={item.credential}
+                  key={item.studentId}
                   type="button"
-                  onClick={() => loginStudent(item.credential)}
+                  onClick={() => loginStudent({ studentId: item.studentId, accessCode: item.accessCode })}
                   disabled={loginLoading}
                   className="min-h-11 rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-medium text-[#0e6f4d] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                 >
