@@ -241,8 +241,18 @@ function getCurrentStudentServerSnapshot() {
 
 function parseStudentCredential(value: string) {
   const credential = value.trim().toLowerCase().replace(/\s+/g, ' ');
+  const aliasAccessCodes: Record<string, string> = {
+    gyw: '1122',
+    lcr: '2233',
+    sxy: '3344',
+    xmj: '4455',
+    yjn: '4837',
+  };
   if (credential === 'demo') {
     return { studentId: 'demo', accessCode: '1234' };
+  }
+  if (aliasAccessCodes[credential]) {
+    return { studentId: credential, accessCode: aliasAccessCodes[credential] };
   }
 
   const matchedAccessCode = credential.match(/(?:[\s\-–—－_]+|)(\d{3,})$/u);
@@ -1640,7 +1650,7 @@ export default function StudentPage() {
                 autoCapitalize="none"
                 autoComplete="off"
                 className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
-                placeholder="例如 demo、yjn4837 或 yjn 4837"
+                placeholder="例如 demo、gyw、lcr、sxy、xmj、yjn"
               />
             </label>
             <button
