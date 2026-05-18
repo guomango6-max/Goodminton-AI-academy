@@ -40,9 +40,44 @@ type ValidGoogleServiceAccount = {
 const singleStudentCache = new Map<string, Record<string, unknown>>();
 const fileStudentCache = new Map<string, Record<string, unknown>>();
 const driveStudentCache = new Map<string, Record<string, unknown>>();
+const sheetStudentCache = new Map<string, Record<string, unknown>>();
 let envStudentCacheRaw = '';
 let envStudentCache: Record<string, Record<string, unknown>> | Array<Record<string, unknown>> | null = null;
 let googleAccessTokenCache: { token: string; expiresAt: number } | null = null;
+
+async function getStudentFromSheet(studentId: string) {
+  const endpoint = process.env.GOODMINTON_STUDENT_SHEET_ENDPOINT;
+  const token = process.env.GOODMINTON_STUDENT_SHEET_TOKEN;
+  if (!endpoint || !token) return null;
+
+  const cached = sheetStudentCache.get(studentId);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token, studentId }),
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!response.ok) {
+      console.error('[student-data-sheet-error]', response.status, await response.text().catch(() => ''));
+      return null;
+    }
+
+    const payload = (await response.json()) as { student?: Record<string, unknown> } | Record<string, unknown>;
+    const student = 'student' in payload ? payload.student : payload;
+    if (!student || typeof student !== 'object' || Array.isArray(student)) return null;
+    const studentRecord = student as Record<string, unknown>;
+
+    sheetStudentCache.set(studentId, studentRecord);
+    return studentRecord;
+  } catch (error) {
+    console.error('[student-data-sheet-fetch-error]', error);
+    return null;
+  }
+}
 
 function base64Url(value: Buffer | string) {
   return Buffer.from(value).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
@@ -242,6 +277,9 @@ async function getStudentFromFile(studentId: string) {
 }
 
 async function getStudentById(studentId: string) {
+  const sheetStudent = await getStudentFromSheet(studentId);
+  if (sheetStudent) return sheetStudent;
+
   const driveStudent = await getStudentFromDrive(studentId);
   if (driveStudent) return driveStudent;
 
