@@ -95,6 +95,17 @@ async function getStudentFromFile(studentId: string) {
   return student;
 }
 
+async function getStudentById(studentId: string) {
+  const envStudent = getStudentFromSingleEnv(studentId) || getStudentFromEnv(studentId);
+  if (envStudent) return envStudent;
+
+  try {
+    return await getStudentFromFile(studentId);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as {
     studentId?: string;
@@ -110,10 +121,23 @@ export async function POST(req: Request) {
 
   try {
     const alias = STUDENT_LOGIN_ALIASES[studentId];
-    const lookupStudentId = alias?.studentId || studentId;
     const expectedAccessCode = alias?.accessCode;
-    const student =
-      getStudentFromSingleEnv(lookupStudentId) || getStudentFromEnv(lookupStudentId) || (await getStudentFromFile(lookupStudentId));
+    const lookupStudentIds = [
+      alias?.studentId,
+      accessCode ? `${studentId}_${accessCode}` : '',
+      studentId,
+    ].filter(Boolean) as string[];
+    const uniqueLookupStudentIds = [...new Set(lookupStudentIds)];
+
+    let student: Record<string, unknown> | null = null;
+    for (const lookupStudentId of uniqueLookupStudentIds) {
+      student = await getStudentById(lookupStudentId);
+      if (student) break;
+    }
+
+    if (!student) {
+      return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404 });
+    }
 
     if ((expectedAccessCode || student.accessCode) !== accessCode) {
       return NextResponse.json({ error: '学员 ID 或访问码不正确。' }, { status: 401 });
