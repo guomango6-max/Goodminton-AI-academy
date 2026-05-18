@@ -1575,6 +1575,7 @@ export default function StudentPage() {
   const [credential, setCredential] = useState('');
   const [loginStatus, setLoginStatus] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loginDebug, setLoginDebug] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
   async function loginStudent(rawCredential: string | { studentId: string; accessCode: string }) {
@@ -1590,6 +1591,7 @@ export default function StudentPage() {
 
     setLoginError('');
     setLoginStatus('正在读取学员档案...');
+    setLoginDebug(`请求：${credential.studentId}`);
     setLoginLoading(true);
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 10000);
@@ -1602,6 +1604,7 @@ export default function StudentPage() {
         signal: controller.signal,
       });
       const payload = (await response.json().catch(() => ({}))) as { student?: StudentData; error?: string };
+      setLoginDebug(`请求：${credential.studentId} / 状态：${response.status}`);
 
       if (!response.ok || !payload.student) {
         throw new Error(payload.error || '读取失败。');
@@ -1636,6 +1639,7 @@ export default function StudentPage() {
     setCredential('');
     setLoginStatus('');
     setLoginError('');
+    setLoginDebug('');
   }
 
   if (!student) {
@@ -1649,6 +1653,7 @@ export default function StudentPage() {
           <p className="mt-2 text-center text-sm leading-6 text-slate-600">
             手机端需要在当前浏览器登录一次。输入 demo，或输入学员ID-访问码。
           </p>
+          <p className="mt-1 text-center text-xs text-slate-400">版本：quick-login-v2</p>
           <form onSubmit={handleStudentLogin} className="mt-5 space-y-3">
             <label className="block">
               <span className="text-sm font-medium text-slate-700">学员凭证</span>
@@ -1687,6 +1692,7 @@ export default function StudentPage() {
           </div>
           {loginStatus ? <p className="mt-3 text-sm text-[#16845f]">{loginStatus}</p> : null}
           {loginError ? <p className="mt-3 text-sm text-red-600">{loginError}</p> : null}
+          {loginDebug ? <p className="mt-2 rounded-md bg-slate-100 px-2 py-1 font-mono text-xs text-slate-500">{loginDebug}</p> : null}
           <Link href="/" className="mt-5 inline-flex text-sm font-medium text-[#0e6f4d]">
             返回主页
           </Link>
