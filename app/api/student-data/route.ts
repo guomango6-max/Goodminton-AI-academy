@@ -66,9 +66,17 @@ async function getStudentFromSheet(studentId: string) {
       return null;
     }
 
-    const payload = (await response.json()) as { student?: Record<string, unknown> } | Record<string, unknown>;
+    const payload = (await response.json()) as { error?: string; student?: Record<string, unknown> } | Record<string, unknown>;
+    if ('error' in payload && payload.error) return null;
     const student = 'student' in payload ? payload.student : payload;
-    if (!student || typeof student !== 'object' || Array.isArray(student)) return null;
+    if (
+      !student ||
+      typeof student !== 'object' ||
+      Array.isArray(student) ||
+      !('studentId' in student)
+    ) {
+      return null;
+    }
     const studentRecord = student as Record<string, unknown>;
 
     sheetStudentCache.set(studentId, studentRecord);
