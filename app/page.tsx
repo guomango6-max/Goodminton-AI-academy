@@ -256,7 +256,7 @@ const copy = {
     studentTitle: '学员入口',
     studentDesc: '输入教练给你的学员凭证，进入自己的训练页面。',
     studentIdLabel: '学员凭证',
-    studentIdPlaceholder: '请键入学生ID或demo',
+    studentIdPlaceholder: 'demo 或 学生ID-访问码',
     studentCta: '进入',
     loadingStudent: '正在读取...',
     validatingStudent: '正在验证凭证...',
@@ -314,7 +314,7 @@ const copy = {
     studentTitle: 'Student portal',
     studentDesc: 'Open your training page.',
     studentIdLabel: 'Student credential',
-    studentIdPlaceholder: 'Enter demo or student ID',
+    studentIdPlaceholder: 'demo or student ID-code',
     studentCta: 'Enter',
     loadingStudent: 'Loading...',
     validatingStudent: 'Checking credential...',
@@ -467,11 +467,11 @@ export default function Home() {
   }, []);
 
   function parseStudentCredential(value: string) {
-    const credential = value.trim().toLowerCase();
+    const credential = value.trim().toLowerCase().replace(/\s+/g, ' ');
     if (credential === 'demo') {
       return { studentId: 'demo', accessCode: '1234' };
     }
-    const matchedAccessCode = credential.match(/-(\d{3,})$/);
+    const matchedAccessCode = credential.match(/[\s\-–—－_]+(\d{3,})$/u);
     if (matchedAccessCode) {
       return {
         studentId: credential.slice(0, -matchedAccessCode[0].length),
