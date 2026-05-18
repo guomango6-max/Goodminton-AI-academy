@@ -1560,11 +1560,13 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 }
 
 export default function StudentPage() {
-  const student = useSyncExternalStore(
+  const savedStudent = useSyncExternalStore(
     subscribeCurrentStudent,
     readCurrentStudent,
     getCurrentStudentServerSnapshot,
   );
+  const [activeStudent, setActiveStudent] = useState<StudentData | null>(null);
+  const student = activeStudent || savedStudent;
   const [credential, setCredential] = useState('');
   const [loginStatus, setLoginStatus] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -1600,8 +1602,13 @@ export default function StudentPage() {
         throw new Error(payload.error || '读取失败。');
       }
 
-      window.sessionStorage.setItem('goodminton-student-current', JSON.stringify(payload.student));
-      window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
+      setActiveStudent(payload.student);
+      try {
+        window.sessionStorage.setItem('goodminton-student-current', JSON.stringify(payload.student));
+        window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
+      } catch {
+        // Some mobile/private browsers reject storage writes. The React state above still opens the page.
+      }
       setLoginStatus('已打开学员档案。');
     } catch (error) {
       setLoginError(
@@ -1624,8 +1631,13 @@ export default function StudentPage() {
   }
 
   function logoutStudent() {
-    window.sessionStorage.removeItem('goodminton-student-current');
-    window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
+    setActiveStudent(null);
+    try {
+      window.sessionStorage.removeItem('goodminton-student-current');
+      window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
+    } catch {
+      // Ignore storage failures; clearing React state is enough for the current page.
+    }
     setCredential('');
     setLoginStatus('');
     setLoginError('');
