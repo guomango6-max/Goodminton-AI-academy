@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useSyncExternalStore, ReactNode } from 'react';
 
 export type Lang = 'zh' | 'en';
 
@@ -9,19 +9,43 @@ const LangContext = createContext<{
   toggle: () => void;
 }>({ lang: 'zh', toggle: () => {} });
 
+const LANG_STORAGE_KEY = 'goodminton-lang';
+const LANG_CHANGE_EVENT = 'goodminton-lang-change';
+
+function normalizeLang(value: string | null): Lang {
+  return value === 'en' ? 'en' : 'zh';
+}
+
+function getStoredLang(): Lang {
+  if (typeof window === 'undefined') return 'zh';
+  return normalizeLang(window.localStorage.getItem(LANG_STORAGE_KEY));
+}
+
+function getServerLang(): Lang {
+  return 'zh';
+}
+
+function subscribeLangChange(onStoreChange: () => void) {
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener(LANG_CHANGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener(LANG_CHANGE_EVENT, onStoreChange);
+  };
+}
+
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>(() => {
-    if (typeof window === 'undefined') return 'zh';
-    const saved = window.localStorage.getItem('goodminton-lang');
-    return saved === 'zh' || saved === 'en' ? saved : 'zh';
-  });
+  const lang = useSyncExternalStore(subscribeLangChange, getStoredLang, getServerLang);
 
   useEffect(() => {
-    window.localStorage.setItem('goodminton-lang', lang);
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
   }, [lang]);
 
-  const toggle = () => setLang((l) => (l === 'zh' ? 'en' : 'zh'));
+  const toggle = () => {
+    const next = lang === 'zh' ? 'en' : 'zh';
+    window.localStorage.setItem(LANG_STORAGE_KEY, next);
+    window.dispatchEvent(new Event(LANG_CHANGE_EVENT));
+  };
 
   return <LangContext.Provider value={{ lang, toggle }}>{children}</LangContext.Provider>;
 }

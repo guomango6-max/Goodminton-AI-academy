@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 
 type StudentPathItem = {
   label: string;
@@ -128,6 +128,7 @@ type StudentDraft = {
 
 type StudentSubmissionLog = {
   id: string;
+  submissionType: 'lesson' | 'match';
   studentId: string;
   studentName: string;
   submittedAt: string;
@@ -147,6 +148,10 @@ type StudentSubmissionLog = {
     experience: string;
   };
 };
+
+const STUDENT_SESSION_EVENT = 'goodminton-student-current-change';
+let cachedCurrentStudentRaw: string | null | undefined;
+let cachedCurrentStudent: StudentData | null = null;
 
 function readStudentDraft(key: string): StudentDraft | null {
   if (typeof window === 'undefined') {
@@ -194,16 +199,44 @@ function readCurrentStudent(): StudentData | null {
 
   const savedStudent = window.sessionStorage.getItem('goodminton-student-current');
 
+  if (savedStudent === cachedCurrentStudentRaw) {
+    return cachedCurrentStudent;
+  }
+
+  cachedCurrentStudentRaw = savedStudent;
+
   if (!savedStudent) {
+    cachedCurrentStudent = null;
     return null;
   }
 
   try {
-    return JSON.parse(savedStudent) as StudentData;
+    cachedCurrentStudent = JSON.parse(savedStudent) as StudentData;
+    return cachedCurrentStudent;
   } catch {
     window.sessionStorage.removeItem('goodminton-student-current');
+    cachedCurrentStudentRaw = null;
+    cachedCurrentStudent = null;
     return null;
   }
+}
+
+function subscribeCurrentStudent(listener: () => void) {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
+  window.addEventListener('storage', listener);
+  window.addEventListener(STUDENT_SESSION_EVENT, listener);
+
+  return () => {
+    window.removeEventListener('storage', listener);
+    window.removeEventListener(STUDENT_SESSION_EVENT, listener);
+  };
+}
+
+function getCurrentStudentServerSnapshot() {
+  return null;
 }
 
 function Pill({ children, active }: { children: React.ReactNode; active?: boolean }) {
@@ -223,12 +256,12 @@ function Pill({ children, active }: { children: React.ReactNode; active?: boolea
 
 function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section id={id} className="scroll-mt-6 overflow-hidden rounded-lg border border-[#dfe7dc] bg-[#fffdf8] shadow-sm">
+    <section id={id} className="scroll-mt-28 overflow-hidden rounded-lg border border-[#dfe7dc] bg-[#fffdf8] shadow-sm lg:scroll-mt-6">
       <div className="flex items-center justify-between border-b border-[#dfe7dc] bg-[#f4f8f1] px-5 py-3">
         <div className="text-sm font-semibold text-slate-900">{title}</div>
         <div className="text-xs text-[#16845f]">学员数据</div>
       </div>
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {children}
       </div>
     </section>
@@ -269,33 +302,37 @@ function GoodmintonMark() {
 function StudentSideNav({ student }: { student: StudentData }) {
   const items = [
     ['O', '总览'],
+    ['S', '课后总结'],
+    ['R', '比赛复盘'],
+    ['H', '家庭作业'],
     ['C', '当前任务'],
     ['A', '个人能力'],
     ['B', '成就勋章'],
     ['L', '训练记录'],
-    ['R', '比赛复盘'],
   ];
 
   return (
-    <aside className="sticky top-0 grid h-screen grid-rows-[auto_1fr_auto] border-r border-[#e6e1d4] bg-[#fbfaf6]/95 max-lg:static max-lg:h-auto">
-      <div className="grid min-h-32 content-center gap-3 border-b border-[#e6e1d4] p-5">
+    <aside className="sticky top-0 z-30 grid h-screen grid-rows-[auto_1fr_auto] border-r border-[#e6e1d4] bg-[#fbfaf6]/95 max-lg:block max-lg:h-auto max-lg:border-r-0 max-lg:border-b max-lg:shadow-sm">
+      <div className="grid min-h-32 content-center gap-3 border-b border-[#e6e1d4] p-5 max-lg:min-h-0 max-lg:grid-cols-[44px_1fr] max-lg:items-center max-lg:gap-3 max-lg:p-3">
         <GoodmintonMark />
         <div>
-          <h1 className="text-xl font-semibold leading-tight tracking-[-0.015em] text-slate-950">
+          <h1 className="text-xl font-semibold leading-tight tracking-[-0.015em] text-slate-950 max-lg:text-base">
             {student.name}
-            <br />
-            学员图谱
+            <span className="max-lg:hidden">
+              <br />
+              学员图谱
+            </span>
           </h1>
-          <p className="mt-1 text-xs text-slate-500">Goodminton progress system</p>
+          <p className="mt-1 text-xs text-slate-500 max-lg:truncate">Goodminton progress system · {student.studentId}</p>
         </div>
       </div>
-      <nav className="py-2 max-lg:grid max-lg:grid-cols-3 max-sm:grid-cols-2">
+      <nav className="py-2 max-lg:flex max-lg:gap-2 max-lg:overflow-x-auto max-lg:px-3 max-lg:py-2 max-lg:[scrollbar-width:none]">
         {items.map(([icon, label], index) => (
           <a
             key={label}
             href={`#student-section-${index}`}
             className={
-              'grid grid-cols-[34px_1fr] items-center gap-2 border-l-4 px-5 py-3 text-sm font-semibold transition ' +
+              'grid grid-cols-[34px_1fr] items-center gap-2 border-l-4 px-5 py-3 text-sm font-semibold transition max-lg:min-h-11 max-lg:min-w-max max-lg:grid-cols-[24px_1fr] max-lg:rounded-md max-lg:border-l-0 max-lg:border-b-4 max-lg:px-3 max-lg:py-2 ' +
               (index === 0
                 ? 'border-[#14bf96] bg-[#e9fbf3] text-[#0e6f4d]'
                 : 'border-transparent text-slate-500 hover:bg-[#f4f8f1]')
@@ -306,7 +343,7 @@ function StudentSideNav({ student }: { student: StudentData }) {
           </a>
         ))}
       </nav>
-      <div className="flex items-center justify-between border-t border-[#e6e1d4] p-5 text-sm text-slate-500">
+      <div className="flex items-center justify-between border-t border-[#e6e1d4] p-5 text-sm text-slate-500 max-lg:hidden">
         <span className="grid h-7 w-7 place-items-center rounded-full bg-[#dff5e9] font-semibold text-[#0e6f4d]">
           {student.name.slice(0, 1)}
         </span>
@@ -353,6 +390,74 @@ function displayRank(level: string, progress: number) {
   if (progress >= 52) return '黄金';
   if (progress >= 40) return '白银';
   return '青铜';
+}
+
+function rankBadgeConfig(rank: string) {
+  if (/荣耀王者|最强王者|星耀/.test(rank)) {
+    return { accent: '#60a5fa', gem: '#93c5fd', core: '#38bdf8', shape: 'star' as const };
+  }
+
+  if (/钻石/.test(rank)) {
+    return { accent: '#38bdf8', gem: '#7dd3fc', core: '#0ea5e9', shape: 'diamond' as const };
+  }
+
+  if (/铂金/.test(rank)) {
+    return { accent: '#67e8f9', gem: '#cffafe', core: '#06b6d4', shape: 'diamond' as const };
+  }
+
+  if (/黄金/.test(rank)) {
+    return { accent: '#f59e0b', gem: '#fbbf24', core: '#fb923c', shape: 'star' as const };
+  }
+
+  if (/白银/.test(rank)) {
+    return { accent: '#e5e7eb', gem: '#f8fafc', core: '#cbd5e1', shape: 'star' as const };
+  }
+
+  return { accent: '#a3a3a3', gem: '#d4d4d4', core: '#737373', shape: 'star' as const };
+}
+
+function RankBadge({ rank, size = 'md' }: { rank: string; size?: 'sm' | 'md' | 'lg' }) {
+  const config = rankBadgeConfig(rank);
+  const dimension = size === 'lg' ? 72 : size === 'sm' ? 34 : 48;
+  const innerShape =
+    config.shape === 'diamond' ? (
+      <>
+        <polygon points="50 26 72 48 50 78 28 48" fill={config.gem} />
+        <polygon points="50 26 62 48 50 78 38 48" fill={config.accent} opacity="0.9" />
+        <polygon points="28 48 38 48 50 78" fill="#ffffff" opacity="0.32" />
+        <polygon points="62 48 72 48 50 78" fill="#0f172a" opacity="0.12" />
+      </>
+    ) : (
+      <>
+        <polygon points="50 24 58 41 77 43 63 56 67 75 50 65 33 75 37 56 23 43 42 41" fill={config.gem} />
+        <polygon points="50 24 58 41 50 50 42 41" fill="#ffffff" opacity="0.34" />
+        <polygon points="50 50 63 56 67 75 50 65" fill={config.core} opacity="0.88" />
+        <polygon points="50 50 37 56 33 75 50 65" fill="#ffffff" opacity="0.2" />
+      </>
+    );
+
+  return (
+    <svg width={dimension} height={dimension} viewBox="0 0 100 100" aria-label={`${rank}等级徽章`} role="img">
+      <polygon
+        points="50 6 83 20 96 50 83 80 50 94 17 80 4 50 17 20"
+        fill="#30343a"
+      />
+      <polygon
+        points="50 13 78 25 89 50 78 75 50 87 22 75 11 50 22 25"
+        fill="#20242a"
+        stroke={config.accent}
+        strokeWidth="4"
+      />
+      <polygon
+        points="50 18 74 28 84 50 74 72 50 82 26 72 16 50 26 28"
+        fill="none"
+        stroke="#ffffff"
+        strokeOpacity="0.35"
+        strokeWidth="2"
+      />
+      {innerShape}
+    </svg>
+  );
 }
 
 const CANONICAL_ABILITY = [
@@ -882,36 +987,63 @@ function AchievementBadges({ achievements }: { achievements: Achievement[] }) {
 
 function LessonLog({ lessons }: { lessons: NonNullable<StudentData['lessonHistory']> }) {
   return (
-    <div className="max-h-96 overflow-auto rounded-md bg-white">
-      <div className="min-w-[860px] space-y-1 font-mono text-sm">
-      {lessons.map((lesson, index) => (
-        <div key={lesson.id || `${lesson.date}-${lesson.title}`} className="space-y-1 border-b border-slate-100 py-2 last:border-b-0">
-          <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
-            <span className="text-slate-500">{lesson.date.slice(5)}</span>
-            <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-            <span className="text-slate-900">课堂标题： {lesson.title}</span>
-          </div>
-          <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
-            <span className="text-slate-500">{lesson.date.slice(5)}</span>
-            <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-            <span className="text-slate-900">
-              课堂主要内容： {(lesson.mainContent || [lesson.focus]).filter(Boolean).join(' / ')}
-            </span>
-          </div>
-          <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
-            <span className="text-slate-500">{lesson.date.slice(5)}</span>
-            <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-            <span className="text-slate-900">教练观察： {lesson.coachNote}</span>
-          </div>
-          <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
-            <span className="text-slate-500">{lesson.date.slice(5)}</span>
-            <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-            <span className="text-slate-900">学生反馈： {lesson.studentNote}</span>
-          </div>
-        </div>
-      ))}
+    <>
+      <div className="space-y-3 sm:hidden">
+        {lessons.map((lesson, index) => (
+          <article key={lesson.id || `${lesson.date}-${lesson.title}`} className="rounded-md border border-[#dfe7dc] bg-white p-3">
+            <div className="flex items-center justify-between gap-3 text-xs text-slate-500">
+              <span>{lesson.date}</span>
+              <span className="font-mono text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+            </div>
+            <div className="mt-2 text-sm font-semibold leading-6 text-slate-950">{lesson.title}</div>
+            <dl className="mt-2 space-y-2 text-sm leading-6 text-slate-700">
+              <div>
+                <dt className="font-medium text-slate-900">课堂主要内容</dt>
+                <dd>{(lesson.mainContent || [lesson.focus]).filter(Boolean).join(' / ')}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-900">教练观察</dt>
+                <dd>{lesson.coachNote}</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-slate-900">学生反馈</dt>
+                <dd>{lesson.studentNote}</dd>
+              </div>
+            </dl>
+          </article>
+        ))}
       </div>
-    </div>
+      <div className="hidden max-h-96 overflow-auto rounded-md bg-white sm:block">
+        <div className="min-w-[860px] space-y-1 font-mono text-sm">
+        {lessons.map((lesson, index) => (
+          <div key={lesson.id || `${lesson.date}-${lesson.title}`} className="space-y-1 border-b border-slate-100 py-2 last:border-b-0">
+            <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
+              <span className="text-slate-500">{lesson.date.slice(5)}</span>
+              <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+              <span className="text-slate-900">课堂标题： {lesson.title}</span>
+            </div>
+            <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
+              <span className="text-slate-500">{lesson.date.slice(5)}</span>
+              <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+              <span className="text-slate-900">
+                课堂主要内容： {(lesson.mainContent || [lesson.focus]).filter(Boolean).join(' / ')}
+              </span>
+            </div>
+            <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
+              <span className="text-slate-500">{lesson.date.slice(5)}</span>
+              <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+              <span className="text-slate-900">教练观察： {lesson.coachNote}</span>
+            </div>
+            <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
+              <span className="text-slate-500">{lesson.date.slice(5)}</span>
+              <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
+              <span className="text-slate-900">学生反馈： {lesson.studentNote}</span>
+            </div>
+          </div>
+        ))}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -932,7 +1064,10 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
       student.lessonSummary?.homework.filter((item) => item.done).map((item) => item.id) ||
       [],
   );
-  const [submissionStatus, setSubmissionStatus] = useState('');
+  const [lessonSubmissionStatus, setLessonSubmissionStatus] = useState('');
+  const [matchSubmissionStatus, setMatchSubmissionStatus] = useState('');
+  const [lessonSubmissionLoading, setLessonSubmissionLoading] = useState(false);
+  const [matchSubmissionLoading, setMatchSubmissionLoading] = useState(false);
   const [submissionLogs, setSubmissionLogs] = useState<StudentSubmissionLog[]>(() => readStudentSubmissionLogs(logKey));
   const [lessonInput, setLessonInput] = useState({
     studentReflection: initialDraft?.lessonInput?.studentReflection ?? student.lessonSummary?.studentReflection ?? '',
@@ -955,10 +1090,11 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
     setCheckedHomework((items) => (items.includes(id) ? items.filter((item) => item !== id) : [...items, id]));
   }
 
-  function buildSubmissionLog(): StudentSubmissionLog {
+  function buildSubmissionLog(submissionType: 'lesson' | 'match'): StudentSubmissionLog {
     const submittedAt = new Date().toISOString();
     return {
       id: `${student.studentId}-${submittedAt}`,
+      submissionType,
       studentId: student.studentId,
       studentName: student.name,
       submittedAt,
@@ -991,26 +1127,85 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
     );
   }, [checkedHomework, draftKey, lessonInput, matchInput]);
 
-  function submitStudentReview() {
-    const submission = buildSubmissionLog();
+  async function submitStudentReview(submissionType: 'lesson' | 'match') {
+    const isLesson = submissionType === 'lesson';
+    if (isLesson ? lessonSubmissionLoading : matchSubmissionLoading) return;
+
+    const submission = buildSubmissionLog(submissionType);
+    const hasLessonContent =
+      submission.lessonSummary.studentReflection ||
+      submission.lessonSummary.question ||
+      submission.lessonSummary.completedHomework.length > 0;
+    const hasMatchContent =
+      submission.matchReview.match ||
+      submission.matchReview.score ||
+      submission.matchReview.whatWorked ||
+      submission.matchReview.nextAdjustment ||
+      submission.matchReview.experience;
     const nextLogs = [submission, ...submissionLogs].slice(0, 20);
     const clearedLessonInput = { studentReflection: '', question: '', confidence: '3' };
     const clearedMatchInput = { match: '', score: '', whatWorked: '', nextAdjustment: '', experience: '' };
+    const setActiveStatus = isLesson ? setLessonSubmissionStatus : setMatchSubmissionStatus;
+    const setActiveLoading = isLesson ? setLessonSubmissionLoading : setMatchSubmissionLoading;
+
+    if (isLesson && !hasLessonContent) {
+      setActiveStatus('请先填写课后总结、问题，或勾选作业。');
+      return;
+    }
+
+    if (!isLesson && !hasMatchContent) {
+      setActiveStatus('请先填写比赛复盘内容。');
+      return;
+    }
 
     window.localStorage.setItem(`${draftKey}-submitted`, JSON.stringify(submission));
     window.localStorage.setItem(logKey, JSON.stringify(nextLogs));
     setSubmissionLogs(nextLogs);
-    setLessonInput(clearedLessonInput);
-    setMatchInput(clearedMatchInput);
-    window.localStorage.setItem(
-      draftKey,
-      JSON.stringify({
-        checkedHomework,
-        lessonInput: clearedLessonInput,
-        matchInput: clearedMatchInput,
-      }),
-    );
-    setSubmissionStatus('已提交，已记录到日志，并清空课后总结和比赛复盘输入框。');
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+    setActiveLoading(true);
+    setActiveStatus('正在发送给教练...');
+
+    try {
+      const response = await fetch('/api/student-submission', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(submission),
+        signal: controller.signal,
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error || '发送失败。');
+      }
+
+      if (isLesson) {
+        setLessonInput(clearedLessonInput);
+      } else {
+        setMatchInput(clearedMatchInput);
+      }
+      window.localStorage.setItem(
+        draftKey,
+        JSON.stringify({
+          checkedHomework,
+          lessonInput: isLesson ? clearedLessonInput : lessonInput,
+          matchInput: isLesson ? matchInput : clearedMatchInput,
+        }),
+      );
+      setActiveStatus(isLesson ? '课后总结已发送给教练，并保留本机日志。' : '比赛复盘已发送给教练，并保留本机日志。');
+    } catch (error) {
+      const message =
+        error instanceof DOMException && error.name === 'AbortError'
+          ? '发送超时'
+          : error instanceof Error
+            ? error.message
+            : '发送失败';
+      setActiveStatus(`已保存到本机日志，但发送给教练失败：${message}`);
+    } finally {
+      window.clearTimeout(timeout);
+      setActiveLoading(false);
+    }
   }
 
   return (
@@ -1020,13 +1215,13 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
         <div className="min-w-0">
       <div className="border-b border-[#e6e1d4] bg-[#fbfaf6]/95">
         <div
-          className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8"
+          className="flex flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 lg:px-8"
           style={contentFrameStyle}
         >
           <div className="text-sm font-semibold">Goodminton Academy</div>
           <div className="text-sm text-slate-400">/</div>
           <div className="text-sm text-slate-600">学员图谱</div>
-          <button onClick={onLogout} className="ml-auto rounded-md border border-[#cfe8d9] bg-white px-3 py-1.5 text-sm font-medium text-[#0e6f4d]">
+          <button onClick={onLogout} className="ml-auto min-h-10 rounded-md border border-[#cfe8d9] bg-white px-3 py-1.5 text-sm font-medium text-[#0e6f4d]">
             退出
           </button>
         </div>
@@ -1036,15 +1231,18 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
         className="px-4 py-6 sm:px-6 lg:px-8"
         style={contentFrameStyle}
       >
-        <header id="student-section-0" className="mb-6 scroll-mt-6 rounded-lg border border-[#dfe7dc] bg-[#fffdf8] p-5 shadow-sm">
+        <header id="student-section-0" className="mb-6 scroll-mt-28 rounded-lg border border-[#dfe7dc] bg-[#fffdf8] p-4 shadow-sm sm:p-5 lg:scroll-mt-6">
           <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
-            <div className="flex gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[#16845f] text-2xl font-semibold text-white shadow-sm">
+            <div className="flex gap-3 sm:gap-4">
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#16845f] text-xl font-semibold text-white shadow-sm sm:h-16 sm:w-16 sm:text-2xl">
                 {student.name.slice(0, 1).toUpperCase()}
+                <span className="absolute -bottom-2 -right-2 rounded-full bg-[#fffdf8] p-0.5 shadow-sm">
+                  <RankBadge rank={rank} size="sm" />
+                </span>
               </div>
-              <div>
-                <div className="text-sm text-slate-500">Goodminton / 学员图谱 / {student.studentId}</div>
-            <h1 className="mt-1 text-3xl font-semibold tracking-[-0.02em] text-slate-950">
+              <div className="min-w-0">
+                <div className="break-words text-sm text-slate-500">Goodminton / 学员图谱 / {student.studentId}</div>
+            <h1 className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-slate-950 sm:text-3xl">
                   {student.name} 的训练数据
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
@@ -1053,16 +1251,19 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
               </div>
             </div>
             <div className="rounded-lg border border-[#dfe7dc] bg-[#f4f8f1] p-4">
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div>
+              <div className="grid grid-cols-3 gap-2 text-center sm:gap-3">
+                <div className="flex flex-col items-center">
                   <div className="text-xs text-slate-500">等级</div>
+                  <div className="mt-1">
+                    <RankBadge rank={rank} />
+                  </div>
                   <div className="mt-1 text-sm font-semibold">{rank}</div>
                 </div>
-                <div>
+                <div className="flex flex-col items-center justify-center">
                   <div className="text-xs text-slate-500">进度</div>
                   <div className="mt-1 text-sm font-semibold">{student.progress}%</div>
                 </div>
-                <div>
+                <div className="flex flex-col items-center justify-center">
                   <div className="text-xs text-slate-500">模式</div>
                   <div className="mt-1 text-sm font-semibold">{student.reviewMode}</div>
                 </div>
@@ -1079,86 +1280,8 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
         </header>
 
         <div className="space-y-6">
-          <section id="student-section-1" className="scroll-mt-6 rounded-md border border-[#dfe7dc] bg-[#fffdf8] p-5 shadow-sm">
-            <div className="grid gap-5 lg:grid-cols-[1fr_240px]">
-              <div>
-                <div className="text-sm text-slate-500">当前训练</div>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.015em] text-slate-950">
-                  {student.stage.title}
-                </h2>
-                <p className="mt-3 text-base leading-7 text-slate-600">{student.stage.description}</p>
-                <div className="mt-6">
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    {student.stage.path.map((item) => (
-                      <Pill key={item.label} active={item.active}>
-                        {item.label}
-                      </Pill>
-                    ))}
-                  </div>
-                  <ProgressBar value={student.stage.pathProgress} />
-                </div>
-              </div>
-
-              <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4">
-                <div className="text-sm text-slate-500">今日最小练习</div>
-                <div className="mt-2 text-xl font-semibold tracking-[-0.01em]">{student.today.title}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{student.today.description}</p>
-                <button
-                  onClick={() => markReviewed(student.today.title)}
-                  className="mt-5 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-medium text-[#0e6f4d]"
-                >
-                  {reviewedItems.includes(student.today.title) ? '已审查' : '标记为已审查'}
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <Section title="家庭作业">
-            <div className="grid gap-3 md:grid-cols-3">
-              {student.lessonSummary?.homework.map((item) => {
-                const checked = checkedHomework.includes(item.id);
-                return (
-                  <label
-                    key={item.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-md border border-[#dfe7dc] bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700"
-                  >
-                    <input
-                      checked={checked}
-                      onChange={() => toggleHomework(item.id)}
-                      type="checkbox"
-                      className="mt-1 h-4 w-4 rounded border-slate-300 accent-[#16845f]"
-                    />
-                    <span className={checked ? 'text-slate-400 line-through' : ''}>{item.text}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </Section>
-
-          <Section id="student-section-3" title="成就和勋章">
-            <AchievementBadges achievements={student.achievements || []} />
-          </Section>
-
-          {student.abilityMatrix?.length ? (
-            <Section id="student-section-2" title="能力矩阵">
-              <AbilityHex items={student.abilityMatrix} />
-            </Section>
-          ) : null}
-
-          {student.skillTree?.length ? (
-            <Section title="技能树">
-              <SkillTree />
-            </Section>
-          ) : null}
-
-          {student.lessonHistory?.length ? (
-            <Section id="student-section-4" title="上课日志">
-              <LessonLog lessons={student.lessonHistory} />
-            </Section>
-          ) : null}
-
           <div className="grid gap-6 lg:grid-cols-2">
-            <Section title="课后总结">
+            <Section id="student-section-1" title="课后总结">
               <div className="space-y-4">
                 <div className="rounded-md bg-[#f4f8f1] p-4">
                   <div className="text-sm text-slate-500">{student.lessonSummary?.date}</div>
@@ -1202,10 +1325,25 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <div className="text-sm font-medium">教练观察</div>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{student.lessonSummary?.coachNote}</p>
                 </div>
+                <div className="flex flex-col gap-2 rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">提交课后总结</div>
+                    <div className="mt-1 text-sm text-slate-500">只发送本栏总结、问题、掌握度和作业完成状态。</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => submitStudentReview('lesson')}
+                    disabled={lessonSubmissionLoading}
+                    className="min-h-11 rounded-md bg-[#16845f] px-5 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 max-sm:w-full"
+                  >
+                    {lessonSubmissionLoading ? '提交中...' : '提交总结'}
+                  </button>
+                </div>
+                {lessonSubmissionStatus ? <div className="text-sm text-slate-600">{lessonSubmissionStatus}</div> : null}
               </div>
             </Section>
 
-            <Section id="student-section-5" title="比赛复盘">
+            <Section id="student-section-2" title="比赛复盘">
               <div className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block">
@@ -1254,27 +1392,106 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     placeholder="这场比赛以后，下次可以直接复用的一条经验。"
                   />
                 </label>
+                <div className="flex flex-col gap-2 rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">提交比赛复盘</div>
+                    <div className="mt-1 text-sm text-slate-500">只发送本栏比赛、比分、有效点、改进点和经验。</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => submitStudentReview('match')}
+                    disabled={matchSubmissionLoading}
+                    className="min-h-11 rounded-md bg-[#16845f] px-5 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 max-sm:w-full"
+                  >
+                    {matchSubmissionLoading ? '提交中...' : '提交复盘'}
+                  </button>
+                </div>
+                {matchSubmissionStatus ? <div className="text-sm text-slate-600">{matchSubmissionStatus}</div> : null}
               </div>
             </Section>
           </div>
 
-          <Section title="提交">
-            <div className="flex flex-col gap-3 rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-sm font-semibold text-slate-900">提交本次反馈</div>
-                <div className="mt-1 text-sm text-slate-500">包含课后总结、比赛复盘和家庭作业完成状态。</div>
-              </div>
-              <button
-                type="button"
-                onClick={submitStudentReview}
-                className="rounded-md bg-[#16845f] px-5 py-2 text-sm font-medium text-white"
-              >
-                提交
-              </button>
+          <Section id="student-section-3" title="家庭作业">
+            <div className="grid gap-3 md:grid-cols-3">
+              {student.lessonSummary?.homework.map((item) => {
+                const checked = checkedHomework.includes(item.id);
+                return (
+                  <label
+                    key={item.id}
+                    className="flex cursor-pointer items-start gap-3 rounded-md border border-[#dfe7dc] bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700"
+                  >
+                    <input
+                      checked={checked}
+                      onChange={() => toggleHomework(item.id)}
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 rounded border-slate-300 accent-[#16845f]"
+                    />
+                    <span className={checked ? 'text-slate-400 line-through' : ''}>{item.text}</span>
+                  </label>
+                );
+              })}
             </div>
-            {submissionStatus ? <div className="mt-3 text-sm text-slate-600">{submissionStatus}</div> : null}
+          </Section>
+
+          <section id="student-section-4" className="scroll-mt-28 rounded-md border border-[#dfe7dc] bg-[#fffdf8] p-4 shadow-sm sm:p-5 lg:scroll-mt-6">
+            <div className="grid gap-5 lg:grid-cols-[1fr_240px]">
+              <div>
+                <div className="text-sm text-slate-500">当前训练</div>
+                <h2 className="mt-2 text-xl font-semibold tracking-[-0.015em] text-slate-950 sm:text-2xl">
+                  {student.stage.title}
+                </h2>
+                <p className="mt-3 text-base leading-7 text-slate-600">{student.stage.description}</p>
+                <div className="mt-6">
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {student.stage.path.map((item) => (
+                      <Pill key={item.label} active={item.active}>
+                        {item.label}
+                      </Pill>
+                    ))}
+                  </div>
+                  <ProgressBar value={student.stage.pathProgress} />
+                </div>
+              </div>
+
+              <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4">
+                <div className="text-sm text-slate-500">今日最小练习</div>
+                <div className="mt-2 text-xl font-semibold tracking-[-0.01em]">{student.today.title}</div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{student.today.description}</p>
+                <button
+                  onClick={() => markReviewed(student.today.title)}
+                  className="mt-5 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-medium text-[#0e6f4d]"
+                >
+                  {reviewedItems.includes(student.today.title) ? '已审查' : '标记为已审查'}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {student.abilityMatrix?.length ? (
+            <Section id="student-section-5" title="能力矩阵">
+              <AbilityHex items={student.abilityMatrix} />
+            </Section>
+          ) : null}
+
+          <Section id="student-section-6" title="成就和勋章">
+            <AchievementBadges achievements={student.achievements || []} />
+          </Section>
+
+          {student.skillTree?.length ? (
+            <Section title="技能树">
+              <SkillTree />
+            </Section>
+          ) : null}
+
+          {student.lessonHistory?.length ? (
+            <Section id="student-section-7" title="上课日志">
+              <LessonLog lessons={student.lessonHistory} />
+            </Section>
+          ) : null}
+
+          <Section title="提交记录">
             {submissionLogs.length ? (
-              <div className="mt-4 rounded-md border border-slate-200 bg-white p-4">
+              <div className="rounded-md border border-slate-200 bg-white p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div className="text-sm font-semibold text-slate-900">提交日志</div>
                   <div className="text-xs text-slate-500">保留最近 20 条</div>
@@ -1284,21 +1501,16 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
                       <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                         <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
-                        <span>课后总结</span>
-                        <span>比赛复盘</span>
-                        <span>作业 {log.lessonSummary.completedHomework.length} 项</span>
+                        <span>{log.submissionType === 'match' ? '比赛复盘' : '课后总结'}</span>
+                        {log.submissionType === 'lesson' ? <span>作业 {log.lessonSummary.completedHomework.length} 项</span> : null}
                       </div>
-                      <div className="mt-2 grid gap-2 lg:grid-cols-2">
+                      <div className="mt-2">
                         <div>
-                          <b className="text-slate-900">总结：</b>
+                          <b className="text-slate-900">{log.submissionType === 'match' ? '复盘：' : '总结：'}</b>
                           <span>
-                            {log.lessonSummary.studentReflection || log.lessonSummary.question || '未填写'}
-                          </span>
-                        </div>
-                        <div>
-                          <b className="text-slate-900">复盘：</b>
-                          <span>
-                            {log.matchReview.match || log.matchReview.whatWorked || log.matchReview.nextAdjustment || '未填写'}
+                            {log.submissionType === 'match'
+                              ? log.matchReview.match || log.matchReview.whatWorked || log.matchReview.nextAdjustment || '未填写'
+                              : log.lessonSummary.studentReflection || log.lessonSummary.question || '未填写'}
                           </span>
                         </div>
                       </div>
@@ -1306,7 +1518,11 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   ))}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 text-sm text-slate-500">
+                还没有提交记录。
+              </div>
+            )}
           </Section>
         </div>
       </div>
@@ -1317,11 +1533,15 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 }
 
 export default function StudentPage() {
-  const [student, setStudent] = useState<StudentData | null>(() => readCurrentStudent());
+  const student = useSyncExternalStore(
+    subscribeCurrentStudent,
+    readCurrentStudent,
+    getCurrentStudentServerSnapshot,
+  );
 
   function logoutStudent() {
     window.sessionStorage.removeItem('goodminton-student-current');
-    setStudent(null);
+    window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
   }
 
   if (!student) {

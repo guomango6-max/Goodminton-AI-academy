@@ -85,6 +85,12 @@ h6 {
 }
 
 @media (max-width: 639px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
   .goodminton-zh .cjk-wrap {
     width: min(300px, calc(100vw - 40px));
     max-width: min(300px, calc(100vw - 40px)) !important;

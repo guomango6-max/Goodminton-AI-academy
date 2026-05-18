@@ -43,6 +43,8 @@ type CoachProfile = {
   trainingSummary?: string;
 };
 
+const portraitShowcaseIds = new Set(['podium-first-place', 'podium-team-awards']);
+
 const heroFeature: Record<Lang, ArticlePost> = {
   zh: {
     title: '开放式学习：人工智能正在改变什么',
@@ -281,9 +283,15 @@ const copy = {
     showcaseKicker: '学员荣耀',
     showcaseTitle: '从训练场到领奖台',
     showcaseDesc: '公开展示学员和团队的比赛成绩、奖牌记录与成长瞬间。这里不连接私人训练档案，只呈现可公开分享的荣誉内容。',
+    showcaseCollapsedDesc: '学员荣誉默认收起，点击后查看公开展示的比赛成绩与成长瞬间。',
+    showcaseOpen: '展开学员荣耀',
+    showcaseClose: '收起学员荣耀',
     coachSectionKicker: '教练简介',
     coachSectionTitle: '把训练目标讲清楚，把进步路径做扎实',
     coachSectionDesc: 'Goodminton Academy 的训练从真实课堂出发，关注动作细节、比赛判断和长期反馈。',
+    coachCollapsedDesc: '教练资料默认收起，点击后查看训练背景、教学重点和联系方式。',
+    coachOpen: '展开教练简介',
+    coachClose: '收起教练简介',
     coachEducationLabel: '毕业专业',
     coachExperienceLabel: '教学经验',
     coachContact: '联系教练',
@@ -334,9 +342,15 @@ const copy = {
     showcaseKicker: 'Student honors',
     showcaseTitle: 'From practice court to podium',
     showcaseDesc: 'A public showcase of student and team achievements, medals, and growth moments. Private training records stay separate.',
+    showcaseCollapsedDesc: 'Student honors stay collapsed by default. Open to view public achievements and growth moments.',
+    showcaseOpen: 'Open student honors',
+    showcaseClose: 'Close student honors',
     coachSectionKicker: 'Coach profile',
     coachSectionTitle: 'Clear goals, steady practice, visible progress',
     coachSectionDesc: 'Goodminton Academy starts from real lessons and focuses on technique, match decisions, and long-term feedback.',
+    coachCollapsedDesc: 'Coach details stay collapsed by default. Open to view background, coaching focus, and contact.',
+    coachOpen: 'Open coach profile',
+    coachClose: 'Close coach profile',
     coachEducationLabel: 'Education',
     coachExperienceLabel: 'Experience',
     coachContact: 'Contact coach',
@@ -398,6 +412,8 @@ export default function Home() {
   const [studentError, setStudentError] = useState('');
   const [studentStatus, setStudentStatus] = useState('');
   const [studentLoading, setStudentLoading] = useState(false);
+  const [showcaseOpen, setShowcaseOpen] = useState(false);
+  const [coachOpen, setCoachOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -520,6 +536,15 @@ export default function Home() {
     await loginStudent(studentId);
   }
 
+  function handleNavClick(href: string) {
+    if (href === '#student-showcase') {
+      setShowcaseOpen(true);
+    }
+    if (href === '#coach') {
+      setCoachOpen(true);
+    }
+  }
+
   return (
     <div className={`min-h-screen overflow-x-hidden bg-[#fbfaf6] text-[#21242c] ${lang === 'zh' ? 'goodminton-zh' : ''}`}>
       <header className="sticky top-0 z-40 border-b border-[#e6e1d4] bg-[#fbfaf6]/92 backdrop-blur">
@@ -530,7 +555,12 @@ export default function Home() {
           </Link>
           <nav className="ml-3 hidden items-center gap-7 text-[14px] font-medium text-[#4f5961] lg:flex" aria-label="Primary navigation">
             {t.nav.map(([label, href]) => (
-              <a key={label} href={href} className="transition-colors hover:text-[#121212] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#14bf96]">
+              <a
+                key={label}
+                href={href}
+                onClick={() => handleNavClick(href)}
+                className="transition-colors hover:text-[#121212] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#14bf96]"
+              >
                 {label}
               </a>
             ))}
@@ -568,7 +598,14 @@ export default function Home() {
             <div className="mt-10 border-t border-[#e0dacb] pt-10">
               <article className="grid gap-7 lg:grid-cols-[410px_minmax(0,1fr)] lg:items-center">
                 <div className="relative aspect-[16/9] overflow-hidden rounded-[8px] bg-[#b9c6a3]">
-                  <Image src={featured.image} alt={t.featuredAlt} fill sizes="(min-width: 1024px) 410px, 100vw" className="object-cover" />
+                  <Image
+                    src={featured.image}
+                    alt={t.featuredAlt}
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 410px, 100vw"
+                    className="object-cover"
+                  />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[13px] font-semibold text-[#16845f]">{featured.category}</p>
@@ -667,127 +704,179 @@ export default function Home() {
         </section>
 
         {showcaseList.length ? (
-          <section id="student-showcase" className="scroll-mt-20 bg-[#fbfaf6] py-16">
+          <section id="student-showcase" className="scroll-mt-20 bg-[#f4f7f1] py-12">
             <div className="mx-auto w-full max-w-[1180px] px-5">
-              <div className="max-w-2xl">
-                <p className="text-[13px] font-semibold text-[#16845f]">{t.showcaseKicker}</p>
-                <h2 className="mt-3 text-[32px] font-semibold leading-tight tracking-[-0.015em] text-[#101820]">
-                  {t.showcaseTitle}
-                </h2>
-                <p className="cjk-wrap mt-4 text-[16px] leading-8 text-[#52636b]">{t.showcaseDesc}</p>
+              <div className="flex flex-col gap-5 border-y border-[#d7dfd0] py-7 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-2xl">
+                  <p className="text-[13px] font-semibold text-[#16845f]">{t.showcaseKicker}</p>
+                  <h2 className="mt-2 text-[30px] font-semibold leading-tight text-[#101820]">
+                    {t.showcaseTitle}
+                  </h2>
+                  <p className="cjk-wrap mt-3 text-[15px] leading-7 text-[#52636b]">
+                    {showcaseOpen ? t.showcaseDesc : t.showcaseCollapsedDesc}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowcaseOpen((value) => !value)}
+                  aria-expanded={showcaseOpen}
+                  aria-controls="student-showcase-panel"
+                  className="inline-flex h-11 shrink-0 items-center justify-center rounded-[6px] border border-[#b9d8c8] bg-white px-5 text-[14px] font-semibold text-[#1f4a38] transition-colors hover:border-[#14bf96] hover:bg-[#eef8f2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14bf96]"
+                >
+                  {showcaseOpen ? t.showcaseClose : t.showcaseOpen}
+                </button>
               </div>
 
-              <div className="mt-9 grid gap-5 lg:grid-cols-4">
-                {showcaseList.map((item) => (
-                  <article
-                    key={item.id}
-                    className={`overflow-hidden rounded-[8px] border border-[#e0dacb] bg-white shadow-[0_16px_36px_-32px_rgba(16,24,32,0.32)] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_44px_-30px_rgba(16,24,32,0.34)] ${
-                      item.featured ? 'lg:col-span-2 lg:row-span-2' : ''
-                    }`}
-                  >
-                    <div className={`relative overflow-hidden bg-[#d8e8dc] ${item.featured ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        fill
-                        sizes={item.featured ? '(min-width: 1024px) 570px, 100vw' : '(min-width: 1024px) 280px, 100vw'}
-                        className="object-cover"
-                      />
-                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,24,32,0.02),rgba(16,24,32,0.16))]" aria-hidden="true" />
-                    </div>
-                    <div className={item.featured ? 'p-6' : 'p-5'}>
-                      <p className="text-[13px] font-semibold text-[#16845f]">{item.achievement}</p>
-                      <h3 className={`cjk-wrap mt-3 font-semibold leading-tight tracking-[-0.01em] text-[#101820] ${item.featured ? 'text-[26px]' : 'text-[20px]'}`}>
-                        {item.title}
-                      </h3>
-                      <p className="mt-2 text-[13px] font-semibold text-[#64737a]">{item.season}</p>
-                      <p className="cjk-wrap mt-4 text-[15px] leading-7 text-[#52636b]">{item.summary}</p>
-                    </div>
-                  </article>
-                ))}
-              </div>
+              {showcaseOpen ? (
+                <div id="student-showcase-panel" className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
+                  {showcaseList
+                    .filter((item) => item.featured)
+                    .map((item) => (
+                      <article key={item.id} className="overflow-hidden rounded-[8px] border border-[#d7dfd0] bg-white">
+                        <div className="relative aspect-[16/9] overflow-hidden bg-[#d8e8dc]">
+                          <Image
+                            src={item.image}
+                            alt={item.title}
+                            fill
+                            sizes="(min-width: 1024px) 560px, 100vw"
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <p className="text-[13px] font-semibold text-[#16845f]">{item.achievement}</p>
+                          <h3 className="cjk-wrap mt-3 text-[26px] font-semibold leading-tight text-[#101820]">
+                            {item.title}
+                          </h3>
+                          <p className="mt-2 text-[13px] font-semibold text-[#64737a]">{item.season}</p>
+                          <p className="cjk-wrap mt-4 text-[15px] leading-7 text-[#52636b]">{item.summary}</p>
+                        </div>
+                      </article>
+                    ))}
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {showcaseList
+                      .filter((item) => !item.featured)
+                      .map((item) => (
+                        <article key={item.id} className="overflow-hidden rounded-[8px] border border-[#d7dfd0] bg-white">
+                          <div className={`relative overflow-hidden bg-[#d8e8dc] ${portraitShowcaseIds.has(item.id) ? 'aspect-[3/4]' : 'aspect-[4/3]'}`}>
+                            <Image
+                              src={item.image}
+                              alt={item.title}
+                              fill
+                              sizes="(min-width: 1024px) 270px, (min-width: 640px) 50vw, 100vw"
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="p-4">
+                            <p className="text-[12px] font-semibold text-[#16845f]">{item.achievement}</p>
+                            <h3 className="cjk-wrap mt-2 text-[18px] font-semibold leading-tight text-[#101820]">
+                              {item.title}
+                            </h3>
+                            <p className="mt-2 text-[12px] font-semibold text-[#64737a]">{item.season}</p>
+                            <p className="cjk-wrap mt-3 text-[14px] leading-6 text-[#52636b]">{item.summary}</p>
+                          </div>
+                        </article>
+                      ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </section>
         ) : null}
 
         {coach ? (
-          <section id="coach" className="scroll-mt-20 border-y border-[#e6e1d4] bg-white/62 py-16">
-            <div className="mx-auto grid w-full max-w-[1180px] gap-9 px-5 lg:grid-cols-[420px_minmax(0,1fr)] lg:items-center">
-              <div className="relative aspect-[5/4] overflow-hidden rounded-[8px] bg-[#e6e1d4] shadow-[0_18px_44px_-34px_rgba(16,24,32,0.34)]">
-                <Image
-                  src={coach.image}
-                  alt={coach.name}
-                  fill
-                  sizes="(min-width: 1024px) 420px, 100vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,24,32,0.02),rgba(16,24,32,0.18))]" aria-hidden="true" />
+          <section id="coach" className="scroll-mt-20 border-y border-[#d7dfd0] bg-white py-12">
+            <div className="mx-auto w-full max-w-[1180px] px-5">
+              <div className="flex flex-col gap-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-2xl">
+                  <p className="text-[13px] font-semibold text-[#16845f]">{t.coachSectionKicker}</p>
+                  <h2 className="mt-2 text-[30px] font-semibold leading-tight text-[#101820]">
+                    {t.coachSectionTitle}
+                  </h2>
+                  <p className="cjk-wrap mt-3 text-[15px] leading-7 text-[#52636b]">
+                    {coachOpen ? t.coachSectionDesc : t.coachCollapsedDesc}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCoachOpen((value) => !value)}
+                  aria-expanded={coachOpen}
+                  aria-controls="coach-panel"
+                  className="inline-flex h-11 shrink-0 items-center justify-center rounded-[6px] border border-[#b9d8c8] bg-[#f4f7f1] px-5 text-[14px] font-semibold text-[#1f4a38] transition-colors hover:border-[#14bf96] hover:bg-[#eef8f2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14bf96]"
+                >
+                  {coachOpen ? t.coachClose : t.coachOpen}
+                </button>
               </div>
 
-              <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-[#16845f]">{t.coachSectionKicker}</p>
-                <h2 className="mt-3 max-w-2xl text-[32px] font-semibold leading-tight tracking-[-0.015em] text-[#101820]">
-                  {t.coachSectionTitle}
-                </h2>
-                <p className="cjk-wrap mt-4 max-w-2xl text-[16px] leading-8 text-[#52636b]">{t.coachSectionDesc}</p>
-
-                <div className="mt-8 rounded-[8px] border border-[#dfe7dc] bg-[#fbfaf6] p-6">
-                  <p className="text-[28px] font-semibold tracking-[-0.015em] text-[#101820]">{coach.name}</p>
-                  <p className="mt-2 text-[15px] font-semibold text-[#16845f]">{coach.role}</p>
-                  <p className="cjk-wrap mt-5 text-[16px] leading-8 text-[#52636b]">{coach.summary}</p>
-
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                    <div className="border-t border-[#d8d0bf] pt-4">
-                      <p className="text-[13px] font-semibold text-[#64737a]">{t.coachEducationLabel}</p>
-                      <p className="cjk-wrap mt-2 text-[16px] font-semibold leading-7 text-[#101820]">{coach.education}</p>
-                    </div>
-                    <div className="border-t border-[#d8d0bf] pt-4">
-                      <p className="text-[13px] font-semibold text-[#64737a]">{t.coachExperienceLabel}</p>
-                      <p className="cjk-wrap mt-2 text-[16px] font-semibold leading-7 text-[#101820]">{coach.experience}</p>
-                    </div>
+              {coachOpen ? (
+                <div id="coach-panel" className="mt-8 grid gap-8 border-t border-[#d7dfd0] pt-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-[8px] bg-[#e6e1d4]">
+                    <Image
+                      src={coach.image}
+                      alt={coach.name}
+                      fill
+                      sizes="(min-width: 1024px) 360px, 100vw"
+                      className="object-cover"
+                    />
                   </div>
 
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {coach.specialties.map((item) => (
-                      <span key={item} className="rounded-full border border-[#cfe8d9] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#1f4a38]">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[30px] font-semibold leading-tight text-[#101820]">{coach.name}</p>
+                    <p className="mt-2 text-[15px] font-semibold text-[#16845f]">{coach.role}</p>
+                    <p className="cjk-wrap mt-5 max-w-3xl text-[16px] leading-8 text-[#52636b]">{coach.summary}</p>
 
-                  <a
-                    href={coach.contactHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-7 inline-flex h-11 items-center justify-center rounded-[6px] bg-[#14bf96] px-5 text-[14px] font-semibold text-white transition-colors hover:bg-[#10a985]"
-                  >
-                    {t.coachContact}
-                  </a>
+                    <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-[8px] border border-[#d7dfd0] bg-[#f4f7f1] p-5">
+                        <p className="text-[13px] font-semibold text-[#64737a]">{t.coachEducationLabel}</p>
+                        <p className="cjk-wrap mt-2 text-[16px] font-semibold leading-7 text-[#101820]">{coach.education}</p>
+                      </div>
+                      <div className="rounded-[8px] border border-[#d7dfd0] bg-[#f4f7f1] p-5">
+                        <p className="text-[13px] font-semibold text-[#64737a]">{t.coachExperienceLabel}</p>
+                        <p className="cjk-wrap mt-2 text-[16px] font-semibold leading-7 text-[#101820]">{coach.experience}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-2">
+                      {coach.specialties.map((item) => (
+                        <span key={item} className="rounded-[6px] border border-[#b9d8c8] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#1f4a38]">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+
+                    <a
+                      href={coach.contactHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-7 inline-flex h-11 items-center justify-center rounded-[6px] bg-[#14bf96] px-5 text-[14px] font-semibold text-white transition-colors hover:bg-[#10a985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14bf96]"
+                    >
+                      {t.coachContact}
+                    </a>
+                  </div>
 
                   {coach.trainingImage ? (
-                    <figure className="mt-7 overflow-hidden rounded-[8px] border border-[#e0dacb] bg-white">
+                    <figure className="overflow-hidden rounded-[8px] border border-[#d7dfd0] bg-[#f4f7f1] lg:col-span-2 lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)]">
                       <div className="relative aspect-[3/2] overflow-hidden bg-[#e6e1d4]">
                         <Image
                           src={coach.trainingImage}
                           alt={coach.trainingTitle || coach.name}
                           fill
-                          sizes="(min-width: 1024px) 650px, 100vw"
+                          sizes="(min-width: 1024px) 520px, 100vw"
                           className="object-cover"
                         />
-                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,24,32,0.01),rgba(16,24,32,0.16))]" aria-hidden="true" />
                       </div>
-                      <figcaption className="p-4">
+                      <figcaption className="p-5 lg:flex lg:flex-col lg:justify-center lg:p-6">
                         {coach.trainingTitle ? (
-                          <p className="text-[15px] font-semibold text-[#101820]">{coach.trainingTitle}</p>
+                          <p className="text-[18px] font-semibold leading-tight text-[#101820]">{coach.trainingTitle}</p>
                         ) : null}
                         {coach.trainingSummary ? (
-                          <p className="cjk-wrap mt-2 text-[14px] leading-6 text-[#52636b]">{coach.trainingSummary}</p>
+                          <p className="cjk-wrap mt-3 text-[15px] leading-7 text-[#52636b]">{coach.trainingSummary}</p>
                         ) : null}
                       </figcaption>
                     </figure>
                   ) : null}
                 </div>
-              </div>
+              ) : null}
             </div>
           </section>
         ) : null}
