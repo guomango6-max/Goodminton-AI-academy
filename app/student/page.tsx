@@ -239,6 +239,23 @@ function getCurrentStudentServerSnapshot() {
   return null;
 }
 
+function parseStudentCredential(value: string) {
+  const credential = value.trim().toLowerCase();
+  if (credential === 'demo') {
+    return { studentId: 'demo', accessCode: '1234' };
+  }
+
+  const matchedAccessCode = credential.match(/-(\d{3,})$/);
+  if (matchedAccessCode) {
+    return {
+      studentId: credential.slice(0, -matchedAccessCode[0].length),
+      accessCode: matchedAccessCode[1],
+    };
+  }
+
+  return { studentId: credential, accessCode: '' };
+}
+
 function Pill({ children, active }: { children: React.ReactNode; active?: boolean }) {
   return (
     <div
@@ -1538,27 +1555,105 @@ export default function StudentPage() {
     readCurrentStudent,
     getCurrentStudentServerSnapshot,
   );
+  const [credential, setCredential] = useState('');
+  const [loginStatus, setLoginStatus] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  async function loginStudent(rawCredential: string) {
+    if (loginLoading) return;
+
+    const trimmedCredential = rawCredential.trim();
+    if (!trimmedCredential) {
+      setLoginError('请输入学员凭证。');
+      setLoginStatus('');
+      return;
+    }
+
+    setLoginError('');
+    setLoginStatus('正在读取学员档案...');
+    setLoginLoading(true);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch('/api/student-data', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(parseStudentCredential(trimmedCredential)),
+        signal: controller.signal,
+      });
+      const payload = (await response.json().catch(() => ({}))) as { student?: StudentData; error?: string };
+
+      if (!response.ok || !payload.student) {
+        throw new Error(payload.error || '读取失败。');
+      }
+
+      window.sessionStorage.setItem('goodminton-student-current', JSON.stringify(payload.student));
+      window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
+      setLoginStatus('已打开学员档案。');
+    } catch (error) {
+      setLoginError(
+        error instanceof DOMException && error.name === 'AbortError'
+          ? '读取超时，请再试一次。'
+          : error instanceof Error
+            ? error.message
+            : '读取失败。',
+      );
+      setLoginStatus('');
+    } finally {
+      window.clearTimeout(timeout);
+      setLoginLoading(false);
+    }
+  }
+
+  async function handleStudentLogin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await loginStudent(credential);
+  }
 
   function logoutStudent() {
     window.sessionStorage.removeItem('goodminton-student-current');
     window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
+    setCredential('');
+    setLoginStatus('');
+    setLoginError('');
   }
 
   if (!student) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fbfaf6] px-4 text-slate-900">
-        <section className="w-full max-w-md rounded-lg border border-[#dfe7dc] bg-[#fffdf8] p-6 text-center shadow-sm">
+        <section className="w-full max-w-md rounded-lg border border-[#dfe7dc] bg-[#fffdf8] p-6 shadow-sm">
           <div className="mx-auto w-fit">
             <GoodmintonMark />
           </div>
-          <h1 className="mt-5 text-xl font-semibold tracking-[-0.015em]">请从主页登录</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            学员入口已经移到 Goodminton 主页。登录成功后会直接进入这里。
+          <h1 className="mt-5 text-center text-xl font-semibold tracking-[-0.015em]">打开学员档案</h1>
+          <p className="mt-2 text-center text-sm leading-6 text-slate-600">
+            手机端需要在当前浏览器登录一次。输入 demo，或输入学员ID-访问码。
           </p>
-          <Link
-            href="/"
-            className="mt-5 inline-flex rounded-md bg-[#16845f] px-4 py-2 text-sm font-medium text-white"
-          >
+          <form onSubmit={handleStudentLogin} className="mt-5 space-y-3">
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">学员凭证</span>
+              <input
+                value={credential}
+                onChange={(event) => setCredential(event.target.value)}
+                autoCapitalize="none"
+                autoComplete="off"
+                className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
+                placeholder="例如 demo 或 yjn-4837"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={loginLoading || !credential.trim()}
+              className="min-h-11 w-full rounded-md bg-[#16845f] px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              {loginLoading ? '读取中...' : '进入学员页'}
+            </button>
+          </form>
+          {loginStatus ? <p className="mt-3 text-sm text-[#16845f]">{loginStatus}</p> : null}
+          {loginError ? <p className="mt-3 text-sm text-red-600">{loginError}</p> : null}
+          <Link href="/" className="mt-5 inline-flex text-sm font-medium text-[#0e6f4d]">
             返回主页
           </Link>
         </section>
