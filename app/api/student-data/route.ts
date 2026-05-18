@@ -6,15 +6,33 @@ import { NextResponse } from 'next/server';
 
 function normalizeStudentId(value: unknown) {
   if (typeof value !== 'string') return '';
-  return value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+  return value.trim().toLowerCase().replace(/\s+/g, '');
+}
+
+function normalizeAsciiStudentId(value: unknown) {
+  return normalizeStudentId(value).replace(/[^a-z0-9-_]/g, '');
+}
+
+function isSafeStudentFileId(value: string) {
+  return /^[a-z0-9][a-z0-9_-]*$/u.test(value);
 }
 
 const STUDENT_LOGIN_ALIASES: Record<string, { studentId: string; accessCode: string }> = {
   gyw: { studentId: 'guo-yiwei', accessCode: '1122' },
+  guoyiwei: { studentId: 'guo-yiwei', accessCode: '1122' },
+  郭一苇: { studentId: 'guo-yiwei', accessCode: '1122' },
   lcr: { studentId: 'li-chenrun', accessCode: '2233' },
+  lichenrun: { studentId: 'li-chenrun', accessCode: '2233' },
+  李晨润: { studentId: 'li-chenrun', accessCode: '2233' },
   sxy: { studentId: 'sheng-xinyi', accessCode: '3344' },
+  shengxinyi: { studentId: 'sheng-xinyi', accessCode: '3344' },
+  盛欣怡: { studentId: 'sheng-xinyi', accessCode: '3344' },
   xmj: { studentId: 'xue-meijiao', accessCode: '4455' },
+  xuemeijiao: { studentId: 'xue-meijiao', accessCode: '4455' },
+  薛美姣: { studentId: 'xue-meijiao', accessCode: '4455' },
   yjn: { studentId: 'yang-jingnan', accessCode: '4837' },
+  yangjingnan: { studentId: 'yang-jingnan', accessCode: '4837' },
+  杨静南: { studentId: 'yang-jingnan', accessCode: '4837' },
 };
 
 function stripPrivateFields(student: Record<string, unknown>) {
@@ -294,6 +312,8 @@ async function getStudentById(studentId: string) {
   const envStudent = getStudentFromSingleEnv(studentId) || getStudentFromEnv(studentId);
   if (envStudent) return envStudent;
 
+  if (!isSafeStudentFileId(studentId)) return null;
+
   try {
     return await getStudentFromFile(studentId);
   } catch {
@@ -308,6 +328,7 @@ export async function POST(req: Request) {
   } | null;
 
   const studentId = normalizeStudentId(body?.studentId);
+  const asciiStudentId = normalizeAsciiStudentId(body?.studentId);
   const accessCode = typeof body?.accessCode === 'string' ? body.accessCode.trim() : '';
 
   if (!studentId || !accessCode) {
@@ -315,12 +336,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    const alias = STUDENT_LOGIN_ALIASES[studentId];
+    const alias = STUDENT_LOGIN_ALIASES[studentId] || STUDENT_LOGIN_ALIASES[asciiStudentId];
     const expectedAccessCode = alias?.accessCode;
     const lookupStudentIds = [
-      alias?.studentId,
-      accessCode ? `${studentId}_${accessCode}` : '',
       studentId,
+      alias?.studentId,
+      asciiStudentId && accessCode ? `${asciiStudentId}_${accessCode}` : '',
+      asciiStudentId,
     ].filter(Boolean) as string[];
     const uniqueLookupStudentIds = [...new Set(lookupStudentIds)];
 

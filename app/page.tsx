@@ -481,7 +481,7 @@ export default function Home() {
     if (aliasAccessCodes[credential]) {
       return { studentId: credential, accessCode: aliasAccessCodes[credential] };
     }
-    const matchedAccessCode = credential.match(/(?:[\s\-–—－_]+|)(\d{3,})$/u);
+    const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{3,})$/u);
     if (matchedAccessCode) {
       return {
         studentId: credential.slice(0, -matchedAccessCode[0].length),

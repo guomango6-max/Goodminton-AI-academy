@@ -255,7 +255,7 @@ function parseStudentCredential(value: string) {
     return { studentId: credential, accessCode: aliasAccessCodes[credential] };
   }
 
-  const matchedAccessCode = credential.match(/(?:[\s\-–—－_]+|)(\d{3,})$/u);
+  const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{3,})$/u);
   if (matchedAccessCode) {
     return {
       studentId: credential.slice(0, -matchedAccessCode[0].length),
@@ -1640,7 +1640,7 @@ export default function StudentPage() {
           </div>
           <h1 className="mt-5 text-center text-xl font-semibold tracking-[-0.015em]">打开学员档案</h1>
           <p className="mt-2 text-center text-sm leading-6 text-slate-600">
-            手机端需要在当前浏览器登录一次。输入 demo，或输入学员ID-访问码。
+            手机端需要在当前浏览器登录一次。输入 demo，或输入学员ID和访问码。
           </p>
           <form onSubmit={handleStudentLogin} className="mt-5 space-y-3">
             <label className="block">
@@ -1651,7 +1651,7 @@ export default function StudentPage() {
                 autoCapitalize="none"
                 autoComplete="off"
                 className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
-                placeholder="例如 demo，或学员ID-访问码"
+                placeholder="例如 demo，或 gyw1122"
               />
             </label>
             <button
