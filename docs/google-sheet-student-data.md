@@ -1,5 +1,7 @@
 # Google Sheet Student Data Setup
 
+This setup keeps student data in your Google Sheet. The website reads through an Apps Script Web App, and the local upload script writes rows from `data/students/*.json`.
+
 ## Sheet
 
 Create a Google Sheet with a tab named `students`.
@@ -7,17 +9,8 @@ Create a Google Sheet with a tab named `students`.
 Required columns:
 
 ```text
-studentId | aliases | accessCode | studentJson
+studentId | aliases | accessCode | studentName | studentJson
 ```
-
-Example rows:
-
-```text
-guo-yiwei | gyw | 1122 | {"studentId":"guo-yiwei",...}
-li-chenrun | lcr | 2233 | {"studentId":"li-chenrun",...}
-```
-
-`studentJson` should contain the full student JSON. The website still checks `accessCode` on the server and removes it before returning data to the browser.
 
 ## Apps Script
 
@@ -26,20 +19,27 @@ Open the Sheet, then go to `Extensions` -> `Apps Script`. Paste this script:
 ```js
 const TOKEN = 'CHANGE_THIS_TO_A_LONG_RANDOM_TOKEN';
 const TAB_NAME = 'students';
+const HEADERS = ['studentId', 'aliases', 'accessCode', 'studentName', 'studentJson'];
 
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents || '{}');
     if (body.token !== TOKEN) {
-      return json({ error: 'unauthorized' }, 401);
+      return json({ error: 'unauthorized' });
+    }
+
+    if (body.action === 'upsertStudents') {
+      return upsertStudents(body.students || []);
     }
 
     const requestedId = String(body.studentId || '').trim().toLowerCase();
     if (!requestedId) {
-      return json({ error: 'missing studentId' }, 400);
+      return json({ error: 'missing studentId' });
     }
 
     const sheet = SpreadsheetApp.getActive().getSheetByName(TAB_NAME);
+    ensureHeaders(sheet);
+
     const values = sheet.getDataRange().getValues();
     const headers = values.shift().map(String);
     const rows = values.map((row) => Object.fromEntries(headers.map((key, index) => [key, row[index]])));
@@ -54,7 +54,7 @@ function doPost(e) {
     });
 
     if (!row) {
-      return json({ error: 'not found' }, 404);
+      return json({ error: 'not found' });
     }
 
     const student = JSON.parse(String(row.studentJson || '{}'));
@@ -64,7 +64,55 @@ function doPost(e) {
 
     return json({ student });
   } catch (error) {
-    return json({ error: String(error) }, 500);
+    return json({ error: String(error) });
+  }
+}
+
+function upsertStudents(students) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(TAB_NAME);
+  ensureHeaders(sheet);
+
+  const values = sheet.getDataRange().getValues();
+  const rows = values.slice(1);
+  const idToRow = new Map();
+  rows.forEach((row, index) => {
+    const studentId = String(row[0] || '').trim().toLowerCase();
+    if (studentId) idToRow.set(studentId, index + 2);
+  });
+
+  let updated = 0;
+  let inserted = 0;
+
+  students.forEach((student) => {
+    const studentId = String(student.studentId || '').trim().toLowerCase();
+    if (!studentId) return;
+
+    const row = [
+      studentId,
+      String(student.aliases || ''),
+      String(student.accessCode || ''),
+      String(student.studentName || ''),
+      String(student.studentJson || '{}'),
+    ];
+
+    const rowNumber = idToRow.get(studentId);
+    if (rowNumber) {
+      sheet.getRange(rowNumber, 1, 1, HEADERS.length).setValues([row]);
+      updated += 1;
+    } else {
+      sheet.appendRow(row);
+      inserted += 1;
+    }
+  });
+
+  return json({ ok: true, updated, inserted });
+}
+
+function ensureHeaders(sheet) {
+  const firstRow = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+  const hasHeaders = HEADERS.every((header, index) => String(firstRow[index] || '') === header);
+  if (!hasHeaders) {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
   }
 }
 
@@ -84,6 +132,18 @@ Who has access: Anyone
 ```
 
 Copy the Web App URL.
+
+## Local Upload Script
+
+Run this on your own computer after the Web App is deployed:
+
+```powershell
+$env:GOODMINTON_STUDENT_SHEET_ENDPOINT="PASTE_WEB_APP_URL_HERE"
+$env:GOODMINTON_STUDENT_SHEET_TOKEN="PASTE_THE_TOKEN_HERE"
+node scripts/upload-students-to-google-sheet.mjs
+```
+
+The script reads local files from `data/students/*.json` and writes them into the Sheet.
 
 ## Vercel
 
