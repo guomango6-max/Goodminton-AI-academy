@@ -256,7 +256,7 @@ const copy = {
     studentTitle: '学员入口',
     studentDesc: '输入教练给你的学员凭证，进入自己的训练页面。',
     studentIdLabel: '学员凭证',
-    studentIdPlaceholder: 'demo 或 学生ID-访问码',
+    studentIdPlaceholder: 'demo 或 学生ID访问码',
     studentCta: '进入',
     loadingStudent: '正在读取...',
     validatingStudent: '正在验证凭证...',
@@ -314,7 +314,7 @@ const copy = {
     studentTitle: 'Student portal',
     studentDesc: 'Open your training page.',
     studentIdLabel: 'Student credential',
-    studentIdPlaceholder: 'demo or student ID-code',
+    studentIdPlaceholder: 'demo or student ID code',
     studentCta: 'Enter',
     loadingStudent: 'Loading...',
     validatingStudent: 'Checking credential...',
@@ -471,7 +471,7 @@ export default function Home() {
     if (credential === 'demo') {
       return { studentId: 'demo', accessCode: '1234' };
     }
-    const matchedAccessCode = credential.match(/[\s\-–—－_]+(\d{3,})$/u);
+    const matchedAccessCode = credential.match(/(?:[\s\-–—－_]+|)(\d{3,})$/u);
     if (matchedAccessCode) {
       return {
         studentId: credential.slice(0, -matchedAccessCode[0].length),

@@ -245,7 +245,7 @@ function parseStudentCredential(value: string) {
     return { studentId: 'demo', accessCode: '1234' };
   }
 
-  const matchedAccessCode = credential.match(/[\s\-–—－_]+(\d{3,})$/u);
+  const matchedAccessCode = credential.match(/(?:[\s\-–—－_]+|)(\d{3,})$/u);
   if (matchedAccessCode) {
     return {
       studentId: credential.slice(0, -matchedAccessCode[0].length),
@@ -1640,7 +1640,7 @@ export default function StudentPage() {
                 autoCapitalize="none"
                 autoComplete="off"
                 className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
-                placeholder="例如 demo、yjn-4837 或 yjn 4837"
+                placeholder="例如 demo、yjn4837 或 yjn 4837"
               />
             </label>
             <button
