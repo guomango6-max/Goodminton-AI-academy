@@ -12,6 +12,28 @@ const deepseek = createOpenAI({
   baseURL: DEEPSEEK_BASE_URL,
 });
 
+type ChatRequestMessage = UIMessage & {
+  content?: string;
+};
+
+function normalizeChatMessages(messages: ChatRequestMessage[]) {
+  return messages.map((message, index) => {
+    if (Array.isArray(message.parts) && message.parts.length > 0) {
+      return message as UIMessage;
+    }
+
+    if (typeof message.content === 'string' && message.content.trim()) {
+      return {
+        ...message,
+        id: message.id || `message-${index}`,
+        parts: [{ type: 'text' as const, text: message.content }],
+      } as UIMessage;
+    }
+
+    return message as UIMessage;
+  });
+}
+
 function getLastUserText(messages: UIMessage[]) {
   const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user');
   if (!lastUserMessage) return '';
@@ -206,7 +228,7 @@ Tone: professional but relaxed, like a knowledgeable playing partner giving you 
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as {
-    messages?: UIMessage[];
+    messages?: ChatRequestMessage[];
     role?: string;
     lang?: string;
   } | null;
@@ -220,11 +242,19 @@ export async function POST(req: Request) {
   }
 
   const { messages, role, lang } = body;
-  const modelMessages = await convertToModelMessages(messages);
+  const normalizedMessages = normalizeChatMessages(messages);
+  const modelMessages = await convertToModelMessages(normalizedMessages).catch((error) => {
+    console.error('[chat-message-format-error]', error);
+    return null;
+  });
+
+  if (!modelMessages) {
+    return NextResponse.json({ error: 'messages are not in a supported format.' }, { status: 400 });
+  }
 
   const langKey = lang === 'en' ? 'en' : 'zh';
   const roleKey = role === 'friend' ? 'friend' : 'student';
-  await logFeedback({ messages, role: roleKey, lang: langKey });
+  await logFeedback({ messages: normalizedMessages, role: roleKey, lang: langKey });
   const systemPrompt = systemPrompts[roleKey][langKey];
 
   try {
