@@ -1578,7 +1578,7 @@ export default function StudentPage() {
 
     const credential =
       typeof rawCredential === 'string' ? parseStudentCredential(rawCredential.trim()) : rawCredential;
-    if (!credential.studentId || !credential.accessCode) {
+    if (!credential.studentId) {
       setLoginError('请输入学员凭证。');
       setLoginStatus('');
       return;

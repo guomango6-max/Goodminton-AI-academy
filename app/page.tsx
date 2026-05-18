@@ -507,8 +507,8 @@ export default function Home() {
 
     try {
       const credential = parseStudentCredential(trimmedCredential);
-      if (!credential.studentId || !credential.accessCode) {
-        throw new Error(lang === 'zh' ? '请输入学员 ID 和访问码。' : 'Enter the student ID and access code.');
+      if (!credential.studentId) {
+        throw new Error(lang === 'zh' ? '请输入学员 ID。' : 'Enter the student ID.');
       }
 
       router.push(`/student?credential=${encodeURIComponent(trimmedCredential)}`);
