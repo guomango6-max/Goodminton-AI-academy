@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect, useState, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 type StudentPathItem = {
   label: string;
@@ -1571,8 +1571,9 @@ export default function StudentPage() {
   const [loginStatus, setLoginStatus] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const autoLoginStarted = useRef(false);
 
-  async function loginStudent(rawCredential: string | { studentId: string; accessCode: string }) {
+  const loginStudent = useCallback(async (rawCredential: string | { studentId: string; accessCode: string }) => {
     if (loginLoading) return;
 
     const credential =
@@ -1623,7 +1624,7 @@ export default function StudentPage() {
       window.clearTimeout(timeout);
       setLoginLoading(false);
     }
-  }
+  }, [loginLoading]);
 
   async function handleStudentLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1643,6 +1644,25 @@ export default function StudentPage() {
     setLoginError('');
   }
 
+  useEffect(() => {
+    if (autoLoginStarted.current || student || loginLoading || typeof window === 'undefined') {
+      return;
+    }
+
+    const autoCredential = new URLSearchParams(window.location.search).get('credential');
+    if (!autoCredential) {
+      return;
+    }
+
+    autoLoginStarted.current = true;
+    window.history.replaceState(null, '', '/student');
+    const autoLoginTimer = window.setTimeout(() => {
+      void loginStudent(autoCredential);
+    }, 0);
+
+    return () => window.clearTimeout(autoLoginTimer);
+  }, [student, loginLoading, loginStudent]);
+
   if (!student) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fbfaf6] px-4 text-slate-900">
@@ -1651,19 +1671,16 @@ export default function StudentPage() {
             <GoodmintonMark />
           </div>
           <h1 className="mt-5 text-center text-xl font-semibold tracking-[-0.015em]">打开学员档案</h1>
-          <p className="mt-2 text-center text-sm leading-6 text-slate-600">
-            手机端需要在当前浏览器登录一次。输入 demo，或输入学员ID和访问码。
-          </p>
           <form onSubmit={handleStudentLogin} className="mt-5 space-y-3">
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">学员凭证</span>
+              <span className="sr-only">学员凭证</span>
               <input
                 value={credential}
                 onChange={(event) => setCredential(event.target.value)}
                 autoCapitalize="none"
                 autoComplete="off"
                 className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
-                placeholder="例如 demo，或 gyw1122"
+                placeholder="请键入学生ID或者demo"
               />
             </label>
             <button

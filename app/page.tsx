@@ -254,9 +254,9 @@ const copy = {
     primaryCta: '联系教练',
     secondaryCta: '进入问答 QA',
     studentTitle: '学员入口',
-    studentDesc: '输入教练给你的学员凭证，进入自己的训练页面。',
+    studentDesc: '进入自己的训练页面。',
     studentIdLabel: '学员凭证',
-    studentIdPlaceholder: 'demo 或 gyw/lcr/sxy/xmj/yjn',
+    studentIdPlaceholder: '请键入学生ID或者demo',
     studentCta: '进入',
     loadingStudent: '正在读取...',
     validatingStudent: '正在验证凭证...',
@@ -314,7 +314,7 @@ const copy = {
     studentTitle: 'Student portal',
     studentDesc: 'Open your training page.',
     studentIdLabel: 'Student credential',
-    studentIdPlaceholder: 'demo or gyw/lcr/sxy/xmj/yjn',
+    studentIdPlaceholder: 'Student ID or demo',
     studentCta: 'Enter',
     loadingStudent: 'Loading...',
     validatingStudent: 'Checking credential...',
@@ -502,33 +502,19 @@ export default function Home() {
     }
 
     setStudentError('');
-    setStudentStatus(t.validatingStudent);
+    setStudentStatus(t.openingStudent);
     setStudentLoading(true);
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 10000);
 
     try {
       const credential = parseStudentCredential(trimmedCredential);
-      const response = await fetch('/api/student-data', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(credential),
-        signal: controller.signal,
-      });
-      const payload = (await response.json().catch(() => ({}))) as { student?: unknown; error?: string };
-
-      if (!response.ok || !payload.student) {
-        throw new Error(payload.error || (lang === 'zh' ? '读取失败。' : 'Failed to load student data.'));
+      if (!credential.studentId || !credential.accessCode) {
+        throw new Error(lang === 'zh' ? '请输入学员 ID 和访问码。' : 'Enter the student ID and access code.');
       }
 
-      setStudentStatus(t.openingStudent);
-      window.sessionStorage.setItem('goodminton-student-current', JSON.stringify(payload.student));
-      router.push('/student');
+      router.push(`/student?credential=${encodeURIComponent(trimmedCredential)}`);
     } catch (requestError) {
       setStudentError(
-        requestError instanceof DOMException && requestError.name === 'AbortError'
-          ? t.timeoutStudent
-          : requestError instanceof Error
+        requestError instanceof Error
             ? requestError.message
             : lang === 'zh'
               ? '读取失败。'
@@ -536,7 +522,6 @@ export default function Home() {
       );
       setStudentStatus('');
     } finally {
-      window.clearTimeout(timeout);
       setStudentLoading(false);
     }
   }
