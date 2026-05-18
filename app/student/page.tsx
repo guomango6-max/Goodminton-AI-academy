@@ -152,6 +152,13 @@ type StudentSubmissionLog = {
 const STUDENT_SESSION_EVENT = 'goodminton-student-current-change';
 let cachedCurrentStudentRaw: string | null | undefined;
 let cachedCurrentStudent: StudentData | null = null;
+const QUICK_STUDENT_LOGINS = [
+  { label: '郭一苇', credential: 'gyw' },
+  { label: '李晨润', credential: 'lcr' },
+  { label: '盛欣怡', credential: 'sxy' },
+  { label: '薛美姣', credential: 'xmj' },
+  { label: '杨静南', credential: 'yjn' },
+];
 
 function readStudentDraft(key: string): StudentDraft | null {
   if (typeof window === 'undefined') {
@@ -1661,6 +1668,22 @@ export default function StudentPage() {
               {loginLoading ? '读取中...' : '进入学员页'}
             </button>
           </form>
+          <div className="mt-4">
+            <div className="text-sm font-medium text-slate-700">快速进入</div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {QUICK_STUDENT_LOGINS.map((item) => (
+                <button
+                  key={item.credential}
+                  type="button"
+                  onClick={() => loginStudent(item.credential)}
+                  disabled={loginLoading}
+                  className="min-h-11 rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-medium text-[#0e6f4d] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
           {loginStatus ? <p className="mt-3 text-sm text-[#16845f]">{loginStatus}</p> : null}
           {loginError ? <p className="mt-3 text-sm text-red-600">{loginError}</p> : null}
           <Link href="/" className="mt-5 inline-flex text-sm font-medium text-[#0e6f4d]">
