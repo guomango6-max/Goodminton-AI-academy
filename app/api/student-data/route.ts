@@ -4,41 +4,30 @@ import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { NextResponse } from 'next/server';
 
-function normalizeStudentId(value: unknown) {
+function normalizeLoginCredential(value: unknown) {
   if (typeof value !== 'string') return '';
-  return value.trim().toLowerCase().replace(/\s+/g, '');
-}
-
-function normalizeAsciiStudentId(value: unknown) {
-  return normalizeStudentId(value).replace(/[^a-z0-9-_]/g, '');
+  return value.trim().toLowerCase().replace(/[\s\-–—－_]+/g, '');
 }
 
 function isSafeStudentFileId(value: string) {
   return /^[a-z0-9][a-z0-9_-]*$/u.test(value);
 }
 
-const STUDENT_LOGIN_ALIASES: Record<string, { studentId: string; accessCode: string }> = {
-  demo: { studentId: 'demo', accessCode: '1234' },
-  gyw: { studentId: 'guo-yiwei', accessCode: '11' },
-  'guo-yiwei': { studentId: 'guo-yiwei', accessCode: '11' },
-  guoyiwei: { studentId: 'guo-yiwei', accessCode: '11' },
-  郭一苇: { studentId: 'guo-yiwei', accessCode: '11' },
-  lcr: { studentId: 'li-chenrun', accessCode: '22' },
-  'li-chenrun': { studentId: 'li-chenrun', accessCode: '22' },
-  lichenrun: { studentId: 'li-chenrun', accessCode: '22' },
-  李晨润: { studentId: 'li-chenrun', accessCode: '22' },
-  sxy: { studentId: 'sheng-xinyi', accessCode: '33' },
-  'sheng-xinyi': { studentId: 'sheng-xinyi', accessCode: '33' },
-  shengxinyi: { studentId: 'sheng-xinyi', accessCode: '33' },
-  盛欣怡: { studentId: 'sheng-xinyi', accessCode: '33' },
-  xmj: { studentId: 'xue-meijiao', accessCode: '44' },
-  'xue-meijiao': { studentId: 'xue-meijiao', accessCode: '44' },
-  xuemeijiao: { studentId: 'xue-meijiao', accessCode: '44' },
-  薛美姣: { studentId: 'xue-meijiao', accessCode: '44' },
-  yjn: { studentId: 'yang-jingnan', accessCode: '48' },
-  'yang-jingnan': { studentId: 'yang-jingnan', accessCode: '48' },
-  yangjingnan: { studentId: 'yang-jingnan', accessCode: '48' },
-  杨静南: { studentId: 'yang-jingnan', accessCode: '48' },
+const STUDENT_LOGIN_CREDENTIALS: Record<string, string> = {
+  demo: 'demo',
+  gyw11: 'guo-yiwei',
+  guoyiwei11: 'guo-yiwei',
+  郭一苇11: 'guo-yiwei',
+  lcr22: 'li-chenrun',
+  lichenrun22: 'li-chenrun',
+  李晨润22: 'li-chenrun',
+  sxy33: 'sheng-xinyi',
+  shengxinyi33: 'sheng-xinyi',
+  盛欣怡33: 'sheng-xinyi',
+  xmj44: 'xue-meijiao',
+  yjn48: 'yang-jingnan',
+  yangjingnan48: 'yang-jingnan',
+  杨静南48: 'yang-jingnan',
 };
 
 function stripPrivateFields(student: Record<string, unknown>) {
@@ -333,45 +322,20 @@ export async function POST(req: Request) {
     accessCode?: string;
   } | null;
 
-  const rawStudentId = typeof body?.studentId === 'string' ? body.studentId.trim() : '';
-  const submittedAccessCode = typeof body?.accessCode === 'string' ? body.accessCode.trim() : '';
-  const embeddedAccessCode = rawStudentId.toLowerCase() === 'demo'
-    ? '1234'
-    : rawStudentId.match(/[\s\-–—－_]*(\d{2,})$/u)?.[1] || '';
-  const rawStudentIdWithoutEmbeddedCode = embeddedAccessCode && rawStudentId.toLowerCase() !== 'demo'
-    ? rawStudentId.slice(0, -rawStudentId.match(/[\s\-–—－_]*(\d{2,})$/u)![0].length)
-    : rawStudentId;
-  const studentId = normalizeStudentId(rawStudentIdWithoutEmbeddedCode);
-  const asciiStudentId = normalizeAsciiStudentId(rawStudentIdWithoutEmbeddedCode);
-  const accessCode = submittedAccessCode || embeddedAccessCode;
+  const rawStudentId = typeof body?.studentId === 'string' ? body.studentId : '';
+  const rawAccessCode = typeof body?.accessCode === 'string' ? body.accessCode : '';
+  const credential = normalizeLoginCredential(`${rawStudentId}${rawAccessCode}`);
+  const studentId = STUDENT_LOGIN_CREDENTIALS[credential];
 
-  if (!studentId || !accessCode) {
-    return NextResponse.json({ error: '请输入学员 ID 和数字码。' }, { status: 400 });
+  if (!studentId) {
+    return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404 });
   }
 
   try {
-    const alias = STUDENT_LOGIN_ALIASES[studentId] || STUDENT_LOGIN_ALIASES[asciiStudentId];
-    const expectedAccessCode = alias?.accessCode;
-    const lookupStudentIds = [
-      studentId,
-      alias?.studentId,
-      asciiStudentId && accessCode ? `${asciiStudentId}_${accessCode}` : '',
-      asciiStudentId,
-    ].filter(Boolean) as string[];
-    const uniqueLookupStudentIds = [...new Set(lookupStudentIds)];
-
-    let student: Record<string, unknown> | null = null;
-    for (const lookupStudentId of uniqueLookupStudentIds) {
-      student = await getStudentById(lookupStudentId);
-      if (student) break;
-    }
+    const student = await getStudentById(studentId);
 
     if (!student) {
       return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404 });
-    }
-
-    if ((expectedAccessCode || student.accessCode) !== accessCode) {
-      return NextResponse.json({ error: '学员 ID 或访问码不正确。' }, { status: 401 });
     }
 
     return NextResponse.json({ student: stripPrivateFields(student) });
