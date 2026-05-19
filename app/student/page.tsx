@@ -241,21 +241,11 @@ function getCurrentStudentServerSnapshot() {
 
 function parseStudentCredential(value: string) {
   const credential = value.trim().toLowerCase().replace(/\s+/g, ' ');
-  const aliasAccessCodes: Record<string, string> = {
-    gyw: '1122',
-    lcr: '2233',
-    sxy: '3344',
-    xmj: '4455',
-    yjn: '4837',
-  };
   if (credential === 'demo') {
     return { studentId: 'demo', accessCode: '1234' };
   }
-  if (aliasAccessCodes[credential]) {
-    return { studentId: credential, accessCode: aliasAccessCodes[credential] };
-  }
 
-  const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{3,})$/u);
+  const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{2,})$/u);
   if (matchedAccessCode) {
     return {
       studentId: credential.slice(0, -matchedAccessCode[0].length),
@@ -1578,7 +1568,7 @@ export default function StudentPage() {
 
     const credential =
       typeof rawCredential === 'string' ? parseStudentCredential(rawCredential.trim()) : rawCredential;
-    if (!credential.studentId) {
+    if (!credential.studentId || !credential.accessCode) {
       setLoginError('请输入学员凭证。');
       setLoginStatus('');
       return;
@@ -1680,7 +1670,7 @@ export default function StudentPage() {
                 autoCapitalize="none"
                 autoComplete="off"
                 className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
-                placeholder="请键入学生ID或者demo"
+                placeholder="请键入学生ID和数字码，或 demo"
               />
             </label>
             <button

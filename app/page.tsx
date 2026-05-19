@@ -256,7 +256,7 @@ const copy = {
     studentTitle: '学员入口',
     studentDesc: '进入自己的训练页面。',
     studentIdLabel: '学员凭证',
-    studentIdPlaceholder: '请键入学生ID或者demo',
+    studentIdPlaceholder: '请键入学生ID和数字码，或 demo',
     studentCta: '进入',
     loadingStudent: '正在读取...',
     validatingStudent: '正在验证凭证...',
@@ -314,7 +314,7 @@ const copy = {
     studentTitle: 'Student portal',
     studentDesc: 'Open your training page.',
     studentIdLabel: 'Student credential',
-    studentIdPlaceholder: 'Student ID or demo',
+    studentIdPlaceholder: 'Student ID and code, or demo',
     studentCta: 'Enter',
     loadingStudent: 'Loading...',
     validatingStudent: 'Checking credential...',
@@ -468,20 +468,10 @@ export default function Home() {
 
   function parseStudentCredential(value: string) {
     const credential = value.trim().toLowerCase().replace(/\s+/g, ' ');
-    const aliasAccessCodes: Record<string, string> = {
-      gyw: '1122',
-      lcr: '2233',
-      sxy: '3344',
-      xmj: '4455',
-      yjn: '4837',
-    };
     if (credential === 'demo') {
       return { studentId: 'demo', accessCode: '1234' };
     }
-    if (aliasAccessCodes[credential]) {
-      return { studentId: credential, accessCode: aliasAccessCodes[credential] };
-    }
-    const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{3,})$/u);
+    const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{2,})$/u);
     if (matchedAccessCode) {
       return {
         studentId: credential.slice(0, -matchedAccessCode[0].length),
@@ -507,8 +497,8 @@ export default function Home() {
 
     try {
       const credential = parseStudentCredential(trimmedCredential);
-      if (!credential.studentId) {
-        throw new Error(lang === 'zh' ? '请输入学员 ID。' : 'Enter the student ID.');
+      if (!credential.studentId || !credential.accessCode) {
+        throw new Error(lang === 'zh' ? '请输入学员 ID 和数字码。' : 'Enter the student ID and code.');
       }
 
       router.push(`/student?credential=${encodeURIComponent(trimmedCredential)}`);

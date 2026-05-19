@@ -19,26 +19,26 @@ function isSafeStudentFileId(value: string) {
 
 const STUDENT_LOGIN_ALIASES: Record<string, { studentId: string; accessCode: string }> = {
   demo: { studentId: 'demo', accessCode: '1234' },
-  gyw: { studentId: 'guo-yiwei', accessCode: '1122' },
-  'guo-yiwei': { studentId: 'guo-yiwei', accessCode: '1122' },
-  guoyiwei: { studentId: 'guo-yiwei', accessCode: '1122' },
-  郭一苇: { studentId: 'guo-yiwei', accessCode: '1122' },
-  lcr: { studentId: 'li-chenrun', accessCode: '2233' },
-  'li-chenrun': { studentId: 'li-chenrun', accessCode: '2233' },
-  lichenrun: { studentId: 'li-chenrun', accessCode: '2233' },
-  李晨润: { studentId: 'li-chenrun', accessCode: '2233' },
-  sxy: { studentId: 'sheng-xinyi', accessCode: '3344' },
-  'sheng-xinyi': { studentId: 'sheng-xinyi', accessCode: '3344' },
-  shengxinyi: { studentId: 'sheng-xinyi', accessCode: '3344' },
-  盛欣怡: { studentId: 'sheng-xinyi', accessCode: '3344' },
-  xmj: { studentId: 'xue-meijiao', accessCode: '4455' },
-  'xue-meijiao': { studentId: 'xue-meijiao', accessCode: '4455' },
-  xuemeijiao: { studentId: 'xue-meijiao', accessCode: '4455' },
-  薛美姣: { studentId: 'xue-meijiao', accessCode: '4455' },
-  yjn: { studentId: 'yang-jingnan', accessCode: '4837' },
-  'yang-jingnan': { studentId: 'yang-jingnan', accessCode: '4837' },
-  yangjingnan: { studentId: 'yang-jingnan', accessCode: '4837' },
-  杨静南: { studentId: 'yang-jingnan', accessCode: '4837' },
+  gyw: { studentId: 'guo-yiwei', accessCode: '11' },
+  'guo-yiwei': { studentId: 'guo-yiwei', accessCode: '11' },
+  guoyiwei: { studentId: 'guo-yiwei', accessCode: '11' },
+  郭一苇: { studentId: 'guo-yiwei', accessCode: '11' },
+  lcr: { studentId: 'li-chenrun', accessCode: '22' },
+  'li-chenrun': { studentId: 'li-chenrun', accessCode: '22' },
+  lichenrun: { studentId: 'li-chenrun', accessCode: '22' },
+  李晨润: { studentId: 'li-chenrun', accessCode: '22' },
+  sxy: { studentId: 'sheng-xinyi', accessCode: '33' },
+  'sheng-xinyi': { studentId: 'sheng-xinyi', accessCode: '33' },
+  shengxinyi: { studentId: 'sheng-xinyi', accessCode: '33' },
+  盛欣怡: { studentId: 'sheng-xinyi', accessCode: '33' },
+  xmj: { studentId: 'xue-meijiao', accessCode: '44' },
+  'xue-meijiao': { studentId: 'xue-meijiao', accessCode: '44' },
+  xuemeijiao: { studentId: 'xue-meijiao', accessCode: '44' },
+  薛美姣: { studentId: 'xue-meijiao', accessCode: '44' },
+  yjn: { studentId: 'yang-jingnan', accessCode: '48' },
+  'yang-jingnan': { studentId: 'yang-jingnan', accessCode: '48' },
+  yangjingnan: { studentId: 'yang-jingnan', accessCode: '48' },
+  杨静南: { studentId: 'yang-jingnan', accessCode: '48' },
 };
 
 function stripPrivateFields(student: Record<string, unknown>) {
@@ -335,20 +335,14 @@ export async function POST(req: Request) {
 
   const studentId = normalizeStudentId(body?.studentId);
   const asciiStudentId = normalizeAsciiStudentId(body?.studentId);
-  const submittedAccessCode = typeof body?.accessCode === 'string' ? body.accessCode.trim() : '';
+  const accessCode = typeof body?.accessCode === 'string' ? body.accessCode.trim() : '';
 
-  if (!studentId) {
-    return NextResponse.json({ error: '请输入学员 ID。' }, { status: 400 });
+  if (!studentId || !accessCode) {
+    return NextResponse.json({ error: '请输入学员 ID 和数字码。' }, { status: 400 });
   }
 
   try {
     const alias = STUDENT_LOGIN_ALIASES[studentId] || STUDENT_LOGIN_ALIASES[asciiStudentId];
-    const accessCode = submittedAccessCode || alias?.accessCode || '';
-
-    if (!accessCode) {
-      return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404 });
-    }
-
     const expectedAccessCode = alias?.accessCode;
     const lookupStudentIds = [
       studentId,
