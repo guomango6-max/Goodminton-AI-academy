@@ -90,7 +90,7 @@ type ValidGoogleServiceAccount = {
 const singleStudentCache = new Map<string, Record<string, unknown>>();
 const fileStudentCache = new Map<string, Record<string, unknown>>();
 const driveStudentCache = new Map<string, Record<string, unknown>>();
-const sheetStudentCache = new Map<string, Record<string, unknown>>();
+const sheetStudentCache = new Map<string, { student: Record<string, unknown>; expiresAt: number }>();
 let envStudentCacheRaw = '';
 let envStudentCache: Record<string, Record<string, unknown>> | Array<Record<string, unknown>> | null = null;
 let googleAccessTokenCache: { token: string; expiresAt: number } | null = null;
@@ -101,7 +101,7 @@ async function getStudentFromSheet(studentId: string) {
   if (!endpoint || !token) return null;
 
   const cached = sheetStudentCache.get(studentId);
-  if (cached) return cached;
+  if (cached && cached.expiresAt > Date.now()) return cached.student;
 
   try {
     const response = await fetch(endpoint, {
@@ -129,7 +129,7 @@ async function getStudentFromSheet(studentId: string) {
     }
     const studentRecord = student as Record<string, unknown>;
 
-    sheetStudentCache.set(studentId, studentRecord);
+    sheetStudentCache.set(studentId, { student: studentRecord, expiresAt: Date.now() + 60000 });
     return studentRecord;
   } catch (error) {
     console.error('[student-data-sheet-fetch-error]', error);
