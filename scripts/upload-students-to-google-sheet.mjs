@@ -5,11 +5,20 @@ const endpoint = process.env.GOODMINTON_STUDENT_SHEET_ENDPOINT;
 const token = process.env.GOODMINTON_STUDENT_SHEET_TOKEN;
 
 const students = [
+  { file: 'sami.json', alias: 'sami' },
   { file: 'guo-yiwei.json', alias: 'gyw' },
   { file: 'li-chenrun.json', alias: 'lcr' },
   { file: 'sheng-xinyi.json', alias: 'sxy' },
   { file: 'xue-meijiao.json', alias: 'xmj' },
   { file: 'yang-jingnan.json', alias: 'yjn' },
+  { file: 'guo-renhua.json', alias: 'grh' },
+  { file: 'cui-yunhao.json', alias: 'cyh' },
+  { file: 'wang-meng.json', alias: 'wm' },
+  { file: 'zhang-biqiong.json', alias: 'zbq' },
+  { file: 'zhang-cuiqi.json', alias: 'zcq' },
+  { file: 'zhao-xin.json', alias: 'zx' },
+  { file: 'jin-yan.json', alias: 'jy' },
+  { file: 'lu-shiqiong.json', alias: 'lsq' },
 ];
 
 if (!endpoint || !token) {

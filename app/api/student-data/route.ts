@@ -19,6 +19,7 @@ function isSafeStudentFileId(value: string) {
 
 const STUDENT_LOGIN_CREDENTIALS: Record<string, string> = {
   demo: 'demo',
+  sami09: 'sami',
   gyw11: 'guo-yiwei',
   gyw1: 'guo-yiwei',
   gyw1122: 'guo-yiwei',
@@ -56,6 +57,14 @@ const STUDENT_LOGIN_CREDENTIALS: Record<string, string> = {
   yangjingnan4837: 'yang-jingnan',
   杨静南48: 'yang-jingnan',
   杨静南4837: 'yang-jingnan',
+  grh46: 'guo-renhua',
+  cyh33: 'cui-yunhao',
+  wm45: 'wang-meng',
+  zbq48: 'zhang-biqiong',
+  zcq40: 'zhang-cuiqi',
+  zx40: 'zhao-xin',
+  jy47: 'jin-yan',
+  lsq40: 'lu-shiqiong',
 };
 
 function stripPrivateFields(student: Record<string, unknown>) {
