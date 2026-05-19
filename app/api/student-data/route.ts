@@ -333,9 +333,17 @@ export async function POST(req: Request) {
     accessCode?: string;
   } | null;
 
-  const studentId = normalizeStudentId(body?.studentId);
-  const asciiStudentId = normalizeAsciiStudentId(body?.studentId);
-  const accessCode = typeof body?.accessCode === 'string' ? body.accessCode.trim() : '';
+  const rawStudentId = typeof body?.studentId === 'string' ? body.studentId.trim() : '';
+  const submittedAccessCode = typeof body?.accessCode === 'string' ? body.accessCode.trim() : '';
+  const embeddedAccessCode = rawStudentId.toLowerCase() === 'demo'
+    ? '1234'
+    : rawStudentId.match(/[\s\-–—－_]*(\d{2,})$/u)?.[1] || '';
+  const rawStudentIdWithoutEmbeddedCode = embeddedAccessCode && rawStudentId.toLowerCase() !== 'demo'
+    ? rawStudentId.slice(0, -rawStudentId.match(/[\s\-–—－_]*(\d{2,})$/u)![0].length)
+    : rawStudentId;
+  const studentId = normalizeStudentId(rawStudentIdWithoutEmbeddedCode);
+  const asciiStudentId = normalizeAsciiStudentId(rawStudentIdWithoutEmbeddedCode);
+  const accessCode = submittedAccessCode || embeddedAccessCode;
 
   if (!studentId || !accessCode) {
     return NextResponse.json({ error: '请输入学员 ID 和数字码。' }, { status: 400 });
