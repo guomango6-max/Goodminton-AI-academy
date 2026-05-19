@@ -10,8 +10,7 @@ function normalizeLoginCredential(value: unknown) {
     .normalize('NFKC')
     .trim()
     .toLowerCase()
-    .replace(/[\u200B-\u200D\uFEFF]/g, '')
-    .replace(/[\s\-–—－_]+/g, '');
+    .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
 function isSafeStudentFileId(value: string) {
