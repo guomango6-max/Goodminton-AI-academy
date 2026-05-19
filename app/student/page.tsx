@@ -245,7 +245,7 @@ function parseStudentCredential(value: string) {
     return { studentId: 'demo', accessCode: '1234' };
   }
 
-  const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{2,})$/u);
+  const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d+)$/u);
   if (matchedAccessCode) {
     return {
       studentId: credential.slice(0, -matchedAccessCode[0].length),
