@@ -471,7 +471,7 @@ export default function Home() {
     if (credential === 'demo') {
       return { studentId: 'demo', accessCode: '1234' };
     }
-    const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d+)$/u);
+    const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{2,})$/u);
     if (matchedAccessCode) {
       return {
         studentId: credential.slice(0, -matchedAccessCode[0].length),
