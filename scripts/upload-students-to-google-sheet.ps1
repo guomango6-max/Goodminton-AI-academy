@@ -12,22 +12,10 @@ if (-not $Endpoint -or -not $Token) {
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $studentDir = Join-Path $root "data\students"
 
-$students = @(
-  @{ File = "sami.json"; Alias = "sami" },
-  @{ File = "guo-yiwei.json"; Alias = "gyw" },
-  @{ File = "li-chenrun.json"; Alias = "lcr" },
-  @{ File = "sheng-xinyi.json"; Alias = "sxy" },
-  @{ File = "xue-meijiao.json"; Alias = "xmj" },
-  @{ File = "yang-jingnan.json"; Alias = "yjn" },
-  @{ File = "guo-renhua.json"; Alias = "grh" },
-  @{ File = "cui-yunhao.json"; Alias = "cyh" },
-  @{ File = "wang-meng.json"; Alias = "wm" },
-  @{ File = "zhang-biqiong.json"; Alias = "zbq" },
-  @{ File = "zhang-cuiqi.json"; Alias = "zcq" },
-  @{ File = "zhao-xin.json"; Alias = "zx" },
-  @{ File = "jin-yan.json"; Alias = "jy" },
-  @{ File = "lu-shiqiong.json"; Alias = "lsq" }
-)
+$manifestPath = Join-Path $root "data\student-manifest.json"
+$students = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 |
+  ConvertFrom-Json |
+  Where-Object { $_.studentId -ne "demo" }
 
 $rows = foreach ($item in $students) {
   $path = Join-Path $studentDir $item.File

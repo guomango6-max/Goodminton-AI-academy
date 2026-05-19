@@ -1,0 +1,121 @@
+[
+  {
+    "studentId": "cui-yunhao",
+    "file": "cui-yunhao.json",
+    "alias": "cyh",
+    "loginId": "cyh33",
+    "name": "崔云颢",
+    "source": "student-cui-yunhao.md"
+  },
+  {
+    "studentId": "demo",
+    "file": "demo.json",
+    "alias": "demo",
+    "loginId": "demo",
+    "name": "示例学员"
+  },
+  {
+    "studentId": "guo-renhua",
+    "file": "guo-renhua.json",
+    "alias": "grh",
+    "loginId": "grh46",
+    "name": "郭仁花",
+    "source": "student-guo-renhua.md"
+  },
+  {
+    "studentId": "guo-yiwei",
+    "file": "guo-yiwei.json",
+    "alias": "gyw",
+    "loginId": "gyw11",
+    "name": "郭一苇",
+    "source": "student-guo-yiwei.md"
+  },
+  {
+    "studentId": "jin-yan",
+    "file": "jin-yan.json",
+    "alias": "jy",
+    "loginId": "jy47",
+    "name": "金岩",
+    "source": "student-jin-yan.md"
+  },
+  {
+    "studentId": "li-chenrun",
+    "file": "li-chenrun.json",
+    "alias": "lcr",
+    "loginId": "lcr22",
+    "name": "李晨润",
+    "source": "student-li-chenrun.md"
+  },
+  {
+    "studentId": "lu-shiqiong",
+    "file": "lu-shiqiong.json",
+    "alias": "lsq",
+    "loginId": "lsq40",
+    "name": "陆世琼",
+    "source": "student-lu-shiqiong.md"
+  },
+  {
+    "studentId": "sami",
+    "file": "sami.json",
+    "alias": "sami",
+    "loginId": "sami09",
+    "name": "Sami",
+    "source": "student-sami.md"
+  },
+  {
+    "studentId": "sheng-xinyi",
+    "file": "sheng-xinyi.json",
+    "alias": "sxy",
+    "loginId": "sxy33",
+    "name": "盛心怡",
+    "source": "student-sheng-xinyi.md"
+  },
+  {
+    "studentId": "wang-meng",
+    "file": "wang-meng.json",
+    "alias": "wm",
+    "loginId": "wm45",
+    "name": "王蒙",
+    "source": "student-wang-meng.md"
+  },
+  {
+    "studentId": "xue-meijiao",
+    "file": "xue-meijiao.json",
+    "alias": "xmj",
+    "loginId": "xmj44",
+    "name": "薛美姣",
+    "source": "student-xue-meijiao.md"
+  },
+  {
+    "studentId": "yang-jingnan",
+    "file": "yang-jingnan.json",
+    "alias": "yjn",
+    "loginId": "yjn48",
+    "name": "杨静南",
+    "source": "student-yang-jingnan.md"
+  },
+  {
+    "studentId": "zhang-biqiong",
+    "file": "zhang-biqiong.json",
+    "alias": "zbq",
+    "loginId": "zbq48",
+    "name": "张碧琼",
+    "source": "student-zhang-biqiong.md"
+  },
+  {
+    "studentId": "zhang-cuiqi",
+    "file": "zhang-cuiqi.json",
+    "alias": "zcq",
+    "loginId": "zcq40",
+    "name": "张翠其",
+    "source": "student-zhang-cuiqi.md"
+  },
+  {
+    "studentId": "zhao-xin",
+    "file": "zhao-xin.json",
+    "alias": "zx",
+    "loginId": "zx40",
+    "name": "赵昕",
+    "source": "student-zhao-xin.md"
+  }
+]

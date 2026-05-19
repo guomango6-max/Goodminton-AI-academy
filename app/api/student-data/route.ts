@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { createSign } from 'node:crypto';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
@@ -17,7 +18,7 @@ function isSafeStudentFileId(value: string) {
   return /^[a-z0-9][a-z0-9_-]*$/u.test(value);
 }
 
-const STUDENT_LOGIN_CREDENTIALS: Record<string, string> = {
+const FALLBACK_STUDENT_LOGIN_CREDENTIALS: Record<string, string> = {
   demo: 'demo',
   sami09: 'sami',
   gyw11: 'guo-yiwei',
@@ -66,6 +67,25 @@ const STUDENT_LOGIN_CREDENTIALS: Record<string, string> = {
   jy47: 'jin-yan',
   lsq40: 'lu-shiqiong',
 };
+
+let loginCredentialsCache: Record<string, string> | null = null;
+
+function getStudentLoginCredentials() {
+  if (loginCredentialsCache) return loginCredentialsCache;
+
+  try {
+    const raw = readFileSync(join(process.cwd(), 'data', 'student-login-credentials.json'), 'utf8');
+    const generatedCredentials = JSON.parse(raw) as Record<string, string>;
+    loginCredentialsCache = {
+      ...FALLBACK_STUDENT_LOGIN_CREDENTIALS,
+      ...generatedCredentials,
+    };
+  } catch {
+    loginCredentialsCache = FALLBACK_STUDENT_LOGIN_CREDENTIALS;
+  }
+
+  return loginCredentialsCache;
+}
 
 function stripPrivateFields(student: Record<string, unknown>) {
   const publicStudent = { ...student };
@@ -362,7 +382,7 @@ export async function POST(req: Request) {
   const rawStudentId = typeof body?.studentId === 'string' ? body.studentId : '';
   const rawAccessCode = typeof body?.accessCode === 'string' ? body.accessCode : '';
   const credential = normalizeLoginCredential(`${rawStudentId}${rawAccessCode}`);
-  const studentId = STUDENT_LOGIN_CREDENTIALS[credential];
+  const studentId = getStudentLoginCredentials()[credential];
 
   if (!studentId) {
     return NextResponse.json({ error: `没有找到这个学员数据。识别为：${credential || '空'}` }, { status: 404 });
