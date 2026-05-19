@@ -1582,6 +1582,12 @@ export default function StudentPage() {
       try {
         window.sessionStorage.setItem('goodminton-student-current', JSON.stringify(payload.student));
         window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
+        window.setTimeout(() => {
+          if (!readCurrentStudent()) return;
+          if (!document.body.textContent?.includes(payload.student?.name || '')) {
+            window.location.replace('/student');
+          }
+        }, 250);
       } catch {
         // Some mobile/private browsers reject storage writes. The React state above still opens the page.
       }

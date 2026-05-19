@@ -354,7 +354,7 @@ export async function POST(req: Request) {
   const studentId = STUDENT_LOGIN_CREDENTIALS[credential];
 
   if (!studentId) {
-    return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404 });
+    return NextResponse.json({ error: `没有找到这个学员数据。识别为：${credential || '空'}` }, { status: 404 });
   }
 
   try {
