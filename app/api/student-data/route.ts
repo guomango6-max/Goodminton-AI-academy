@@ -38,6 +38,8 @@ const STUDENT_LOGIN_CREDENTIALS: Record<string, string> = {
   sxy3344: 'sheng-xinyi',
   shengxinyi33: 'sheng-xinyi',
   shengxinyi3344: 'sheng-xinyi',
+  盛心怡33: 'sheng-xinyi',
+  盛心怡3344: 'sheng-xinyi',
   盛欣怡33: 'sheng-xinyi',
   盛欣怡3344: 'sheng-xinyi',
   xmj44: 'xue-meijiao',
