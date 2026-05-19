@@ -95,7 +95,7 @@ function toNtfyBody(submission: ReturnType<typeof normalizeSubmission>) {
     '课后总结：',
     submission.lessonSummary.studentReflection || '未填写',
     '',
-    '想问教练：',
+    '最近想学习的内容：',
     submission.lessonSummary.question || '未填写',
     '',
   ].join('\n');

@@ -1299,7 +1299,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   />
                 </label>
                 <label className="block">
-                  <div className="text-sm font-medium">我还想问教练的问题</div>
+                  <div className="text-sm font-medium">最近想学习的内容</div>
                   <textarea
                     value={lessonInput.question}
                     onChange={(event) => setLessonInput((value) => ({ ...value, question: event.target.value }))}
