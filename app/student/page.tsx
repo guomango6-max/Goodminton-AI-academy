@@ -1661,7 +1661,7 @@ export default function StudentPage() {
                 autoCapitalize="none"
                 autoComplete="off"
                 className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
-                placeholder="请键入学生ID和数字码，或 demo"
+                placeholder="学员ID / demo"
               />
             </label>
             <button
