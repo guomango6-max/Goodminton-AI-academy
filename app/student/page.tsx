@@ -1304,7 +1304,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     value={lessonInput.question}
                     onChange={(event) => setLessonInput((value) => ({ ...value, question: event.target.value }))}
                     className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
-                    placeholder="例如：为什么我接快推时总是慢半拍？"
+                    placeholder="例如：我想练反手高远球、接杀防守、双打轮转。"
                   />
                 </label>
                 <label className="block">
