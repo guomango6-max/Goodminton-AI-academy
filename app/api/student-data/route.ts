@@ -6,7 +6,12 @@ import { NextResponse } from 'next/server';
 
 function normalizeLoginCredential(value: unknown) {
   if (typeof value !== 'string') return '';
-  return value.trim().toLowerCase().replace(/[\s\-–—－_]+/g, '');
+  return value
+    .normalize('NFKC')
+    .trim()
+    .toLowerCase()
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\s\-–—－_]+/g, '');
 }
 
 function isSafeStudentFileId(value: string) {
