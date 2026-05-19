@@ -239,23 +239,6 @@ function getCurrentStudentServerSnapshot() {
   return null;
 }
 
-function parseStudentCredential(value: string) {
-  const credential = value.trim().toLowerCase().replace(/\s+/g, ' ');
-  if (credential === 'demo') {
-    return { studentId: 'demo', accessCode: '1234' };
-  }
-
-  const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{2,})$/u);
-  if (matchedAccessCode) {
-    return {
-      studentId: credential.slice(0, -matchedAccessCode[0].length),
-      accessCode: matchedAccessCode[1],
-    };
-  }
-
-  return { studentId: credential, accessCode: '' };
-}
-
 function Pill({ children, active }: { children: React.ReactNode; active?: boolean }) {
   return (
     <div
@@ -1567,8 +1550,10 @@ export default function StudentPage() {
     if (loginLoading) return;
 
     const credential =
-      typeof rawCredential === 'string' ? parseStudentCredential(rawCredential.trim()) : rawCredential;
-    if (!credential.studentId || !credential.accessCode) {
+      typeof rawCredential === 'string'
+        ? { studentId: rawCredential.trim(), accessCode: '' }
+        : rawCredential;
+    if (!credential.studentId) {
       setLoginError('请输入学员凭证。');
       setLoginStatus('');
       return;

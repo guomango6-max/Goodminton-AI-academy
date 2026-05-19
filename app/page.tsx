@@ -466,21 +466,6 @@ export default function Home() {
     };
   }, []);
 
-  function parseStudentCredential(value: string) {
-    const credential = value.trim().toLowerCase().replace(/\s+/g, ' ');
-    if (credential === 'demo') {
-      return { studentId: 'demo', accessCode: '1234' };
-    }
-    const matchedAccessCode = credential.match(/[\s\-–—－_]*(\d{2,})$/u);
-    if (matchedAccessCode) {
-      return {
-        studentId: credential.slice(0, -matchedAccessCode[0].length),
-        accessCode: matchedAccessCode[1],
-      };
-    }
-    return { studentId: credential, accessCode: '' };
-  }
-
   async function loginStudent(rawCredential: string) {
     if (studentLoading) return;
 
@@ -496,11 +481,6 @@ export default function Home() {
     setStudentLoading(true);
 
     try {
-      const credential = parseStudentCredential(trimmedCredential);
-      if (!credential.studentId || !credential.accessCode) {
-        throw new Error(lang === 'zh' ? '请输入学员 ID 和数字码。' : 'Enter the student ID and code.');
-      }
-
       router.push(`/student?credential=${encodeURIComponent(trimmedCredential)}`);
     } catch (requestError) {
       setStudentError(
