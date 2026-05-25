@@ -18,6 +18,8 @@ function normalizeLang(value: string | null): Lang {
 
 function getStoredLang(): Lang {
   if (typeof window === 'undefined') return 'zh';
+  const urlLang = normalizeLang(new URLSearchParams(window.location.search).get('lang'));
+  if (urlLang === 'en') return 'en';
   return normalizeLang(window.localStorage.getItem(LANG_STORAGE_KEY));
 }
 
@@ -36,6 +38,14 @@ function subscribeLangChange(onStoreChange: () => void) {
 
 export function LangProvider({ children }: { children: ReactNode }) {
   const lang = useSyncExternalStore(subscribeLangChange, getStoredLang, getServerLang);
+
+  useEffect(() => {
+    const urlLang = normalizeLang(new URLSearchParams(window.location.search).get('lang'));
+    if (urlLang === 'en' && window.localStorage.getItem(LANG_STORAGE_KEY) !== 'en') {
+      window.localStorage.setItem(LANG_STORAGE_KEY, 'en');
+      window.dispatchEvent(new Event(LANG_CHANGE_EVENT));
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';

@@ -423,7 +423,7 @@ function makeDefaultHomework() {
   ];
 }
 
-function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, focusItems, recentGoal, growthPath, homework = [], raw }) {
+function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, focusItems, homework = [], raw }) {
   const focus = focusItems.length ? focusItems : ['基础能力初评', '训练反馈建档'];
   const progress = levelToProgress(level);
   const ability = levelToAbility(level);

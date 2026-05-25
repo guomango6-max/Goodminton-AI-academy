@@ -481,7 +481,8 @@ export default function Home() {
     setStudentLoading(true);
 
     try {
-      router.push(`/student?credential=${encodeURIComponent(trimmedCredential)}`);
+      const langParam = lang === 'en' ? '&lang=en' : '';
+      router.push(`/student?credential=${encodeURIComponent(trimmedCredential)}${langParam}`);
     } catch (requestError) {
       setStudentError(
         requestError instanceof Error
