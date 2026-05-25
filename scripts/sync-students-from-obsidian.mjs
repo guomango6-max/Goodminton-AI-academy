@@ -15,6 +15,7 @@ const obsidianStudentDir = process.env.GOODMINTON_OBSIDIAN_STUDENT_DIR || DEFAUL
 const loginOverrides = {
   abih: 'abih30',
   'abih-wife': 'abiw30',
+  rishi: 'rishi40',
   sami: 'sami09',
   'guo-yiwei': 'gyw11',
   'li-chenrun': 'lcr22',

@@ -71,6 +71,14 @@
     "source": "student-lu-shiqiong.md"
   },
   {
+    "studentId": "rishi",
+    "file": "rishi.json",
+    "alias": "rishi",
+    "loginId": "rishi40",
+    "name": "Rishi",
+    "source": "student-rishi.md"
+  },
+  {
     "studentId": "sami",
     "file": "sami.json",
     "alias": "sami",
