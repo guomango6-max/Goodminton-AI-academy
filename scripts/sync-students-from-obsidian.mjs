@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 const DEFAULT_OBSIDIAN_STUDENT_DIR = 'D:\\ob\\work\\05-students';
+const DEFAULT_OBSIDIAN_HOMEWORK_DIR = 'D:\\ob\\work\\03-training\\drill';
 const STUDENT_DIR = join(process.cwd(), 'data', 'students');
 const LOGIN_FILE = join(process.cwd(), 'data', 'student-login-credentials.json');
 const MANIFEST_FILE = join(process.cwd(), 'data', 'student-manifest.json');
@@ -11,6 +12,7 @@ const args = new Set(process.argv.slice(2));
 const shouldUpload = args.has('--upload');
 const shouldDryRun = args.has('--dry-run');
 const obsidianStudentDir = process.env.GOODMINTON_OBSIDIAN_STUDENT_DIR || DEFAULT_OBSIDIAN_STUDENT_DIR;
+const obsidianHomeworkDir = process.env.GOODMINTON_OBSIDIAN_HOMEWORK_DIR || DEFAULT_OBSIDIAN_HOMEWORK_DIR;
 
 const loginOverrides = {
   abih: 'abih30',
@@ -121,7 +123,7 @@ function getTableValue(raw, labels) {
 
 function getSection(raw, title) {
   const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-  const match = raw.match(new RegExp(`^##\\s+${escapedTitle}\\s*\\r?\\n([\\s\\S]*?)(?=^##\\s+|$)`, 'mu'));
+  const match = raw.match(new RegExp(`^##\\s+${escapedTitle}\\s*\\r?\\n([\\s\\S]*?)(?=^##\\s+|(?![\\s\\S]))`, 'mu'));
   return match?.[1]?.trim() || '';
 }
 
@@ -147,6 +149,120 @@ function getFocusItems(raw) {
     .filter(Boolean)
     .map(stripMarkdown)
     .slice(0, 2);
+}
+
+function parseTableRows(section) {
+  const rows = [];
+  let headers = [];
+
+  for (const line of section.split(/\r?\n/u)) {
+    if (!line.trim().startsWith('|')) continue;
+    const cells = line
+      .split('|')
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+    if (!cells.length || cells.every((cell) => /^:?-{3,}:?$/u.test(cell))) continue;
+
+    const stripped = cells.map(stripMarkdown);
+    if (!headers.length) {
+      headers = stripped;
+      continue;
+    }
+
+    const row = {};
+    headers.forEach((header, index) => {
+      row[header] = cells[index] || '';
+    });
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function getRecentGoal(raw) {
+  return stripMarkdown(
+    getTableValue(raw, ['短期目标_4周', '短期目标', '近期目标']) ||
+      getTableValue(raw, ['中期目标_3月', '中期目标']) ||
+      '',
+  );
+}
+
+function getGrowthPathSummary(raw) {
+  const section = getSection(raw, '当前路径定位');
+  if (!section) return '';
+
+  const rows = parseTableRows(section);
+  const active = rows
+    .filter((row) => /active|主线|重点/u.test(stripMarkdown(row['角色'] || row.role || '')))
+    .map((row) => stripMarkdown(row.path || row['path'] || row['路径'] || ''))
+    .filter(Boolean);
+
+  if (active.length) return active.slice(0, 2).join(' / ');
+
+  return rows
+    .map((row) => stripMarkdown(row.path || row['path'] || row['路径'] || ''))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' / ');
+}
+
+function extractWikiTarget(value) {
+  return String(value || '').match(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/u)?.[1] || '';
+}
+
+async function getHomeworkTitleMap() {
+  const titleMap = new Map();
+  if (!existsSync(obsidianHomeworkDir)) return titleMap;
+
+  const files = await readdir(obsidianHomeworkDir);
+  for (const fileName of files.filter((file) => file.startsWith('homework-') && file.endsWith('.md'))) {
+    const raw = await readFile(join(obsidianHomeworkDir, fileName), 'utf8');
+    const frontmatter = parseFrontmatter(raw);
+    const id = basename(fileName, '.md');
+    const title = stripMarkdown(frontmatter.title || raw.match(/^#\s+家庭作业｜(.+)$/mu)?.[1] || raw.match(/^#\s+(.+)$/mu)?.[1] || id);
+    titleMap.set(id, title);
+  }
+
+  return titleMap;
+}
+
+function getAssignedHomework(raw, { recentGoal, growthPath, focusItems, homeworkTitleMap }) {
+  const section = getSection(raw, '当前家庭作业');
+  if (!section) return [];
+
+  const rows = parseTableRows(section);
+  const homework = [];
+
+  for (const row of rows) {
+    const homeworkCell = row.homework || row['家庭作业'] || '';
+    const homeworkId = extractWikiTarget(homeworkCell);
+    const title = homeworkId ? homeworkTitleMap.get(homeworkId) || stripMarkdown(homeworkCell) : stripMarkdown(homeworkCell);
+    const relatedPath = stripMarkdown(row['相关 path'] || row.path || '');
+    const relatedFocus = stripMarkdown(row['相关 error / focus'] || row.focus || '');
+    const reason = stripMarkdown(row['匹配原因'] || '');
+    const frequency = stripMarkdown(row['频率'] || '');
+    const metric = stripMarkdown(row['观察指标'] || '').replace(/^下次课看/u, '').trim();
+
+    if (!title || title === '[[]]' || /不预设|不额外增加/u.test(reason)) continue;
+
+    const target = recentGoal || focusItems[0] || relatedFocus;
+    const path = growthPath || relatedPath;
+    const parts = [
+      title,
+      target ? `近期目标：${target}` : '',
+      path ? `成长路径：${path}` : '',
+      frequency ? `频率：${frequency}` : '',
+      metric ? `下次课看：${metric}` : '',
+    ].filter(Boolean);
+
+    homework.push({
+      id: homeworkId || `homework-${homework.length + 1}`,
+      text: parts.join('｜'),
+      done: false,
+    });
+  }
+
+  return homework.slice(0, 3);
 }
 
 function getTrainingRecordCount(raw) {
@@ -299,12 +415,21 @@ function makeEnglishStudent(student) {
   return translateObject(student);
 }
 
-function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, focusItems, raw }) {
+function makeDefaultHomework() {
+  return [
+    { id: 'hw-1', text: '记录本周最想改进的一个动作。', done: false },
+    { id: 'hw-2', text: '下次课前回忆一个最近最容易失误的场景。', done: false },
+    { id: 'hw-3', text: '课后用自己的话写一句训练感受。', done: false },
+  ];
+}
+
+function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, focusItems, recentGoal, growthPath, homework = [], raw }) {
   const focus = focusItems.length ? focusItems : ['基础能力初评', '训练反馈建档'];
   const progress = levelToProgress(level);
   const ability = levelToAbility(level);
   const recordCount = getTrainingRecordCount(raw);
   const description = `当前重点：${focus.join('；')}。先从 Obsidian 档案同步到网站，后续按课堂记录继续校准。`;
+  const assignedHomework = homework.length ? homework : makeDefaultHomework();
 
   const student = {
     studentId,
@@ -355,11 +480,7 @@ function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, f
       title: '首次建档',
       studentReflection: '',
       coachNote: '从 Obsidian 学员档案生成网站基础页，后续按课堂记录持续校准。',
-      homework: [
-        { id: 'hw-1', text: '记录本周最想改进的一个动作。', done: false },
-        { id: 'hw-2', text: '下次课前回忆一个最近最容易失误的场景。', done: false },
-        { id: 'hw-3', text: '课后用自己的话写一句训练感受。', done: false },
-      ],
+      homework: assignedHomework,
     },
     matchReview: {
       match: '',
@@ -398,11 +519,17 @@ function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, f
 }
 
 function mergeExistingStudent(existing, generated, { name, level, loginId }) {
+  const lessonSummary = {
+    ...(generated.lessonSummary || {}),
+    ...(existing.lessonSummary || {}),
+    homework: generated.lessonSummary?.homework || existing.lessonSummary?.homework || [],
+  };
   const mergedForEnglish = {
     ...generated,
     ...existing,
     name,
     level,
+    lessonSummary,
   };
   delete mergedForEnglish.i18n;
   const englishStudent = makeEnglishStudent(mergedForEnglish);
@@ -420,6 +547,7 @@ function mergeExistingStudent(existing, generated, { name, level, loginId }) {
     reviewQueue: existing.reviewQueue?.length ? existing.reviewQueue : generated.reviewQueue,
     knowledgeLinks: existing.knowledgeLinks?.length ? existing.knowledgeLinks : generated.knowledgeLinks,
     recentFeedback: existing.recentFeedback?.length ? existing.recentFeedback : generated.recentFeedback,
+    lessonSummary,
     lastUpdated: existing.lastUpdated || generated.lastUpdated,
   };
 }
@@ -440,6 +568,7 @@ function isStudentProfile(fileName, raw, frontmatter) {
 
 async function collectStudents() {
   const files = await readdir(obsidianStudentDir);
+  const homeworkTitleMap = await getHomeworkTitleMap();
   const students = [];
 
   for (const fileName of files.sort()) {
@@ -463,6 +592,14 @@ async function collectStudents() {
     const tags = frontmatter.tags || '';
     const group = /青少年|儿童/u.test(tags) || Number(age) < 18 ? '青少年' : '成人';
     const focusItems = getFocusItems(raw);
+    const recentGoal = getRecentGoal(raw);
+    const growthPath = getGrowthPathSummary(raw);
+    const homework = getAssignedHomework(raw, {
+      recentGoal,
+      growthPath,
+      focusItems,
+      homeworkTitleMap,
+    });
     const loginId = loginOverrides[studentId] || fallbackLoginId(studentId, age);
 
     students.push({
@@ -475,6 +612,9 @@ async function collectStudents() {
       loginId,
       alias: loginId.replace(/\d+$/u, ''),
       focusItems,
+      recentGoal,
+      growthPath,
+      homework,
       raw,
     });
   }
