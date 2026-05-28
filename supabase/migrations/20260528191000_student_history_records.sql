@@ -31,3 +31,6 @@ create index if not exists student_history_records_type_time_idx
   on public.student_history_records (record_type, happened_at desc, created_at desc);
 
 alter table public.student_history_records enable row level security;
+
+-- Intentionally no anon/auth policies: the app accesses this table only through
+-- server-side routes with SUPABASE_SERVICE_ROLE_KEY.

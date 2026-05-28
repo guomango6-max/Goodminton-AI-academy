@@ -1,3 +1,7 @@
+-- Manual setup reference for Goodminton student history.
+-- The canonical migration lives at:
+-- supabase/migrations/20260528191000_student_history_records.sql
+
 create table if not exists public.student_history_records (
   id uuid primary key default gen_random_uuid(),
   external_id text not null unique,
@@ -32,7 +36,5 @@ create index if not exists student_history_records_type_time_idx
 
 alter table public.student_history_records enable row level security;
 
--- The website reads and writes this table only through server-side API routes
--- with SUPABASE_SERVICE_ROLE_KEY. Do not expose the service role key in browser code.
--- No anon/auth policies are created on purpose. Browser clients must not read or
--- write this table directly; use /api/student-history and /api/student-submission.
+-- Intentionally no anon/auth policies. Student history is read and written only
+-- through server-side routes with SUPABASE_SERVICE_ROLE_KEY.

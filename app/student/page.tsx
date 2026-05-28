@@ -601,21 +601,54 @@ function DetailLine({ label, value }: { label: string; value?: string | number |
   );
 }
 
+function ConfidencePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="mt-2 grid grid-cols-5 gap-1.5">
+      {[1, 2, 3, 4, 5].map((score) => {
+        const active = Number(value) === score;
+        return (
+          <button
+            key={score}
+            type="button"
+            onClick={() => onChange(String(score))}
+            className={
+              'min-h-11 rounded-md border px-2 text-sm font-semibold transition ' +
+              (active
+                ? 'border-[#16845f] bg-[#16845f] text-white'
+                : 'border-[#cfe8d9] bg-white text-[#0e6f4d]')
+            }
+          >
+            {score}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function StudentHistoryPanel({
   lessons = [],
   submissionLogs,
   t,
   lang,
   onSaveSubmission,
+  loading,
 }: {
   lessons?: NonNullable<StudentData['lessonHistory']>;
   submissionLogs: StudentSubmissionLog[];
   t: StudentText;
   lang: Lang;
   onSaveSubmission: (log: StudentSubmissionLog) => Promise<void>;
+  loading: boolean;
 }) {
   const [openLessons, setOpenLessons] = useState(false);
-  const [openSummaries, setOpenSummaries] = useState(false);
+  const [openSummaries, setOpenSummaries] = useState(true);
   const [openMatches, setOpenMatches] = useState(false);
   const [editingId, setEditingId] = useState('');
   const [savingId, setSavingId] = useState('');
@@ -693,7 +726,7 @@ function StudentHistoryPanel({
     }
   }
 
-  if (!lessons.length && !lessonSummaries.length && !matchReviews.length) {
+  if (!lessons.length && !lessonSummaries.length && !matchReviews.length && !loading) {
     return (
       <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 text-sm text-slate-500">
         {t.noLogs}
@@ -703,7 +736,14 @@ function StudentHistoryPanel({
 
   return (
     <div className="space-y-5">
-      {inlineStatus ? <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-600">{inlineStatus}</div> : null}
+      {loading ? (
+        <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">
+          <div className="h-4 w-28 rounded bg-slate-200/80" />
+          <div className="mt-3 h-3 w-full rounded bg-slate-200/70" />
+          <div className="mt-2 h-3 w-3/4 rounded bg-slate-200/70" />
+        </div>
+      ) : null}
+      {inlineStatus ? <div className="rounded-md border border-[#bdebd8] bg-[#e9fbf3] p-3 text-sm font-medium text-[#0e6f4d]">{inlineStatus}</div> : null}
 
       <HistoryGroup title={t.historyLessons} count={lessons.length} open={openLessons} expandLabel={t.expand} collapseLabel={t.collapse} onToggle={() => setOpenLessons((value) => !value)}>
         {lessons.length ? (
@@ -744,18 +784,18 @@ function StudentHistoryPanel({
               <div className="mt-3 space-y-3">
                 <label className="block">
                   <div className="text-xs font-medium text-slate-700">{t.lessonReflection}</div>
-                  <textarea value={lessonDraft.studentReflection} onChange={(event) => setLessonDraft((value) => ({ ...value, studentReflection: event.target.value }))} className="mt-1 min-h-24 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]" />
+                  <textarea value={lessonDraft.studentReflection} onChange={(event) => setLessonDraft((value) => ({ ...value, studentReflection: event.target.value }))} className="mt-1 min-h-24 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
                 </label>
                 <label className="block">
                   <div className="text-xs font-medium text-slate-700">{t.learningInterest}</div>
-                  <textarea value={lessonDraft.question} onChange={(event) => setLessonDraft((value) => ({ ...value, question: event.target.value }))} className="mt-1 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]" />
+                  <textarea value={lessonDraft.question} onChange={(event) => setLessonDraft((value) => ({ ...value, question: event.target.value }))} className="mt-1 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
                 </label>
                 <label className="block">
                   <div className="flex items-center justify-between text-xs font-medium text-slate-700">
                     <span>{t.confidence}</span>
                     <span>{lessonDraft.confidence} / 5</span>
                   </div>
-                  <input value={lessonDraft.confidence} onChange={(event) => setLessonDraft((value) => ({ ...value, confidence: event.target.value }))} type="range" min="1" max="5" className="mt-2 w-full accent-[#16845f]" />
+                  <ConfidencePicker value={lessonDraft.confidence} onChange={(confidence) => setLessonDraft((draft) => ({ ...draft, confidence }))} />
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => saveEdit(log)} disabled={savingId === log.id} className="min-h-10 rounded-md bg-[#16845f] px-4 py-2 text-sm font-medium text-white disabled:bg-slate-300">
@@ -799,23 +839,23 @@ function StudentHistoryPanel({
               <div className="mt-3 space-y-3">
                 <label className="block">
                   <div className="text-xs font-medium text-slate-700">{t.matchOpponent}</div>
-                  <input value={matchDraft.match} onChange={(event) => setMatchDraft((value) => ({ ...value, match: event.target.value }))} className="mt-1 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm outline-none focus:border-[#16845f]" />
+                  <input value={matchDraft.match} onChange={(event) => setMatchDraft((value) => ({ ...value, match: event.target.value }))} className="mt-1 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f] sm:text-sm" />
                 </label>
                 <label className="block">
                   <div className="text-xs font-medium text-slate-700">{t.score}</div>
-                  <input value={matchDraft.score} onChange={(event) => setMatchDraft((value) => ({ ...value, score: event.target.value }))} className="mt-1 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm outline-none focus:border-[#16845f]" />
+                  <input value={matchDraft.score} onChange={(event) => setMatchDraft((value) => ({ ...value, score: event.target.value }))} className="mt-1 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f] sm:text-sm" />
                 </label>
                 <label className="block">
                   <div className="text-xs font-medium text-slate-700">{t.whatWorked}</div>
-                  <textarea value={matchDraft.whatWorked} onChange={(event) => setMatchDraft((value) => ({ ...value, whatWorked: event.target.value }))} className="mt-1 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]" />
+                  <textarea value={matchDraft.whatWorked} onChange={(event) => setMatchDraft((value) => ({ ...value, whatWorked: event.target.value }))} className="mt-1 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
                 </label>
                 <label className="block">
                   <div className="text-xs font-medium text-slate-700">{t.nextAdjustment}</div>
-                  <textarea value={matchDraft.nextAdjustment} onChange={(event) => setMatchDraft((value) => ({ ...value, nextAdjustment: event.target.value }))} className="mt-1 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]" />
+                  <textarea value={matchDraft.nextAdjustment} onChange={(event) => setMatchDraft((value) => ({ ...value, nextAdjustment: event.target.value }))} className="mt-1 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
                 </label>
                 <label className="block">
                   <div className="text-xs font-medium text-slate-700">{t.experience}</div>
-                  <textarea value={matchDraft.experience} onChange={(event) => setMatchDraft((value) => ({ ...value, experience: event.target.value }))} className="mt-1 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]" />
+                  <textarea value={matchDraft.experience} onChange={(event) => setMatchDraft((value) => ({ ...value, experience: event.target.value }))} className="mt-1 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => saveEdit(log)} disabled={savingId === log.id} className="min-h-10 rounded-md bg-[#16845f] px-4 py-2 text-sm font-medium text-white disabled:bg-slate-300">
@@ -884,15 +924,15 @@ function StudentSideNav({ student, lang }: { student: StudentData; lang: Lang })
   const [activeIndex, setActiveIndex] = useState(0);
   const navRef = useRef<HTMLElement>(null);
 
-  const items = [
-    ['O', t.nav[0]],
-    ['S', t.nav[1]],
-    ['L', t.nav[2]],
-    ['R', t.nav[3]],
-    ['H', t.nav[4]],
-    ['C', t.nav[5]],
-    ['A', t.nav[6]],
-    ['B', t.nav[7]],
+  const items: Array<[string, string, boolean]> = [
+    ['O', t.nav[0], true],
+    ['S', t.nav[1], true],
+    ['L', t.nav[2], true],
+    ['R', t.nav[3], true],
+    ['H', t.nav[4], true],
+    ['C', t.nav[5], false],
+    ['A', t.nav[6], false],
+    ['B', t.nav[7], false],
   ];
 
   useEffect(() => {
@@ -910,10 +950,9 @@ function StudentSideNav({ student, lang }: { student: StudentData; lang: Lang })
             const idx = parseInt(entry.target.id.replace('student-section-', ''), 10);
             if (!isNaN(idx)) {
               setActiveIndex(idx);
-              // Auto-scroll the matching tab into view on mobile
               const nav = navRef.current;
               if (nav) {
-                const tab = nav.children[idx] as HTMLElement | undefined;
+                const tab = nav.querySelector(`[data-index="${idx}"]`) as HTMLElement | undefined;
                 tab?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
               }
             }
@@ -929,11 +968,11 @@ function StudentSideNav({ student, lang }: { student: StudentData; lang: Lang })
   }, []);
 
   return (
-    <aside className="sticky top-0 z-30 grid h-screen grid-rows-[auto_1fr_auto] border-r border-[#e6e1d4] bg-[#fbfaf6]/95 max-lg:block max-lg:h-auto max-lg:border-r-0 max-lg:border-b max-lg:shadow-sm">
-      <div className="grid min-h-32 content-center gap-3 border-b border-[#e6e1d4] p-5 max-lg:min-h-0 max-lg:grid-cols-[44px_1fr] max-lg:items-center max-lg:gap-3 max-lg:p-3">
+    <aside className="sticky top-0 z-30 grid h-screen grid-rows-[auto_1fr_auto] border-r border-[#e6e1d4] bg-[#fbfaf6]/95 max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-auto max-lg:h-auto max-lg:block max-lg:border-r-0 max-lg:border-t max-lg:shadow-[0_-8px_24px_rgba(15,23,42,0.08)] max-lg:supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]">
+      <div className="grid min-h-32 content-center gap-3 border-b border-[#e6e1d4] p-5 max-lg:hidden">
         <GoodmintonMark />
         <div>
-          <h1 className="text-xl font-semibold leading-tight tracking-[-0.015em] text-slate-950 max-lg:text-base">
+          <h1 className="text-xl font-semibold leading-tight text-slate-950 max-lg:text-base">
             {student.name}
             <span className="max-lg:hidden">
               <br />
@@ -944,18 +983,19 @@ function StudentSideNav({ student, lang }: { student: StudentData; lang: Lang })
         </div>
       </div>
 
-      {/* Relative wrapper enables the right-side fade scroll indicator on mobile */}
       <div className="relative max-lg:overflow-hidden">
         <nav
           ref={navRef}
-          className="py-2 max-lg:flex max-lg:gap-2 max-lg:overflow-x-auto max-lg:px-3 max-lg:py-2 max-lg:[scrollbar-width:none]"
+          className="py-2 max-lg:grid max-lg:grid-cols-5 max-lg:gap-1 max-lg:px-2 max-lg:py-2"
         >
-          {items.map(([icon, label], index) => (
+          {items.map(([icon, label, mobile], index) => (
             <a
               key={label}
+              data-index={index}
               href={`#student-section-${index}`}
               className={
-                'grid grid-cols-[34px_1fr] items-center gap-2 border-l-4 px-5 py-3 text-sm font-semibold transition max-lg:min-h-11 max-lg:min-w-max max-lg:grid-cols-[24px_1fr] max-lg:rounded-md max-lg:border-l-0 max-lg:border-b-4 max-lg:px-3 max-lg:py-2 ' +
+                'grid grid-cols-[34px_1fr] items-center gap-2 border-l-4 px-5 py-3 text-sm font-semibold transition max-lg:min-h-14 max-lg:grid-cols-1 max-lg:justify-items-center max-lg:gap-1 max-lg:rounded-md max-lg:border-l-0 max-lg:border-b-4 max-lg:px-1 max-lg:py-1.5 max-lg:text-[11px] ' +
+                (mobile ? '' : 'max-lg:hidden ') +
                 (index === activeIndex
                   ? 'border-[#14bf96] bg-[#e9fbf3] text-[#0e6f4d]'
                   : 'border-transparent text-slate-500 hover:bg-[#f4f8f1]')
@@ -966,11 +1006,6 @@ function StudentSideNav({ student, lang }: { student: StudentData; lang: Lang })
             </a>
           ))}
         </nav>
-        {/* Fade-right scroll hint — visible on mobile only */}
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#fbfaf6] to-transparent lg:hidden"
-          aria-hidden="true"
-        />
       </div>
 
       <div className="flex items-center justify-between border-t border-[#e6e1d4] p-5 text-sm text-slate-500 max-lg:hidden">
@@ -1257,7 +1292,7 @@ function AbilityHex({ items, lang }: { items: Array<{ label: string; value: numb
           ))}
         </svg>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-3">
         {normalized.map((item) => {
           const level = item.value;
           const percent = (level / 8) * 100;
@@ -1366,7 +1401,7 @@ function SkillTree({ lang }: { lang: Lang }) {
       {/* ── Desktop layout (≥ lg): original 4-column horizontal map ── */}
       <div className="hidden min-h-[620px] gap-4 lg:grid lg:grid-cols-[220px_180px_180px_1fr] lg:items-center">
         <div className="flex items-center justify-center lg:justify-start">
-          <div className="rounded-2xl border border-[#cfe8d9] bg-[#dff5e9] px-8 py-6 text-2xl font-semibold tracking-[-0.015em] text-slate-950 shadow-sm">
+          <div className="rounded-2xl border border-[#cfe8d9] bg-[#dff5e9] px-8 py-6 text-2xl font-semibold text-slate-950 shadow-sm">
             {studentCopy[lang].skillTree}
           </div>
         </div>
@@ -1385,7 +1420,7 @@ function SkillTree({ lang }: { lang: Lang }) {
               }
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-lg font-semibold tracking-[-0.01em]">{tLabel(group.group, lang)}</span>
+                <span className="text-lg font-semibold">{tLabel(group.group, lang)}</span>
                 <span className="rounded-full bg-white/70 px-2 py-1 text-xs font-semibold text-[#16845f]">{group.level}/8</span>
               </div>
               <div className="mt-1 text-xs text-slate-600">{lang === 'en' ? `${group.nodes.length} main items` : `${group.nodes.length} 个主项`}</div>
@@ -1407,7 +1442,7 @@ function SkillTree({ lang }: { lang: Lang }) {
               }
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-base font-semibold tracking-[-0.01em]">{tLabel(node.label, lang)}</span>
+                <span className="text-base font-semibold">{tLabel(node.label, lang)}</span>
                 <span className="rounded-full bg-white/70 px-2 py-1 text-xs font-semibold text-[#16845f]">{node.level}/8</span>
               </div>
               <div className="mt-1 text-xs text-slate-600">{node.leaves?.length ? (lang === 'en' ? `${node.leaves.length} details` : `${node.leaves.length} 个细分`) : (lang === 'en' ? 'Detail check' : '细分评估')}</div>
@@ -1717,6 +1752,9 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
   const [matchSubmissionLoading, setMatchSubmissionLoading] = useState(false);
   const [submissionLogs, setSubmissionLogs] = useState<StudentSubmissionLog[]>(() => readStudentSubmissionLogs(logKey));
   const [cloudLessonRecords, setCloudLessonRecords] = useState<NonNullable<StudentData['lessonHistory']>>([]);
+  const [historyLoading, setHistoryLoading] = useState(() =>
+    typeof window === 'undefined' ? true : Boolean(window.sessionStorage.getItem(STUDENT_CREDENTIAL_KEY)),
+  );
   const [lessonInput, setLessonInput] = useState({
     studentReflection: initialDraft?.lessonInput?.studentReflection ?? displayStudent.lessonSummary?.studentReflection ?? '',
     question: initialDraft?.lessonInput?.question ?? '',
@@ -1784,6 +1822,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 
     async function loadCloudSubmissions() {
       try {
+        setHistoryLoading(true);
         const response = await fetch('/api/student-history', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -1810,6 +1849,8 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
         });
       } catch {
         // Keep local history when the cloud archive is not configured yet.
+      } finally {
+        setHistoryLoading(false);
       }
     }
 
@@ -1861,7 +1902,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
       const response = await fetch('/api/student-submission', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(submission),
+        body: JSON.stringify({ ...submission, mode: 'update' }),
         signal: controller.signal,
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -1932,23 +1973,23 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
         <div className="min-w-0">
       <div className="border-b border-[#e6e1d4] bg-[#fbfaf6]/95">
         <div
-          className="flex flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 lg:px-8"
+          className="flex items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 lg:px-8"
           style={contentFrameStyle}
         >
           <div className="text-sm font-semibold">Goodminton Academy</div>
-          <div className="text-sm text-slate-400">/</div>
-          <div className="text-sm text-slate-600">{t.breadcrumb}</div>
-          <button onClick={toggle} className="ml-auto min-h-10 rounded-md border border-[#cfe8d9] bg-white px-3 py-1.5 text-sm font-medium text-[#0e6f4d]">
+          <div className="text-sm text-slate-400 max-sm:hidden">/</div>
+          <div className="truncate text-sm text-slate-600 max-sm:hidden">{t.breadcrumb}</div>
+          <button onClick={toggle} className="ml-auto min-h-11 rounded-md border border-[#cfe8d9] bg-white px-3 py-1.5 text-sm font-medium text-[#0e6f4d]">
             {lang === 'zh' ? 'EN' : '中文'}
           </button>
-          <button onClick={onLogout} className="min-h-10 rounded-md border border-[#cfe8d9] bg-white px-3 py-1.5 text-sm font-medium text-[#0e6f4d]">
+          <button onClick={onLogout} className="min-h-11 rounded-md border border-[#cfe8d9] bg-white px-3 py-1.5 text-sm font-medium text-[#0e6f4d]">
             {t.logout}
           </button>
         </div>
       </div>
 
       <div
-        className="px-4 py-6 sm:px-6 lg:px-8"
+        className="px-4 py-6 pb-[calc(88px+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pb-8"
         style={contentFrameStyle}
       >
         <header id="student-section-0" className="mb-6 scroll-mt-28 rounded-lg border border-[#dfe7dc] bg-[#fffdf8] p-4 shadow-sm sm:p-5 lg:scroll-mt-6">
@@ -1962,12 +2003,26 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
               </div>
               <div className="min-w-0">
                 <div className="break-words text-sm text-slate-500">Goodminton / {t.breadcrumb} / {displayStudent.studentId}</div>
-            <h1 className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-slate-950 sm:text-3xl">
+            <h1 className="mt-1 text-2xl font-semibold text-slate-950 sm:text-3xl">
                   {t.trainingData(displayStudent.name)}
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
                   {t.updated(displayStudent.lastUpdated)}
                 </p>
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:hidden">
+                  <a href="#student-section-1" className="flex min-h-12 items-center justify-center rounded-md bg-[#16845f] px-3 py-2 text-sm font-semibold text-white">
+                    {t.lessonSummary}
+                  </a>
+                  <a href="#student-section-2" className="flex min-h-12 items-center justify-center rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-semibold text-[#0e6f4d]">
+                    {t.submissionRecord}
+                  </a>
+                  <a href="#student-section-3" className="flex min-h-12 items-center justify-center rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-semibold text-[#0e6f4d]">
+                    {t.matchReview}
+                  </a>
+                  <a href="#student-section-4" className="flex min-h-12 items-center justify-center rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-semibold text-[#0e6f4d]">
+                    {t.homework}
+                  </a>
+                </div>
               </div>
             </div>
             <div className="rounded-lg border border-[#dfe7dc] bg-[#f4f8f1] p-4">
@@ -2014,7 +2069,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     onChange={(event) =>
                       setLessonInput((value) => ({ ...value, studentReflection: event.target.value }))
                     }
-                    className="mt-2 min-h-28 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
+                    className="mt-2 min-h-28 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm"
                     placeholder={t.lessonReflectionPlaceholder}
                   />
                 </label>
@@ -2023,7 +2078,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <textarea
                     value={lessonInput.question}
                     onChange={(event) => setLessonInput((value) => ({ ...value, question: event.target.value }))}
-                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
+                    className="mt-2 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm"
                     placeholder={t.learningInterestPlaceholder}
                   />
                 </label>
@@ -2032,14 +2087,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     <span>{t.confidence}</span>
                     <span>{lessonInput.confidence} / 5</span>
                   </div>
-                  <input
-                    value={lessonInput.confidence}
-                    onChange={(event) => setLessonInput((value) => ({ ...value, confidence: event.target.value }))}
-                    type="range"
-                    min="1"
-                    max="5"
-                    className="mt-3 w-full accent-[#16845f]"
-                  />
+                  <ConfidencePicker value={lessonInput.confidence} onChange={(confidence) => setLessonInput((value) => ({ ...value, confidence }))} />
                 </label>
                 <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4">
                   <div className="text-sm font-medium">{t.coachObservation}</div>
@@ -2059,7 +2107,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     {lessonSubmissionLoading ? t.submitting : t.submitSummary}
                   </button>
                 </div>
-                {lessonSubmissionStatus ? <div className="text-sm text-slate-600">{lessonSubmissionStatus}</div> : null}
+                {lessonSubmissionStatus ? <div className="rounded-md border border-[#bdebd8] bg-[#e9fbf3] px-3 py-2 text-sm font-medium text-[#0e6f4d]">{lessonSubmissionStatus}</div> : null}
               </div>
             </Section>
 
@@ -2070,6 +2118,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                 t={t}
                 lang={lang}
                 onSaveSubmission={saveEditedSubmissionLog}
+                loading={historyLoading}
               />
             </Section>
           </div>
@@ -2082,7 +2131,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     <input
                       value={matchInput.match}
                       onChange={(event) => setMatchInput((value) => ({ ...value, match: event.target.value }))}
-                      className="mt-2 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm outline-none focus:border-[#16845f]"
+                      className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f] sm:text-sm"
                       placeholder={t.matchOpponentPlaceholder}
                     />
                   </label>
@@ -2091,7 +2140,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     <input
                       value={matchInput.score}
                       onChange={(event) => setMatchInput((value) => ({ ...value, score: event.target.value }))}
-                      className="mt-2 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm outline-none focus:border-[#16845f]"
+                      className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f] sm:text-sm"
                       placeholder={t.scorePlaceholder}
                     />
                   </label>
@@ -2101,7 +2150,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <textarea
                     value={matchInput.whatWorked}
                     onChange={(event) => setMatchInput((value) => ({ ...value, whatWorked: event.target.value }))}
-                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
+                    className="mt-2 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm"
                     placeholder={t.whatWorkedPlaceholder}
                   />
                 </label>
@@ -2110,7 +2159,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <textarea
                     value={matchInput.nextAdjustment}
                     onChange={(event) => setMatchInput((value) => ({ ...value, nextAdjustment: event.target.value }))}
-                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
+                    className="mt-2 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm"
                     placeholder={t.nextAdjustmentPlaceholder}
                   />
                 </label>
@@ -2119,7 +2168,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                   <textarea
                     value={matchInput.experience}
                     onChange={(event) => setMatchInput((value) => ({ ...value, experience: event.target.value }))}
-                    className="mt-2 min-h-20 w-full resize-none rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-[#16845f]"
+                    className="mt-2 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm"
                     placeholder={t.experiencePlaceholder}
                   />
                 </label>
@@ -2137,7 +2186,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     {matchSubmissionLoading ? t.submitting : t.submitReview}
                   </button>
                 </div>
-                {matchSubmissionStatus ? <div className="text-sm text-slate-600">{matchSubmissionStatus}</div> : null}
+                {matchSubmissionStatus ? <div className="rounded-md border border-[#bdebd8] bg-[#e9fbf3] px-3 py-2 text-sm font-medium text-[#0e6f4d]">{matchSubmissionStatus}</div> : null}
               </div>
           </Section>
 
@@ -2167,7 +2216,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
             <div className="grid gap-5 lg:grid-cols-[1fr_240px]">
               <div>
                 <div className="text-sm text-slate-500">{t.currentTraining}</div>
-                <h2 className="mt-2 text-xl font-semibold tracking-[-0.015em] text-slate-950 sm:text-2xl">
+                <h2 className="mt-2 text-xl font-semibold text-slate-950 sm:text-2xl">
                   {displayStudent.stage.title}
                 </h2>
                 <p className="mt-3 text-base leading-7 text-slate-600">{displayStudent.stage.description}</p>
@@ -2185,7 +2234,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 
               <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4">
                 <div className="text-sm text-slate-500">{t.todayPractice}</div>
-                <div className="mt-2 text-xl font-semibold tracking-[-0.01em]">{displayStudent.today.title}</div>
+                <div className="mt-2 text-xl font-semibold">{displayStudent.today.title}</div>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{displayStudent.today.description}</p>
                 <button
                   onClick={() => markReviewed(displayStudent.today.title)}
@@ -2348,7 +2397,7 @@ export default function StudentPage() {
           <div className="mx-auto w-fit">
             <GoodmintonMark />
           </div>
-          <h1 className="mt-5 text-center text-xl font-semibold tracking-[-0.015em]">{t.loginTitle}</h1>
+          <h1 className="mt-5 text-center text-xl font-semibold">{t.loginTitle}</h1>
           <form onSubmit={handleStudentLogin} className="mt-5 space-y-3">
             <label className="block">
               <span className="sr-only">{t.credential}</span>
@@ -2358,6 +2407,8 @@ export default function StudentPage() {
                 autoCapitalize="none"
                 autoComplete="off"
                 autoCorrect="off"
+                enterKeyHint="go"
+                inputMode="text"
                 spellCheck={false}
                 className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
                 placeholder={t.credentialPlaceholder}
