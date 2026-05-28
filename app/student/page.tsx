@@ -161,7 +161,7 @@ let cachedCurrentStudent: StudentData | null = null;
 const studentCopy = {
   zh: {
     portal: '学员图谱',
-    nav: ['总览', '课后总结', '历史记录', '比赛复盘', '家庭作业', '当前任务', '个人能力', '成就勋章', '训练记录'],
+    nav: ['总览', '课后总结', '历史记录', '比赛复盘', '家庭作业', '当前任务', '个人能力', '成就勋章'],
     logout: '退出',
     breadcrumb: '学员图谱',
     trainingData: (name: string) => `${name} 的训练数据`,
@@ -203,8 +203,11 @@ const studentCopy = {
     achievements: '成就和勋章',
     skillTree: '技能树',
     lessonLog: '上课日志',
-    submissionRecord: '提交记录',
-    submissionLog: '提交日志',
+    submissionRecord: '历史记录',
+    submissionLog: '最近提交',
+    historyLessons: '上课记录',
+    historySummaries: '课后总结',
+    historyMatches: '比赛复盘',
     recent20: '保留最近 20 条',
     lesson: '课后总结',
     match: '比赛复盘',
@@ -212,7 +215,7 @@ const studentCopy = {
     reviewPrefix: '复盘：',
     summaryPrefix: '总结：',
     empty: '未填写',
-    noLogs: '还没有提交记录。',
+    noLogs: '还没有记录。',
     emptyLesson: '请先填写课后总结、问题，或勾选作业。',
     emptyMatch: '请先填写比赛复盘内容。',
     lessonSent: '课后总结已发送给教练，并保留本机日志。',
@@ -232,7 +235,7 @@ const studentCopy = {
   },
   en: {
     portal: 'Student Map',
-    nav: ['Overview', 'Lesson Summary', 'History', 'Match Review', 'Homework', 'Current Task', 'Ability', 'Badges', 'Training Log'],
+    nav: ['Overview', 'Lesson Summary', 'History', 'Match Review', 'Homework', 'Current Task', 'Ability', 'Badges'],
     logout: 'Log out',
     breadcrumb: 'Student Map',
     trainingData: (name: string) => `${name}'s Training Data`,
@@ -274,8 +277,11 @@ const studentCopy = {
     achievements: 'Achievements and Badges',
     skillTree: 'Skill Tree',
     lessonLog: 'Training Log',
-    submissionRecord: 'Submission Record',
-    submissionLog: 'Submission Log',
+    submissionRecord: 'History',
+    submissionLog: 'Recent Submissions',
+    historyLessons: 'Lesson Records',
+    historySummaries: 'Lesson Summaries',
+    historyMatches: 'Match Reviews',
     recent20: 'Keeps the latest 20 items',
     lesson: 'Lesson Summary',
     match: 'Match Review',
@@ -283,7 +289,7 @@ const studentCopy = {
     reviewPrefix: 'Review: ',
     summaryPrefix: 'Summary: ',
     empty: 'Not filled',
-    noLogs: 'No submissions yet.',
+    noLogs: 'No records yet.',
     emptyLesson: 'Please write a lesson summary, question, or check homework first.',
     emptyMatch: 'Please write the match review first.',
     lessonSent: 'Lesson summary sent to the coach and saved locally.',
@@ -490,8 +496,21 @@ function Section({ title, children, id }: { title: string; children: React.React
 
 type StudentText = (typeof studentCopy)[Lang];
 
-function SubmissionRecordPanel({ submissionLogs, t }: { submissionLogs: StudentSubmissionLog[]; t: StudentText }) {
-  if (!submissionLogs.length) {
+function StudentHistoryPanel({
+  lessons = [],
+  submissionLogs,
+  t,
+  lang,
+}: {
+  lessons?: NonNullable<StudentData['lessonHistory']>;
+  submissionLogs: StudentSubmissionLog[];
+  t: StudentText;
+  lang: Lang;
+}) {
+  const lessonSummaries = submissionLogs.filter((log) => log.submissionType === 'lesson');
+  const matchReviews = submissionLogs.filter((log) => log.submissionType === 'match');
+
+  if (!lessons.length && !lessonSummaries.length && !matchReviews.length) {
     return (
       <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 text-sm text-slate-500">
         {t.noLogs}
@@ -500,29 +519,51 @@ function SubmissionRecordPanel({ submissionLogs, t }: { submissionLogs: StudentS
   }
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="text-sm font-semibold text-slate-900">{t.submissionLog}</div>
-        <div className="text-xs text-slate-500">{t.recent20}</div>
+    <div className="space-y-5">
+      <div>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-slate-900">{t.historyLessons}</div>
+          <div className="text-xs text-slate-500">{lessons.length}</div>
+        </div>
+        <div className="space-y-3">
+          {lessons.slice(0, 3).map((lesson) => (
+            <article key={lesson.id || `${lesson.date}-${lesson.title}`} className="rounded-md border border-[#dfe7dc] bg-white px-3 py-3 text-sm leading-6 text-slate-700">
+              <div className="text-xs text-slate-500">{lesson.date}</div>
+              <div className="mt-1 font-semibold text-slate-950">{lesson.title}</div>
+              <div className="mt-1 text-slate-600">{(lesson.mainContent || [lesson.focus]).filter(Boolean).join(' / ')}</div>
+              {lesson.coachNote ? <div className="mt-2 text-slate-500">{lang === 'en' ? 'Coach: ' : '教练：'}{lesson.coachNote}</div> : null}
+            </article>
+          ))}
+        </div>
       </div>
+
       <div className="space-y-3">
-        {submissionLogs.slice(0, 5).map((log) => (
+        <div className="text-sm font-semibold text-slate-900">{t.historySummaries}</div>
+        {lessonSummaries.length ? lessonSummaries.slice(0, 3).map((log) => (
           <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
               <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
-              <span>{log.submissionType === 'match' ? t.match : t.lesson}</span>
-              {log.submissionType === 'lesson' ? <span>{t.homeworkCount(log.lessonSummary.completedHomework.length)}</span> : null}
+              <span>{t.homeworkCount(log.lessonSummary.completedHomework.length)}</span>
             </div>
             <div className="mt-2">
-              <b className="text-slate-900">{log.submissionType === 'match' ? t.reviewPrefix : t.summaryPrefix}</b>
-              <span>
-                {log.submissionType === 'match'
-                  ? log.matchReview.match || log.matchReview.whatWorked || log.matchReview.nextAdjustment || t.empty
-                  : log.lessonSummary.studentReflection || log.lessonSummary.question || t.empty}
-              </span>
+              <b className="text-slate-900">{t.summaryPrefix}</b>
+              <span>{log.lessonSummary.studentReflection || log.lessonSummary.question || t.empty}</span>
             </div>
           </div>
-        ))}
+        )) : <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>}
+      </div>
+
+      <div className="space-y-3">
+        <div className="text-sm font-semibold text-slate-900">{t.historyMatches}</div>
+        {matchReviews.length ? matchReviews.slice(0, 3).map((log) => (
+          <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
+            <div className="text-xs text-slate-500">{log.submittedAt.slice(5, 16).replace('T', ' ')}</div>
+            <div className="mt-2">
+              <b className="text-slate-900">{t.reviewPrefix}</b>
+              <span>{log.matchReview.match || log.matchReview.whatWorked || log.matchReview.nextAdjustment || t.empty}</span>
+            </div>
+          </div>
+        )) : <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>}
       </div>
     </div>
   );
@@ -573,7 +614,6 @@ function StudentSideNav({ student, lang }: { student: StudentData; lang: Lang })
     ['C', t.nav[5]],
     ['A', t.nav[6]],
     ['B', t.nav[7]],
-    ['T', t.nav[8]],
   ];
 
   useEffect(() => {
@@ -1368,68 +1408,6 @@ function AchievementBadges({ achievements, lang }: { achievements: Achievement[]
   );
 }
 
-function LessonLog({ lessons, lang }: { lessons: NonNullable<StudentData['lessonHistory']>; lang: Lang }) {
-  return (
-    <>
-      <div className="space-y-3 sm:hidden">
-        {lessons.map((lesson, index) => (
-          <article key={lesson.id || `${lesson.date}-${lesson.title}`} className="rounded-md border border-[#dfe7dc] bg-white p-3">
-            <div className="flex items-center justify-between gap-3 text-xs text-slate-500">
-              <span>{lesson.date}</span>
-              <span className="font-mono text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-            </div>
-            <div className="mt-2 text-sm font-semibold leading-6 text-slate-950">{lesson.title}</div>
-            <dl className="mt-2 space-y-2 text-sm leading-6 text-slate-700">
-              <div>
-                <dt className="font-medium text-slate-900">{lang === 'en' ? 'Main Content' : '课堂主要内容'}</dt>
-                <dd>{(lesson.mainContent || [lesson.focus]).filter(Boolean).join(' / ')}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-slate-900">{lang === 'en' ? 'Coach Observation' : '教练观察'}</dt>
-                <dd>{lesson.coachNote}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-slate-900">{lang === 'en' ? 'Student Feedback' : '学生反馈'}</dt>
-                <dd>{lesson.studentNote}</dd>
-              </div>
-            </dl>
-          </article>
-        ))}
-      </div>
-      <div className="hidden max-h-96 overflow-auto rounded-md bg-white sm:block">
-        <div className="min-w-[860px] space-y-1 font-mono text-sm">
-        {lessons.map((lesson, index) => (
-          <div key={lesson.id || `${lesson.date}-${lesson.title}`} className="space-y-1 border-b border-slate-100 py-2 last:border-b-0">
-            <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
-              <span className="text-slate-500">{lesson.date.slice(5)}</span>
-              <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-              <span className="text-slate-900">{lang === 'en' ? 'Lesson title: ' : '课堂标题： '}{lesson.title}</span>
-            </div>
-            <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
-              <span className="text-slate-500">{lesson.date.slice(5)}</span>
-              <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-              <span className="text-slate-900">
-                {lang === 'en' ? 'Main content: ' : '课堂主要内容： '}{(lesson.mainContent || [lesson.focus]).filter(Boolean).join(' / ')}
-              </span>
-            </div>
-            <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
-              <span className="text-slate-500">{lesson.date.slice(5)}</span>
-              <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-              <span className="text-slate-900">{lang === 'en' ? 'Coach observation: ' : '教练观察： '}{lesson.coachNote}</span>
-            </div>
-            <div className="grid grid-cols-[108px_92px_1fr] gap-4 whitespace-nowrap leading-7">
-              <span className="text-slate-500">{lesson.date.slice(5)}</span>
-              <span className="text-[#43b66f]">lesson-{String(index + 1).padStart(3, '0')}</span>
-              <span className="text-slate-900">{lang === 'en' ? 'Student feedback: ' : '学生反馈： '}{lesson.studentNote}</span>
-            </div>
-          </div>
-        ))}
-        </div>
-      </div>
-    </>
-  );
-}
-
 function StudentDashboard({ student, onLogout }: { student: StudentData; onLogout: () => void }) {
   const { lang, toggle } = useLang();
   const t = studentCopy[lang];
@@ -1739,7 +1717,12 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
             </Section>
 
             <Section id="student-section-2" title={t.submissionRecord}>
-              <SubmissionRecordPanel submissionLogs={submissionLogs} t={t} />
+              <StudentHistoryPanel
+                lessons={displayStudent.lessonHistory || []}
+                submissionLogs={submissionLogs}
+                t={t}
+                lang={lang}
+              />
             </Section>
           </div>
 
@@ -1879,12 +1862,6 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
           {displayStudent.skillTree?.length ? (
             <Section title={t.skillTree}>
               <SkillTree lang={lang} />
-            </Section>
-          ) : null}
-
-          {displayStudent.lessonHistory?.length ? (
-            <Section id="student-section-8" title={t.lessonLog}>
-              <LessonLog lessons={displayStudent.lessonHistory} lang={lang} />
             </Section>
           ) : null}
 
