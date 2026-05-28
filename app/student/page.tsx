@@ -637,94 +637,19 @@ function StudentHistoryPanel({
   submissionLogs,
   t,
   lang,
-  onSaveSubmission,
   loading,
 }: {
   lessons?: NonNullable<StudentData['lessonHistory']>;
   submissionLogs: StudentSubmissionLog[];
   t: StudentText;
   lang: Lang;
-  onSaveSubmission: (log: StudentSubmissionLog) => Promise<void>;
   loading: boolean;
 }) {
   const [openLessons, setOpenLessons] = useState(false);
   const [openSummaries, setOpenSummaries] = useState(true);
   const [openMatches, setOpenMatches] = useState(false);
-  const [editingId, setEditingId] = useState('');
-  const [savingId, setSavingId] = useState('');
-  const [inlineStatus, setInlineStatus] = useState('');
-  const [lessonDraft, setLessonDraft] = useState({
-    studentReflection: '',
-    question: '',
-    confidence: '3',
-  });
-  const [matchDraft, setMatchDraft] = useState({
-    match: '',
-    score: '',
-    whatWorked: '',
-    nextAdjustment: '',
-    experience: '',
-  });
   const lessonSummaries = submissionLogs.filter((log) => log.submissionType === 'lesson');
   const matchReviews = submissionLogs.filter((log) => log.submissionType === 'match');
-
-  function startEdit(log: StudentSubmissionLog) {
-    setEditingId(log.id);
-    setInlineStatus('');
-    if (log.submissionType === 'lesson') {
-      setLessonDraft({
-        studentReflection: log.lessonSummary.studentReflection || '',
-        question: log.lessonSummary.question || '',
-        confidence: String(log.lessonSummary.confidence || 3),
-      });
-      return;
-    }
-
-    setMatchDraft({
-      match: log.matchReview.match || '',
-      score: log.matchReview.score || '',
-      whatWorked: log.matchReview.whatWorked || '',
-      nextAdjustment: log.matchReview.nextAdjustment || '',
-      experience: log.matchReview.experience || '',
-    });
-  }
-
-  async function saveEdit(log: StudentSubmissionLog) {
-    const updatedLog: StudentSubmissionLog =
-      log.submissionType === 'lesson'
-        ? {
-            ...log,
-            lessonSummary: {
-              ...log.lessonSummary,
-              studentReflection: lessonDraft.studentReflection.trim(),
-              question: lessonDraft.question.trim(),
-              confidence: Number(lessonDraft.confidence),
-            },
-          }
-        : {
-            ...log,
-            matchReview: {
-              match: matchDraft.match.trim(),
-              score: matchDraft.score.trim(),
-              whatWorked: matchDraft.whatWorked.trim(),
-              nextAdjustment: matchDraft.nextAdjustment.trim(),
-              experience: matchDraft.experience.trim(),
-            },
-          };
-
-    setSavingId(log.id);
-    setInlineStatus('');
-    try {
-      await onSaveSubmission(updatedLog);
-      setEditingId('');
-      setInlineStatus(t.saved);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : t.failed;
-      setInlineStatus(t.sendFailed(message));
-    } finally {
-      setSavingId('');
-    }
-  }
 
   if (!lessons.length && !lessonSummaries.length && !matchReviews.length && !loading) {
     return (
@@ -743,7 +668,6 @@ function StudentHistoryPanel({
           <div className="mt-2 h-3 w-3/4 rounded bg-slate-200/70" />
         </div>
       ) : null}
-      {inlineStatus ? <div className="rounded-md border border-[#bdebd8] bg-[#e9fbf3] p-3 text-sm font-medium text-[#0e6f4d]">{inlineStatus}</div> : null}
 
       <HistoryGroup title={t.historyLessons} count={lessons.length} open={openLessons} expandLabel={t.expand} collapseLabel={t.collapse} onToggle={() => setOpenLessons((value) => !value)}>
         {lessons.length ? (
@@ -772,116 +696,52 @@ function StudentHistoryPanel({
 
       <HistoryGroup title={t.historySummaries} count={lessonSummaries.length} open={openSummaries} expandLabel={t.expand} collapseLabel={t.collapse} onToggle={() => setOpenSummaries((value) => !value)}>
         {lessonSummaries.length ? lessonSummaries.map((log) => (
-          <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
+          <article key={log.id} className="rounded-md border border-[#dfe7dc] bg-white px-3 py-3 text-sm leading-6 text-slate-700 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
-              <span>{t.homeworkCount(log.lessonSummary.completedHomework.length)}</span>
-              <button type="button" onClick={() => startEdit(log)} className="ml-auto rounded-md border border-[#cfe8d9] bg-white px-2 py-1 text-[#0e6f4d]">
-                {t.edit}
-              </button>
+              <span className="rounded-full bg-[#e9fbf3] px-2 py-1 font-medium text-[#0e6f4d]">{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
+              <span className="rounded-full bg-[#f4f8f1] px-2 py-1">{t.homeworkCount(log.lessonSummary.completedHomework.length)}</span>
             </div>
-            {editingId === log.id ? (
-              <div className="mt-3 space-y-3">
-                <label className="block">
-                  <div className="text-xs font-medium text-slate-700">{t.lessonReflection}</div>
-                  <textarea value={lessonDraft.studentReflection} onChange={(event) => setLessonDraft((value) => ({ ...value, studentReflection: event.target.value }))} className="mt-1 min-h-24 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
-                </label>
-                <label className="block">
-                  <div className="text-xs font-medium text-slate-700">{t.learningInterest}</div>
-                  <textarea value={lessonDraft.question} onChange={(event) => setLessonDraft((value) => ({ ...value, question: event.target.value }))} className="mt-1 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
-                </label>
-                <label className="block">
-                  <div className="flex items-center justify-between text-xs font-medium text-slate-700">
-                    <span>{t.confidence}</span>
-                    <span>{lessonDraft.confidence} / 5</span>
-                  </div>
-                  <ConfidencePicker value={lessonDraft.confidence} onChange={(confidence) => setLessonDraft((draft) => ({ ...draft, confidence }))} />
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => saveEdit(log)} disabled={savingId === log.id} className="min-h-10 rounded-md bg-[#16845f] px-4 py-2 text-sm font-medium text-white disabled:bg-slate-300">
-                    {savingId === log.id ? t.saving : t.save}
-                  </button>
-                  <button type="button" onClick={() => setEditingId('')} className="min-h-10 rounded-md border border-[#cfe8d9] bg-white px-4 py-2 text-sm font-medium text-[#0e6f4d]">
-                    {t.cancel}
-                  </button>
-                </div>
+            <div className="mt-3 space-y-2">
+              <div>
+                <div className="text-xs font-medium text-slate-500">{lang === 'en' ? 'Lesson' : '课程'}</div>
+                <div className="font-semibold text-slate-950">{log.lessonSummary.title || t.empty}</div>
+                {log.lessonSummary.date ? <div className="text-xs text-slate-500">{log.lessonSummary.date}</div> : null}
               </div>
-            ) : (
-              <div className="mt-2 space-y-1">
-                <DetailLine label={lang === 'en' ? 'Date: ' : '日期：'} value={log.lessonSummary.date} />
-                <DetailLine label={lang === 'en' ? 'Title: ' : '课程：'} value={log.lessonSummary.title} />
-                <DetailLine label={t.summaryPrefix} value={log.lessonSummary.studentReflection || t.empty} />
-                <DetailLine label={`${t.learningInterest}: `} value={log.lessonSummary.question || t.empty} />
-                <DetailLine label={`${t.confidence}: `} value={log.lessonSummary.confidence ? `${log.lessonSummary.confidence} / 5` : t.empty} />
-                <DetailLine label={lang === 'en' ? 'Completed homework: ' : '完成作业：'} value={log.lessonSummary.completedHomework.length ? log.lessonSummary.completedHomework : t.empty} />
-              </div>
-            )}
+              <DetailLine label={t.summaryPrefix} value={log.lessonSummary.studentReflection || t.empty} />
+              <DetailLine label={`${t.learningInterest}: `} value={log.lessonSummary.question || t.empty} />
+              <DetailLine label={`${t.confidence}: `} value={log.lessonSummary.confidence ? `${log.lessonSummary.confidence} / 5` : t.empty} />
+              <DetailLine label={lang === 'en' ? 'Completed homework: ' : '完成作业：'} value={log.lessonSummary.completedHomework.length ? log.lessonSummary.completedHomework : t.empty} />
+            </div>
             {log.coachLiked || log.coachFeedback ? (
-              <div className="mt-2 rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-xs leading-5 text-slate-600">
+              <div className="mt-3 rounded-md border border-[#cfe8d9] bg-[#f7fbf5] px-3 py-2 text-xs leading-5 text-slate-600">
                 {log.coachLiked ? <div className="font-medium text-[#16845f]">{t.coachLiked}</div> : null}
                 {log.coachFeedback ? <div>{t.coachFeedback}: {log.coachFeedback}</div> : null}
               </div>
             ) : null}
-          </div>
+          </article>
         )) : <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>}
       </HistoryGroup>
 
       <HistoryGroup title={t.historyMatches} count={matchReviews.length} open={openMatches} expandLabel={t.expand} collapseLabel={t.collapse} onToggle={() => setOpenMatches((value) => !value)}>
         {matchReviews.length ? matchReviews.map((log) => (
-          <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
+          <article key={log.id} className="rounded-md border border-[#dfe7dc] bg-white px-3 py-3 text-sm leading-6 text-slate-700 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
-              <button type="button" onClick={() => startEdit(log)} className="ml-auto rounded-md border border-[#cfe8d9] bg-white px-2 py-1 text-[#0e6f4d]">
-                {t.edit}
-              </button>
+              <span className="rounded-full bg-[#e9fbf3] px-2 py-1 font-medium text-[#0e6f4d]">{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
             </div>
-            {editingId === log.id ? (
-              <div className="mt-3 space-y-3">
-                <label className="block">
-                  <div className="text-xs font-medium text-slate-700">{t.matchOpponent}</div>
-                  <input value={matchDraft.match} onChange={(event) => setMatchDraft((value) => ({ ...value, match: event.target.value }))} className="mt-1 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f] sm:text-sm" />
-                </label>
-                <label className="block">
-                  <div className="text-xs font-medium text-slate-700">{t.score}</div>
-                  <input value={matchDraft.score} onChange={(event) => setMatchDraft((value) => ({ ...value, score: event.target.value }))} className="mt-1 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f] sm:text-sm" />
-                </label>
-                <label className="block">
-                  <div className="text-xs font-medium text-slate-700">{t.whatWorked}</div>
-                  <textarea value={matchDraft.whatWorked} onChange={(event) => setMatchDraft((value) => ({ ...value, whatWorked: event.target.value }))} className="mt-1 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
-                </label>
-                <label className="block">
-                  <div className="text-xs font-medium text-slate-700">{t.nextAdjustment}</div>
-                  <textarea value={matchDraft.nextAdjustment} onChange={(event) => setMatchDraft((value) => ({ ...value, nextAdjustment: event.target.value }))} className="mt-1 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
-                </label>
-                <label className="block">
-                  <div className="text-xs font-medium text-slate-700">{t.experience}</div>
-                  <textarea value={matchDraft.experience} onChange={(event) => setMatchDraft((value) => ({ ...value, experience: event.target.value }))} className="mt-1 min-h-20 w-full resize-y rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base leading-6 outline-none focus:border-[#16845f] sm:text-sm" />
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => saveEdit(log)} disabled={savingId === log.id} className="min-h-10 rounded-md bg-[#16845f] px-4 py-2 text-sm font-medium text-white disabled:bg-slate-300">
-                    {savingId === log.id ? t.saving : t.save}
-                  </button>
-                  <button type="button" onClick={() => setEditingId('')} className="min-h-10 rounded-md border border-[#cfe8d9] bg-white px-4 py-2 text-sm font-medium text-[#0e6f4d]">
-                    {t.cancel}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-2 space-y-1">
-                <DetailLine label={t.reviewPrefix} value={log.matchReview.match || t.empty} />
-                <DetailLine label={`${t.score}: `} value={log.matchReview.score || t.empty} />
-                <DetailLine label={`${t.whatWorked}: `} value={log.matchReview.whatWorked || t.empty} />
-                <DetailLine label={`${t.nextAdjustment}: `} value={log.matchReview.nextAdjustment || t.empty} />
-                <DetailLine label={`${t.experience}: `} value={log.matchReview.experience || t.empty} />
-              </div>
-            )}
+            <div className="mt-3 space-y-2">
+              <DetailLine label={t.reviewPrefix} value={log.matchReview.match || t.empty} />
+              <DetailLine label={`${t.score}: `} value={log.matchReview.score || t.empty} />
+              <DetailLine label={`${t.whatWorked}: `} value={log.matchReview.whatWorked || t.empty} />
+              <DetailLine label={`${t.nextAdjustment}: `} value={log.matchReview.nextAdjustment || t.empty} />
+              <DetailLine label={`${t.experience}: `} value={log.matchReview.experience || t.empty} />
+            </div>
             {log.coachLiked || log.coachFeedback ? (
-              <div className="mt-2 rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-xs leading-5 text-slate-600">
+              <div className="mt-3 rounded-md border border-[#cfe8d9] bg-[#f7fbf5] px-3 py-2 text-xs leading-5 text-slate-600">
                 {log.coachLiked ? <div className="font-medium text-[#16845f]">{t.coachLiked}</div> : null}
                 {log.coachFeedback ? <div>{t.coachFeedback}: {log.coachFeedback}</div> : null}
               </div>
             ) : null}
-          </div>
+          </article>
         )) : <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>}
       </HistoryGroup>
     </div>
@@ -1902,7 +1762,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
       const response = await fetch('/api/student-submission', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...submission, mode: 'update' }),
+        body: JSON.stringify(submission),
         signal: controller.signal,
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -1937,32 +1797,6 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
     } finally {
       window.clearTimeout(timeout);
       setActiveLoading(false);
-    }
-  }
-
-  async function saveEditedSubmissionLog(submission: StudentSubmissionLog) {
-    const nextLogs = mergeSubmissionLogs([submission], submissionLogs).slice(0, 20);
-    window.localStorage.setItem(`${draftKey}-submitted`, JSON.stringify(submission));
-    window.localStorage.setItem(logKey, JSON.stringify(nextLogs));
-    setSubmissionLogs(nextLogs);
-
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 10000);
-
-    try {
-      const response = await fetch('/api/student-submission', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(submission),
-        signal: controller.signal,
-      });
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error || '发送失败。');
-      }
-    } finally {
-      window.clearTimeout(timeout);
     }
   }
 
@@ -2117,7 +1951,6 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                 submissionLogs={submissionLogs}
                 t={t}
                 lang={lang}
-                onSaveSubmission={saveEditedSubmissionLog}
                 loading={historyLoading}
               />
             </Section>
