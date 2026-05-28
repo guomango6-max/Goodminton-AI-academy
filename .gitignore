@@ -54,4 +54,5 @@ next-env.d.ts
 /data/students/*.json
 !/data/students/demo.json
 
-# claude code 
+# claude code / ide config
+.claude/
