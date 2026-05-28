@@ -5,7 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
 
 const root = process.cwd();
-loadEnv({ path: path.join(root, '.env.local') });
+loadEnv({ path: path.join(root, '.env.vercel.local') });
+loadEnv({ path: path.join(root, '.env.local'), override: true });
 loadEnv({ path: path.join(root, '.env') });
 
 const includeGenerated = process.argv.includes('--include-generated');
