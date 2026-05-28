@@ -28,9 +28,10 @@ for (const filePath of files) {
   const raw = await readJson(filePath);
   const metadata = metadataFrom(raw, filePath);
   const cleanedText = cleanBody(raw.text || raw.transcript || raw.description || "");
+  const subtitleNoise = looksLikeNoisySubtitle(cleanedText);
   const paragraphs = splitParagraphs(cleanedText);
   const uniqueParagraphs = mergeSimilarParagraphs(paragraphs);
-  const quality = scoreQuality({ ...metadata, text: uniqueParagraphs.join("\n\n") });
+  const quality = scoreQuality({ ...metadata, text: uniqueParagraphs.join("\n\n"), subtitleNoise });
 
   if (quality.skip) {
     skipped += 1;
@@ -199,6 +200,7 @@ function fingerprint(value) {
 
 function scoreQuality(item) {
   const text = `${item.title}\n${item.text}`.toLowerCase();
+  const subtitleNoise = item.subtitleNoise || looksLikeNoisySubtitle(item.text);
   const positive = [
     "training", "drill", "technique", "footwork", "serve", "return", "smash", "defence", "defense", "tactics", "coach",
     "训练", "教学", "步法", "纠错", "杀球", "接发", "双打", "轮转", "网前", "多球", "防守", "教练",
@@ -214,10 +216,33 @@ function scoreQuality(item) {
   const chars = item.text.length;
   const score = positiveHits * 2 - negativeHits * 3 + Math.min(4, Math.floor(chars / 1200));
 
+  if (subtitleNoise) return { score, skip: true, reason: "likely noisy auto subtitle", positiveHits, negativeHits };
   if (chars < 180) return { score, skip: true, reason: "too short after cleaning", positiveHits, negativeHits };
   if (negativeHits >= 2 && positiveHits < 3) return { score, skip: true, reason: "likely low-value equipment/news/commercial content", positiveHits, negativeHits };
   if (score < 2) return { score, skip: true, reason: "low training density", positiveHits, negativeHits };
   return { score, skip: false, reason: "useful candidate", positiveHits, negativeHits };
+}
+
+function looksLikeNoisySubtitle(value) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length === 0) return false;
+
+  const eventLines = lines.filter((line) => /^\[(?:music|applause|sound|laughter|noise|cheering|音乐|掌声|笑声|音效)\]$/i.test(line)).length;
+  const lexicalLines = lines.filter((line) => /[\p{L}\p{N}]/u.test(line)).length;
+  const shortLexicalLines = lines.filter((line) => {
+    const normalized = line.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+    return normalized && normalized.split(/\s+/).length <= 4 && normalized.length <= 24;
+  }).length;
+  const chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+  const eventRatio = eventLines / lines.length;
+  const shortRatio = shortLexicalLines / Math.max(1, lexicalLines);
+
+  return lines.length >= 12
+    && chineseChars < 20
+    && (eventRatio >= 0.35 || (eventLines >= 3 && shortRatio >= 0.8));
 }
 
 function chunkParagraphs(paragraphs, maxChars) {

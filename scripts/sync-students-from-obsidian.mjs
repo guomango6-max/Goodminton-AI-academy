@@ -270,8 +270,54 @@ function getTrainingRecordCount(raw) {
   if (!section) return 0;
   return section
     .split(/\r?\n/u)
-    .filter((line) => /^\|\s*\d{4}-\d{2}-\d{2}/u.test(line))
+    .filter((line) => /^\|\s*\d{4}-\d{2}-\d{2}|\|\s*近期/u.test(line))
     .length;
+}
+
+function getLessonHistory(raw, studentId) {
+  const section = getSection(raw, '训练记录');
+  if (!section) return [];
+
+  const rows = parseTableRows(section);
+  const lessons = [];
+
+  for (const row of rows) {
+    const dateRaw = stripMarkdown(row['日期'] || '').trim();
+    if (!dateRaw || dateRaw === '日期') continue;
+
+    const dateMatch = dateRaw.match(/(\d{4}-\d{2}-\d{2})/u);
+    const date = dateMatch ? dateMatch[1] : null;
+    if (!date) continue;
+
+    const focusRaw = stripMarkdown(row['本课重点'] || row['记录'] || '');
+    if (!focusRaw || /^\s*$/.test(focusRaw)) continue;
+
+    const cleanFocus = focusRaw.replace(/^小班[：:]\s*/u, '');
+    const mainContent = cleanFocus
+      .split(/[·、，,；;]+/u)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const coachNote = stripMarkdown(row['下次跟进'] || row['下一步'] || '');
+    const studentNote = stripMarkdown(row['表现'] || '');
+    const lessonRef = stripMarkdown(row['备课链接'] || '');
+    const id = lessonRef
+      ? `lesson-${date}-${lessonRef.replace(/[^a-z0-9-]/giu, '-').toLowerCase().slice(0, 30)}`
+      : `lesson-${date}-${studentId}`;
+
+    lessons.push({
+      id,
+      date,
+      title: mainContent.slice(0, 3).join(' · '),
+      mainContent,
+      coachNote,
+      studentNote,
+      homeworkDone: 0,
+      homeworkTotal: 0,
+    });
+  }
+
+  return lessons.sort((a, b) => b.date.localeCompare(a.date));
 }
 
 function initialsFromStudentId(studentId) {
@@ -427,7 +473,8 @@ function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, f
   const focus = focusItems.length ? focusItems : ['基础能力初评', '训练反馈建档'];
   const progress = levelToProgress(level);
   const ability = levelToAbility(level);
-  const recordCount = getTrainingRecordCount(raw);
+  const parsedHistory = getLessonHistory(raw, studentId);
+  const recordCount = parsedHistory.length || getTrainingRecordCount(raw);
   const description = `当前重点：${focus.join('；')}。先从 Obsidian 档案同步到网站，后续按课堂记录继续校准。`;
   const assignedHomework = homework.length ? homework : makeDefaultHomework();
 
@@ -497,8 +544,8 @@ function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, f
       { label: '战术', value: Math.max(3, ability - 1) },
       { label: '步法', value: ability },
     ],
-    lessonHistory: recordCount
-      ? []
+    lessonHistory: parsedHistory.length
+      ? parsedHistory
       : [
           {
             id: 'lesson-profile-sync',
@@ -548,6 +595,7 @@ function mergeExistingStudent(existing, generated, { name, level, loginId }) {
     knowledgeLinks: existing.knowledgeLinks?.length ? existing.knowledgeLinks : generated.knowledgeLinks,
     recentFeedback: existing.recentFeedback?.length ? existing.recentFeedback : generated.recentFeedback,
     lessonSummary,
+    lessonHistory: generated.lessonHistory?.length ? generated.lessonHistory : (existing.lessonHistory || []),
     lastUpdated: existing.lastUpdated || generated.lastUpdated,
   };
 }

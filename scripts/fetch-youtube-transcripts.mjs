@@ -47,7 +47,9 @@ for (const video of videos) {
   const after = await listFiles(videoDir);
   const changed = after.filter((file) => !before.includes(file));
   const subtitleFile = pickSubtitleFile(after);
-  const transcript = subtitleFile ? await parseSubtitle(join(videoDir, subtitleFile)) : "";
+  const rawTranscript = subtitleFile ? await parseSubtitle(join(videoDir, subtitleFile)) : "";
+  const noisySubtitle = looksLikeNoisySubtitle(rawTranscript);
+  const transcript = noisySubtitle ? "" : rawTranscript;
   const language = subtitleFile ? subtitleLanguage(subtitleFile) : "";
   const published = video.upload_date ? formatUploadDate(video.upload_date) : subtitleDate(subtitleFile);
   const output = {
@@ -78,8 +80,8 @@ for (const video of videos) {
     duration: output.duration,
     language,
     chars: transcript.length,
-    status: transcript ? "ok" : classifyFailure(result.error),
-    note: result.ok ? changed.join(", ") : result.error,
+    status: transcript ? "ok" : noisySubtitle ? "noisy-subtitle" : classifyFailure(result.error),
+    note: noisySubtitle ? `Rejected noisy subtitle: ${subtitleFile}` : result.ok ? changed.join(", ") : result.error,
   });
 }
 
@@ -181,6 +183,7 @@ async function writeAudit(path, source, url, rows) {
     "## 下一步",
     "",
     "- `ok`：可进入 AI 提取。",
+    "- `noisy-subtitle`：自动字幕主要是音乐/掌声/英文短碎片，不能作为训练资料。",
     "- `members-only`：需要 YouTube 登录态 / 会员 cookies 才能抓。",
     "- `missing-subtitle`：需要换字幕语言、手动补转录，或后续用音频转写。",
     "",
@@ -213,6 +216,28 @@ function subtitleLanguage(fileName) {
 function subtitleDate(fileName) {
   const match = basename(fileName || "").match(/^(\d{4})(\d{2})(\d{2})-/);
   return match ? `${match[1]}-${match[2]}-${match[3]}` : "";
+}
+
+function looksLikeNoisySubtitle(value) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length === 0) return false;
+
+  const eventLines = lines.filter((line) => /^\[(?:music|applause|sound|laughter|noise|cheering|音乐|掌声|笑声|音效)\]$/i.test(line)).length;
+  const lexicalLines = lines.filter((line) => /[\p{L}\p{N}]/u.test(line)).length;
+  const shortLexicalLines = lines.filter((line) => {
+    const normalized = line.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+    return normalized && normalized.split(/\s+/).length <= 4 && normalized.length <= 24;
+  }).length;
+  const chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+  const eventRatio = eventLines / lines.length;
+  const shortRatio = shortLexicalLines / Math.max(1, lexicalLines);
+
+  return lines.length >= 12
+    && chineseChars < 20
+    && (eventRatio >= 0.35 || (eventLines >= 3 && shortRatio >= 0.8));
 }
 
 function run(command, commandArgs, options = {}) {
