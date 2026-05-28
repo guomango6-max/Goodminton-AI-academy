@@ -1925,6 +1925,7 @@ export default function StudentPage() {
       const response = await fetch('/api/student-data', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        cache: 'no-store',
         body: JSON.stringify(credential),
         signal: controller.signal,
       });
@@ -2016,6 +2017,8 @@ export default function StudentPage() {
                 onChange={(event) => setCredential(event.target.value)}
                 autoCapitalize="none"
                 autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
                 className="mt-2 min-h-11 w-full rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-base outline-none focus:border-[#16845f]"
                 placeholder={t.credentialPlaceholder}
               />

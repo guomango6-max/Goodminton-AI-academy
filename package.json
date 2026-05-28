@@ -17,11 +17,14 @@
     "articles:hot:install-task": "powershell -ExecutionPolicy Bypass -File scripts/install-hot-articles-task.ps1",
     "qa:hot": "node scripts/fetch-hot-qa-prompts.mjs",
     "qa:hot:dry": "node scripts/fetch-hot-qa-prompts.mjs --dry-run",
-    "qa:hot:install-task": "powershell -ExecutionPolicy Bypass -File scripts/install-qa-prompts-task.ps1"
+    "qa:hot:install-task": "powershell -ExecutionPolicy Bypass -File scripts/install-qa-prompts-task.ps1",
+    "students:check-logins": "node scripts/check-student-login-registry.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.58",
     "@ai-sdk/react": "^3.0.176",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.2",
     "ai": "^6.0.174",
     "dotenv": "^17.4.2",
     "next": "16.2.4",

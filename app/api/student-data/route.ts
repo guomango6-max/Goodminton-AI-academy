@@ -1,90 +1,17 @@
 import { readFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
 import { createSign } from 'node:crypto';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { NextResponse } from 'next/server';
+import { resolveStudentLogin } from '@/lib/student-login';
 
-function normalizeLoginCredential(value: unknown) {
-  if (typeof value !== 'string') return '';
-  return value
-    .normalize('NFKC')
-    .trim()
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]/gu, '');
-}
+const NO_STORE_HEADERS = {
+  'cache-control': 'no-store, no-cache, max-age=0, must-revalidate',
+  pragma: 'no-cache',
+};
 
 function isSafeStudentFileId(value: string) {
   return /^[a-z0-9][a-z0-9_-]*$/u.test(value);
-}
-
-const FALLBACK_STUDENT_LOGIN_CREDENTIALS: Record<string, string> = {
-  demo: 'demo',
-  sami09: 'sami',
-  gyw11: 'guo-yiwei',
-  gyw1: 'guo-yiwei',
-  gyw1122: 'guo-yiwei',
-  guoyiwei11: 'guo-yiwei',
-  guoyiwei1122: 'guo-yiwei',
-  郭一苇11: 'guo-yiwei',
-  郭一苇1122: 'guo-yiwei',
-  lcr22: 'li-chenrun',
-  lcr2: 'li-chenrun',
-  lcr2233: 'li-chenrun',
-  lichenrun22: 'li-chenrun',
-  lichenrun2233: 'li-chenrun',
-  李晨润22: 'li-chenrun',
-  李晨润2233: 'li-chenrun',
-  sxy33: 'sheng-xinyi',
-  sxy3: 'sheng-xinyi',
-  sxy3344: 'sheng-xinyi',
-  shengxinyi33: 'sheng-xinyi',
-  shengxinyi3344: 'sheng-xinyi',
-  盛心怡33: 'sheng-xinyi',
-  盛心怡3344: 'sheng-xinyi',
-  盛欣怡33: 'sheng-xinyi',
-  盛欣怡3344: 'sheng-xinyi',
-  xmj44: 'xue-meijiao',
-  xmj4: 'xue-meijiao',
-  xmj4455: 'xue-meijiao',
-  xuemeijiao44: 'xue-meijiao',
-  xuemeijiao4455: 'xue-meijiao',
-  薛美姣44: 'xue-meijiao',
-  薛美姣4455: 'xue-meijiao',
-  yjn48: 'yang-jingnan',
-  yjn8: 'yang-jingnan',
-  yjn4837: 'yang-jingnan',
-  yangjingnan48: 'yang-jingnan',
-  yangjingnan4837: 'yang-jingnan',
-  杨静南48: 'yang-jingnan',
-  杨静南4837: 'yang-jingnan',
-  grh46: 'guo-renhua',
-  cyh33: 'cui-yunhao',
-  wm45: 'wang-meng',
-  zbq48: 'zhang-biqiong',
-  zcq40: 'zhang-cuiqi',
-  zx40: 'zhao-xin',
-  jy47: 'jin-yan',
-  lsq40: 'lu-shiqiong',
-};
-
-let loginCredentialsCache: Record<string, string> | null = null;
-
-function getStudentLoginCredentials() {
-  if (loginCredentialsCache) return loginCredentialsCache;
-
-  try {
-    const raw = readFileSync(join(process.cwd(), 'data', 'student-login-credentials.json'), 'utf8');
-    const generatedCredentials = JSON.parse(raw) as Record<string, string>;
-    loginCredentialsCache = {
-      ...FALLBACK_STUDENT_LOGIN_CREDENTIALS,
-      ...generatedCredentials,
-    };
-  } catch {
-    loginCredentialsCache = FALLBACK_STUDENT_LOGIN_CREDENTIALS;
-  }
-
-  return loginCredentialsCache;
 }
 
 function stripPrivateFields(student: Record<string, unknown>) {
@@ -128,6 +55,7 @@ async function getStudentFromSheet(studentId: string) {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ token, studentId }),
+      cache: 'no-store',
       signal: AbortSignal.timeout(8000),
     });
 
@@ -379,25 +307,22 @@ export async function POST(req: Request) {
     accessCode?: string;
   } | null;
 
-  const rawStudentId = typeof body?.studentId === 'string' ? body.studentId : '';
-  const rawAccessCode = typeof body?.accessCode === 'string' ? body.accessCode : '';
-  const credential = normalizeLoginCredential(`${rawStudentId}${rawAccessCode}`);
-  const studentId = getStudentLoginCredentials()[credential];
+  const { credential, studentId } = resolveStudentLogin(body?.studentId, body?.accessCode);
 
   if (!studentId) {
-    return NextResponse.json({ error: `没有找到这个学员数据。识别为：${credential || '空'}` }, { status: 404 });
+    return NextResponse.json({ error: `没有找到这个学员数据。识别为：${credential || '空'}` }, { status: 404, headers: NO_STORE_HEADERS });
   }
 
   try {
     const student = await getStudentById(studentId);
 
     if (!student) {
-      return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404 });
+      return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404, headers: NO_STORE_HEADERS });
     }
 
-    return NextResponse.json({ student: stripPrivateFields(student) });
+    return NextResponse.json({ student: stripPrivateFields(student) }, { headers: NO_STORE_HEADERS });
   } catch (error) {
     console.error('[student-data-error]', error);
-    return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404 });
+    return NextResponse.json({ error: '没有找到这个学员数据。' }, { status: 404, headers: NO_STORE_HEADERS });
   }
 }
