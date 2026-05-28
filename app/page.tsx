@@ -250,6 +250,7 @@ const copy = {
     heroKicker: '成人与青少年羽毛球训练',
     title: 'Goodminton Academy',
     mission: '让热爱有方向，进步有反馈，成长有路径。',
+    proofPoints: ['20+ 年教学经验', '课后总结持续追踪', '比赛复盘回到训练'],
     heroAlt: '羽毛球和战术箭头组成的 Goodminton Academy 训练视觉',
     primaryCta: '联系教练',
     secondaryCta: '进入问答 QA',
@@ -308,6 +309,7 @@ const copy = {
     heroKicker: 'Badminton training for adults and teens',
     title: 'Goodminton Academy',
     mission: 'GOOD intentions. Minimal steps. Consistent tone.',
+    proofPoints: ['20+ years coaching', 'Trackable lesson feedback', 'Match review into practice'],
     heroAlt: 'Goodminton Academy training visual with a shuttle and tactical arrows',
     primaryCta: 'Contact coach',
     secondaryCta: 'Open Q&A',
@@ -560,6 +562,13 @@ export default function Home() {
             <p className="cjk-wrap mt-6 max-w-[720px] text-[18px] leading-8 text-[#52636b]">
               <MissionText lang={lang} />
             </p>
+            <div className="mt-7 grid max-w-[760px] gap-3 sm:grid-cols-3">
+              {t.proofPoints.map((item) => (
+                <div key={item} className="rounded-[8px] border border-[#d8e6da] bg-white/72 px-4 py-3 text-[14px] font-semibold leading-6 text-[#1f4a38] shadow-[0_14px_32px_-28px_rgba(18,18,18,0.35)]">
+                  {item}
+                </div>
+              ))}
+            </div>
 
             <div className="mt-10 border-t border-[#e0dacb] pt-10">
               <article className="grid gap-7 lg:grid-cols-[410px_minmax(0,1fr)] lg:items-center">

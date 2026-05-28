@@ -461,12 +461,63 @@ function makeEnglishStudent(student) {
   return translateObject(student);
 }
 
-function makeDefaultHomework() {
-  return [
-    { id: 'hw-1', text: '记录本周最想改进的一个动作。', done: false },
-    { id: 'hw-2', text: '下次课前回忆一个最近最容易失误的场景。', done: false },
-    { id: 'hw-3', text: '课后用自己的话写一句训练感受。', done: false },
-  ];
+const HOMEWORK_CATEGORIES = ['swing', 'footwork', 'fitness'];
+
+function makeDefaultHomework({ recentGoal = '', growthPath = '', focusItems = [] } = {}) {
+  const target = recentGoal || focusItems[0] || '当前训练重点';
+  const path = growthPath ? `｜成长路径：${growthPath}` : '';
+  return {
+    swing: {
+      id: 'hw-swing',
+      text: `挥拍：空拍慢挥 10 次，关注拍面和发力顺序｜近期目标：${target}${path}`,
+      done: false,
+    },
+    footwork: {
+      id: 'hw-footwork',
+      text: `步法：无球启动/回位 6 组，重点看第一步和还原｜近期目标：${target}${path}`,
+      done: false,
+    },
+    fitness: {
+      id: 'hw-fitness',
+      text: `体能：核心或下肢稳定 3 组，动作质量优先｜近期目标：${target}${path}`,
+      done: false,
+    },
+  };
+}
+
+function getHomeworkCategory(item) {
+  const text = `${item?.id || ''} ${item?.text || ''}`.toLowerCase();
+  if (/homework-fitness|^hw-fitness/u.test(text)) return 'fitness';
+  if (/homework-footwork|^hw-footwork/u.test(text)) return 'footwork';
+  if (/homework-swing|^hw-swing/u.test(text)) return 'swing';
+  if (/footwork|步法|启动|蹬|跳|还原|回位|移动|交叉步|垫步|并步|弓步|落地/u.test(text)) return 'footwork';
+  if (/swing|挥拍|高远|杀球|吊球|发力|拍面|网前|推球|接杀|抽球|搓球|勾球|放网/u.test(text)) return 'swing';
+  if (/fitness|plank|core|wall|sit|balance|体能|核心|力量|稳定|靠墙|深蹲|平衡/u.test(text)) return 'fitness';
+  return '';
+}
+
+function completeHomework(homework, context) {
+  const items = Array.isArray(homework) ? homework.filter((item) => item?.id && item?.text) : [];
+  const defaults = makeDefaultHomework(context);
+  const byCategory = new Map();
+  const uncategorized = [];
+
+  for (const item of items) {
+    const category = getHomeworkCategory(item);
+    if (category && !byCategory.has(category)) {
+      byCategory.set(category, item);
+    } else if (!category) {
+      uncategorized.push(item);
+    }
+  }
+
+  for (const category of HOMEWORK_CATEGORIES) {
+    if (!byCategory.has(category) && uncategorized.length) {
+      byCategory.set(category, uncategorized.shift());
+    }
+  }
+
+  return HOMEWORK_CATEGORIES.map((category) => byCategory.get(category) || defaults[category]);
 }
 
 function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, focusItems, homework = [], raw }) {
@@ -476,7 +527,11 @@ function makeBaseStudent({ studentId, name, group, level, loginId, sourceFile, f
   const parsedHistory = getLessonHistory(raw, studentId);
   const recordCount = parsedHistory.length || getTrainingRecordCount(raw);
   const description = `当前重点：${focus.join('；')}。先从 Obsidian 档案同步到网站，后续按课堂记录继续校准。`;
-  const assignedHomework = homework.length ? homework : makeDefaultHomework();
+  const assignedHomework = completeHomework(homework, {
+    recentGoal: getRecentGoal(raw),
+    growthPath: getGrowthPathSummary(raw),
+    focusItems,
+  });
 
   const student = {
     studentId,

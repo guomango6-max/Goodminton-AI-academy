@@ -283,6 +283,15 @@ async function getStudentFromFile(studentId: string) {
 }
 
 async function getStudentById(studentId: string) {
+  if (isSafeStudentFileId(studentId)) {
+    try {
+      const fileStudent = await getStudentFromFile(studentId);
+      if (fileStudent) return fileStudent;
+    } catch {
+      // Fall through to remote backups.
+    }
+  }
+
   const sheetStudent = await getStudentFromSheet(studentId);
   if (sheetStudent) return sheetStudent;
 
@@ -291,14 +300,7 @@ async function getStudentById(studentId: string) {
 
   const envStudent = getStudentFromSingleEnv(studentId) || getStudentFromEnv(studentId);
   if (envStudent) return envStudent;
-
-  if (!isSafeStudentFileId(studentId)) return null;
-
-  try {
-    return await getStudentFromFile(studentId);
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export async function POST(req: Request) {

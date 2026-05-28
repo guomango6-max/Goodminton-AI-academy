@@ -161,7 +161,7 @@ let cachedCurrentStudent: StudentData | null = null;
 const studentCopy = {
   zh: {
     portal: '学员图谱',
-    nav: ['总览', '课后总结', '比赛复盘', '家庭作业', '当前任务', '个人能力', '成就勋章', '训练记录'],
+    nav: ['总览', '课后总结', '历史记录', '比赛复盘', '家庭作业', '当前任务', '个人能力', '成就勋章', '训练记录'],
     logout: '退出',
     breadcrumb: '学员图谱',
     trainingData: (name: string) => `${name} 的训练数据`,
@@ -232,7 +232,7 @@ const studentCopy = {
   },
   en: {
     portal: 'Student Map',
-    nav: ['Overview', 'Lesson Summary', 'Match Review', 'Homework', 'Current Task', 'Ability', 'Badges', 'Training Log'],
+    nav: ['Overview', 'Lesson Summary', 'History', 'Match Review', 'Homework', 'Current Task', 'Ability', 'Badges', 'Training Log'],
     logout: 'Log out',
     breadcrumb: 'Student Map',
     trainingData: (name: string) => `${name}'s Training Data`,
@@ -488,6 +488,46 @@ function Section({ title, children, id }: { title: string; children: React.React
   );
 }
 
+type StudentText = (typeof studentCopy)[Lang];
+
+function SubmissionRecordPanel({ submissionLogs, t }: { submissionLogs: StudentSubmissionLog[]; t: StudentText }) {
+  if (!submissionLogs.length) {
+    return (
+      <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 text-sm text-slate-500">
+        {t.noLogs}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-sm font-semibold text-slate-900">{t.submissionLog}</div>
+        <div className="text-xs text-slate-500">{t.recent20}</div>
+      </div>
+      <div className="space-y-3">
+        {submissionLogs.slice(0, 5).map((log) => (
+          <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
+              <span>{log.submissionType === 'match' ? t.match : t.lesson}</span>
+              {log.submissionType === 'lesson' ? <span>{t.homeworkCount(log.lessonSummary.completedHomework.length)}</span> : null}
+            </div>
+            <div className="mt-2">
+              <b className="text-slate-900">{log.submissionType === 'match' ? t.reviewPrefix : t.summaryPrefix}</b>
+              <span>
+                {log.submissionType === 'match'
+                  ? log.matchReview.match || log.matchReview.whatWorked || log.matchReview.nextAdjustment || t.empty
+                  : log.lessonSummary.studentReflection || log.lessonSummary.question || t.empty}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ProgressBar({ value }: { value: number }) {
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-[#dff5e9]">
@@ -527,12 +567,13 @@ function StudentSideNav({ student, lang }: { student: StudentData; lang: Lang })
   const items = [
     ['O', t.nav[0]],
     ['S', t.nav[1]],
-    ['R', t.nav[2]],
-    ['H', t.nav[3]],
-    ['C', t.nav[4]],
-    ['A', t.nav[5]],
-    ['B', t.nav[6]],
-    ['L', t.nav[7]],
+    ['L', t.nav[2]],
+    ['R', t.nav[3]],
+    ['H', t.nav[4]],
+    ['C', t.nav[5]],
+    ['A', t.nav[6]],
+    ['B', t.nav[7]],
+    ['T', t.nav[8]],
   ];
 
   useEffect(() => {
@@ -1634,7 +1675,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
         </header>
 
         <div className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
             <Section id="student-section-1" title={t.lessonSummary}>
               <div className="space-y-4">
                 <div className="rounded-md bg-[#f4f8f1] p-4">
@@ -1697,7 +1738,12 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
               </div>
             </Section>
 
-            <Section id="student-section-2" title={t.matchReview}>
+            <Section id="student-section-2" title={t.submissionRecord}>
+              <SubmissionRecordPanel submissionLogs={submissionLogs} t={t} />
+            </Section>
+          </div>
+
+          <Section id="student-section-3" title={t.matchReview}>
               <div className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block">
@@ -1762,10 +1808,9 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                 </div>
                 {matchSubmissionStatus ? <div className="text-sm text-slate-600">{matchSubmissionStatus}</div> : null}
               </div>
-            </Section>
-          </div>
+          </Section>
 
-          <Section id="student-section-3" title={t.homework}>
+          <Section id="student-section-4" title={t.homework}>
             <div className="grid gap-3 md:grid-cols-3">
               {displayStudent.lessonSummary?.homework.map((item) => {
                 const checked = checkedHomework.includes(item.id);
@@ -1787,7 +1832,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
             </div>
           </Section>
 
-          <section id="student-section-4" className="scroll-mt-28 rounded-md border border-[#dfe7dc] bg-[#fffdf8] p-4 shadow-sm sm:p-5 lg:scroll-mt-6">
+          <section id="student-section-5" className="scroll-mt-28 rounded-md border border-[#dfe7dc] bg-[#fffdf8] p-4 shadow-sm sm:p-5 lg:scroll-mt-6">
             <div className="grid gap-5 lg:grid-cols-[1fr_240px]">
               <div>
                 <div className="text-sm text-slate-500">{t.currentTraining}</div>
@@ -1822,12 +1867,12 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
           </section>
 
           {displayStudent.abilityMatrix?.length ? (
-            <Section id="student-section-5" title={t.abilityMatrix}>
+            <Section id="student-section-6" title={t.abilityMatrix}>
               <AbilityHex items={displayStudent.abilityMatrix} lang={lang} />
             </Section>
           ) : null}
 
-          <Section id="student-section-6" title={t.achievements}>
+          <Section id="student-section-7" title={t.achievements}>
             <AchievementBadges achievements={displayStudent.achievements || []} lang={lang} />
           </Section>
 
@@ -1838,46 +1883,11 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
           ) : null}
 
           {displayStudent.lessonHistory?.length ? (
-            <Section id="student-section-7" title={t.lessonLog}>
+            <Section id="student-section-8" title={t.lessonLog}>
               <LessonLog lessons={displayStudent.lessonHistory} lang={lang} />
             </Section>
           ) : null}
 
-          <Section title={t.submissionRecord}>
-            {submissionLogs.length ? (
-              <div className="rounded-md border border-slate-200 bg-white p-4">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-slate-900">{t.submissionLog}</div>
-                  <div className="text-xs text-slate-500">{t.recent20}</div>
-                </div>
-                <div className="space-y-3">
-                  {submissionLogs.slice(0, 5).map((log) => (
-                    <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                        <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
-                        <span>{log.submissionType === 'match' ? t.match : t.lesson}</span>
-                        {log.submissionType === 'lesson' ? <span>{t.homeworkCount(log.lessonSummary.completedHomework.length)}</span> : null}
-                      </div>
-                      <div className="mt-2">
-                        <div>
-                          <b className="text-slate-900">{log.submissionType === 'match' ? t.reviewPrefix : t.summaryPrefix}</b>
-                          <span>
-                            {log.submissionType === 'match'
-                              ? log.matchReview.match || log.matchReview.whatWorked || log.matchReview.nextAdjustment || t.empty
-                              : log.lessonSummary.studentReflection || log.lessonSummary.question || t.empty}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4 text-sm text-slate-500">
-                {t.noLogs}
-              </div>
-            )}
-          </Section>
         </div>
       </div>
         </div>
