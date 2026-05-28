@@ -156,6 +156,49 @@ async function archiveStudentSubmission(submission: ReturnType<typeof normalizeS
   return true;
 }
 
+async function archiveStudentHistoryRecord(submission: ReturnType<typeof normalizeSubmission>) {
+  const supabase = createSupabaseAdminClient();
+  if (!supabase) {
+    return false;
+  }
+
+  const isMatch = submission.submissionType === 'match';
+  const happenedAt = isMatch
+    ? submission.submittedAt.slice(0, 10)
+    : submission.lessonSummary.date || submission.submittedAt.slice(0, 10);
+  const title = isMatch
+    ? submission.matchReview.match || '比赛复盘'
+    : submission.lessonSummary.title || '课后总结';
+
+  const { error } = await supabase
+    .from('student_history_records')
+    .upsert(
+      {
+        external_id: submission.id,
+        student_id: submission.studentId,
+        student_name: submission.studentName,
+        record_type: isMatch ? 'match_review' : 'lesson_summary',
+        happened_at: happenedAt || null,
+        title,
+        payload: { submission },
+        source: 'website',
+        status: 'new',
+      },
+      { onConflict: 'external_id' },
+    );
+
+  if (error) {
+    const missingHistoryTable =
+      error.code === '42P01' || error.code === 'PGRST205' || /student_history_records/i.test(error.message || '');
+    if (missingHistoryTable) {
+      return false;
+    }
+    throw new Error(error.message);
+  }
+
+  return true;
+}
+
 export async function POST(req: Request) {
   const raw = (await req.json().catch(() => null)) as StudentSubmissionPayload | null;
 
@@ -189,9 +232,11 @@ export async function POST(req: Request) {
   }
 
   let archived = false;
+  let historyArchived = false;
 
   try {
     archived = await archiveStudentSubmission(submission);
+    historyArchived = await archiveStudentHistoryRecord(submission);
   } catch (error) {
     console.error('[student-submission-archive-error]', error);
     return NextResponse.json({ error: 'Failed to save submission.' }, { status: 502 });
@@ -199,11 +244,11 @@ export async function POST(req: Request) {
 
   try {
     await sendStudentSubmissionNtfy(submission);
-    return NextResponse.json({ ok: true, archived, notified: true });
+    return NextResponse.json({ ok: true, archived, historyArchived, notified: true });
   } catch (error) {
     console.error('[student-submission-ntfy-error]', error);
     if (archived) {
-      return NextResponse.json({ ok: true, archived, notified: false });
+      return NextResponse.json({ ok: true, archived, historyArchived, notified: false });
     }
     return NextResponse.json({ error: 'Failed to notify coach.' }, { status: 502 });
   }

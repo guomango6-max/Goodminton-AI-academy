@@ -101,6 +101,8 @@ type StudentData = {
     studentNote: string;
     homeworkDone: number;
     homeworkTotal: number;
+    coachFeedback?: string;
+    coachLiked?: boolean;
   }>;
   growthPath?: Array<{
     date: string;
@@ -152,6 +154,8 @@ type StudentSubmissionLog = {
     nextAdjustment: string;
     experience: string;
   };
+  coachFeedback?: string;
+  coachLiked?: boolean;
 };
 
 const STUDENT_SESSION_EVENT = 'goodminton-student-current-change';
@@ -218,6 +222,11 @@ const studentCopy = {
     summaryPrefix: '总结：',
     empty: '未填写',
     noLogs: '还没有记录。',
+    edit: '修改',
+    editingLesson: '正在修改一条课后总结',
+    editingMatch: '正在修改一条比赛复盘',
+    coachFeedback: '教练点评',
+    coachLiked: '教练已点赞',
     emptyLesson: '请先填写课后总结、问题，或勾选作业。',
     emptyMatch: '请先填写比赛复盘内容。',
     lessonSent: '课后总结已发送给教练，并保留本机日志。',
@@ -292,6 +301,11 @@ const studentCopy = {
     summaryPrefix: 'Summary: ',
     empty: 'Not filled',
     noLogs: 'No records yet.',
+    edit: 'Edit',
+    editingLesson: 'Editing one lesson summary',
+    editingMatch: 'Editing one match review',
+    coachFeedback: 'Coach Feedback',
+    coachLiked: 'Liked by coach',
     emptyLesson: 'Please write a lesson summary, question, or check homework first.',
     emptyMatch: 'Please write the match review first.',
     lessonSent: 'Lesson summary sent to the coach and saved locally.',
@@ -433,6 +447,22 @@ function mergeSubmissionLogs(primary: StudentSubmissionLog[], secondary: Student
     .slice(0, 50);
 }
 
+function mergeLessonRecords(
+  primary: NonNullable<StudentData['lessonHistory']>,
+  secondary: NonNullable<StudentData['lessonHistory']>,
+) {
+  const seen = new Set<string>();
+  return [...primary, ...secondary]
+    .filter((lesson) => {
+      const key = lesson.id || `${lesson.date}-${lesson.title}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((left, right) => right.date.localeCompare(left.date))
+    .slice(0, 100);
+}
+
 function readCurrentStudent(): StudentData | null {
   if (typeof window === 'undefined') {
     return null;
@@ -516,11 +546,13 @@ function StudentHistoryPanel({
   submissionLogs,
   t,
   lang,
+  onEditSubmission,
 }: {
   lessons?: NonNullable<StudentData['lessonHistory']>;
   submissionLogs: StudentSubmissionLog[];
   t: StudentText;
   lang: Lang;
+  onEditSubmission: (log: StudentSubmissionLog) => void;
 }) {
   const lessonSummaries = submissionLogs.filter((log) => log.submissionType === 'lesson');
   const matchReviews = submissionLogs.filter((log) => log.submissionType === 'match');
@@ -547,6 +579,12 @@ function StudentHistoryPanel({
               <div className="mt-1 font-semibold text-slate-950">{lesson.title}</div>
               <div className="mt-1 text-slate-600">{(lesson.mainContent || [lesson.focus]).filter(Boolean).join(' / ')}</div>
               {lesson.coachNote ? <div className="mt-2 text-slate-500">{lang === 'en' ? 'Coach: ' : '教练：'}{lesson.coachNote}</div> : null}
+              {lesson.coachLiked || lesson.coachFeedback ? (
+                <div className="mt-2 rounded-md border border-[#cfe8d9] bg-[#f7fbf5] px-3 py-2 text-xs leading-5 text-slate-600">
+                  {lesson.coachLiked ? <div className="font-medium text-[#16845f]">{t.coachLiked}</div> : null}
+                  {lesson.coachFeedback ? <div>{t.coachFeedback}: {lesson.coachFeedback}</div> : null}
+                </div>
+              ) : null}
             </article>
           ))}
         </div>
@@ -559,11 +597,20 @@ function StudentHistoryPanel({
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
               <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
               <span>{t.homeworkCount(log.lessonSummary.completedHomework.length)}</span>
+              <button type="button" onClick={() => onEditSubmission(log)} className="ml-auto rounded-md border border-[#cfe8d9] bg-white px-2 py-1 text-[#0e6f4d]">
+                {t.edit}
+              </button>
             </div>
             <div className="mt-2">
               <b className="text-slate-900">{t.summaryPrefix}</b>
               <span>{log.lessonSummary.studentReflection || log.lessonSummary.question || t.empty}</span>
             </div>
+            {log.coachLiked || log.coachFeedback ? (
+              <div className="mt-2 rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-xs leading-5 text-slate-600">
+                {log.coachLiked ? <div className="font-medium text-[#16845f]">{t.coachLiked}</div> : null}
+                {log.coachFeedback ? <div>{t.coachFeedback}: {log.coachFeedback}</div> : null}
+              </div>
+            ) : null}
           </div>
         )) : <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>}
       </div>
@@ -572,11 +619,22 @@ function StudentHistoryPanel({
         <div className="text-sm font-semibold text-slate-900">{t.historyMatches}</div>
         {matchReviews.length ? matchReviews.slice(0, 3).map((log) => (
           <div key={log.id} className="rounded-md bg-[#f4f8f1] px-3 py-3 text-sm leading-6 text-slate-700">
-            <div className="text-xs text-slate-500">{log.submittedAt.slice(5, 16).replace('T', ' ')}</div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span>{log.submittedAt.slice(5, 16).replace('T', ' ')}</span>
+              <button type="button" onClick={() => onEditSubmission(log)} className="ml-auto rounded-md border border-[#cfe8d9] bg-white px-2 py-1 text-[#0e6f4d]">
+                {t.edit}
+              </button>
+            </div>
             <div className="mt-2">
               <b className="text-slate-900">{t.reviewPrefix}</b>
               <span>{log.matchReview.match || log.matchReview.whatWorked || log.matchReview.nextAdjustment || t.empty}</span>
             </div>
+            {log.coachLiked || log.coachFeedback ? (
+              <div className="mt-2 rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-xs leading-5 text-slate-600">
+                {log.coachLiked ? <div className="font-medium text-[#16845f]">{t.coachLiked}</div> : null}
+                {log.coachFeedback ? <div>{t.coachFeedback}: {log.coachFeedback}</div> : null}
+              </div>
+            ) : null}
           </div>
         )) : <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>}
       </div>
@@ -1452,6 +1510,9 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
   const [lessonSubmissionLoading, setLessonSubmissionLoading] = useState(false);
   const [matchSubmissionLoading, setMatchSubmissionLoading] = useState(false);
   const [submissionLogs, setSubmissionLogs] = useState<StudentSubmissionLog[]>(() => readStudentSubmissionLogs(logKey));
+  const [cloudLessonRecords, setCloudLessonRecords] = useState<NonNullable<StudentData['lessonHistory']>>([]);
+  const [editingLessonId, setEditingLessonId] = useState('');
+  const [editingMatchId, setEditingMatchId] = useState('');
   const [lessonInput, setLessonInput] = useState({
     studentReflection: initialDraft?.lessonInput?.studentReflection ?? displayStudent.lessonSummary?.studentReflection ?? '',
     question: initialDraft?.lessonInput?.question ?? '',
@@ -1475,8 +1536,9 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 
   function buildSubmissionLog(submissionType: 'lesson' | 'match'): StudentSubmissionLog {
     const submittedAt = new Date().toISOString();
+    const editingId = submissionType === 'lesson' ? editingLessonId : editingMatchId;
     return {
-      id: `${displayStudent.studentId}-${submittedAt}`,
+      id: editingId || `${displayStudent.studentId}-${submittedAt}`,
       submissionType,
       studentId: displayStudent.studentId,
       studentName: displayStudent.name,
@@ -1499,6 +1561,32 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
     };
   }
 
+  function editSubmissionLog(log: StudentSubmissionLog) {
+    if (log.submissionType === 'lesson') {
+      setLessonInput({
+        studentReflection: log.lessonSummary.studentReflection || '',
+        question: log.lessonSummary.question || '',
+        confidence: String(log.lessonSummary.confidence || 3),
+      });
+      setCheckedHomework(log.lessonSummary.completedHomework || []);
+      setEditingLessonId(log.id);
+      setLessonSubmissionStatus(t.editingLesson);
+      document.getElementById('student-section-1')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    setMatchInput({
+      match: log.matchReview.match || '',
+      score: log.matchReview.score || '',
+      whatWorked: log.matchReview.whatWorked || '',
+      nextAdjustment: log.matchReview.nextAdjustment || '',
+      experience: log.matchReview.experience || '',
+    });
+    setEditingMatchId(log.id);
+    setMatchSubmissionStatus(t.editingMatch);
+    document.getElementById('student-section-3')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   useEffect(() => {
     window.localStorage.setItem(
       draftKey,
@@ -1519,15 +1607,24 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 
     async function loadCloudSubmissions() {
       try {
-        const response = await fetch('/api/student-submissions', {
+        const response = await fetch('/api/student-history', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           cache: 'no-store',
           body: JSON.stringify({ credential }),
           signal: controller.signal,
         });
-        const payload = (await response.json().catch(() => ({}))) as { submissions?: StudentSubmissionLog[] };
-        if (!response.ok || !Array.isArray(payload.submissions) || !payload.submissions.length) return;
+        const payload = (await response.json().catch(() => ({}))) as {
+          lessonRecords?: NonNullable<StudentData['lessonHistory']>;
+          submissions?: StudentSubmissionLog[];
+        };
+        if (!response.ok) return;
+
+        if (Array.isArray(payload.lessonRecords)) {
+          setCloudLessonRecords(payload.lessonRecords);
+        }
+
+        if (!Array.isArray(payload.submissions) || !payload.submissions.length) return;
 
         setSubmissionLogs((current) => {
           const merged = mergeSubmissionLogs(payload.submissions || [], current);
@@ -1558,7 +1655,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
       submission.matchReview.whatWorked ||
       submission.matchReview.nextAdjustment ||
       submission.matchReview.experience;
-    const nextLogs = [submission, ...submissionLogs].slice(0, 20);
+    const nextLogs = mergeSubmissionLogs([submission], submissionLogs).slice(0, 20);
     const clearedLessonInput = { studentReflection: '', question: '', confidence: '3' };
     const clearedMatchInput = { match: '', score: '', whatWorked: '', nextAdjustment: '', experience: '' };
     const setActiveStatus = isLesson ? setLessonSubmissionStatus : setMatchSubmissionStatus;
@@ -1598,8 +1695,10 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 
       if (isLesson) {
         setLessonInput(clearedLessonInput);
+        setEditingLessonId('');
       } else {
         setMatchInput(clearedMatchInput);
+        setEditingMatchId('');
       }
       window.localStorage.setItem(
         draftKey,
@@ -1765,10 +1864,11 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
 
             <Section id="student-section-2" title={t.submissionRecord}>
               <StudentHistoryPanel
-                lessons={displayStudent.lessonHistory || []}
+                lessons={mergeLessonRecords(cloudLessonRecords, displayStudent.lessonHistory || [])}
                 submissionLogs={submissionLogs}
                 t={t}
                 lang={lang}
+                onEditSubmission={editSubmissionLog}
               />
             </Section>
           </div>
