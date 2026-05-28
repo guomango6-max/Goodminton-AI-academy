@@ -155,6 +155,8 @@ type StudentSubmissionLog = {
 };
 
 const STUDENT_SESSION_EVENT = 'goodminton-student-current-change';
+const STUDENT_CURRENT_KEY = 'goodminton-student-current';
+const STUDENT_CREDENTIAL_KEY = 'goodminton-student-credential';
 let cachedCurrentStudentRaw: string | null | undefined;
 let cachedCurrentStudent: StudentData | null = null;
 
@@ -418,12 +420,25 @@ function readStudentSubmissionLogs(key: string): StudentSubmissionLog[] {
   }
 }
 
+function mergeSubmissionLogs(primary: StudentSubmissionLog[], secondary: StudentSubmissionLog[]) {
+  const seen = new Set<string>();
+  return [...primary, ...secondary]
+    .filter((log) => {
+      const key = log.id || `${log.studentId}-${log.submissionType}-${log.submittedAt}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))
+    .slice(0, 50);
+}
+
 function readCurrentStudent(): StudentData | null {
   if (typeof window === 'undefined') {
     return null;
   }
 
-  const savedStudent = window.sessionStorage.getItem('goodminton-student-current');
+  const savedStudent = window.sessionStorage.getItem(STUDENT_CURRENT_KEY);
 
   if (savedStudent === cachedCurrentStudentRaw) {
     return cachedCurrentStudent;
@@ -440,7 +455,7 @@ function readCurrentStudent(): StudentData | null {
     cachedCurrentStudent = JSON.parse(savedStudent) as StudentData;
     return cachedCurrentStudent;
   } catch {
-    window.sessionStorage.removeItem('goodminton-student-current');
+    window.sessionStorage.removeItem(STUDENT_CURRENT_KEY);
     cachedCurrentStudentRaw = null;
     cachedCurrentStudent = null;
     return null;
@@ -1496,6 +1511,38 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
     );
   }, [checkedHomework, draftKey, homeworkDateKey, lessonInput, matchInput]);
 
+  useEffect(() => {
+    const credential = window.sessionStorage.getItem(STUDENT_CREDENTIAL_KEY);
+    if (!credential) return;
+
+    const controller = new AbortController();
+
+    async function loadCloudSubmissions() {
+      try {
+        const response = await fetch('/api/student-submissions', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify({ credential }),
+          signal: controller.signal,
+        });
+        const payload = (await response.json().catch(() => ({}))) as { submissions?: StudentSubmissionLog[] };
+        if (!response.ok || !Array.isArray(payload.submissions) || !payload.submissions.length) return;
+
+        setSubmissionLogs((current) => {
+          const merged = mergeSubmissionLogs(payload.submissions || [], current);
+          window.localStorage.setItem(logKey, JSON.stringify(merged.slice(0, 20)));
+          return merged;
+        });
+      } catch {
+        // Keep local history when the cloud archive is not configured yet.
+      }
+    }
+
+    void loadCloudSubmissions();
+    return () => controller.abort();
+  }, [logKey]);
+
   async function submitStudentReview(submissionType: 'lesson' | 'match') {
     const isLesson = submissionType === 'lesson';
     if (isLesson ? lessonSubmissionLoading : matchSubmissionLoading) return;
@@ -1924,7 +1971,11 @@ export default function StudentPage() {
 
       setActiveStudent(payload.student);
       try {
-        window.sessionStorage.setItem('goodminton-student-current', JSON.stringify(payload.student));
+        window.sessionStorage.setItem(STUDENT_CURRENT_KEY, JSON.stringify(payload.student));
+        window.sessionStorage.setItem(
+          STUDENT_CREDENTIAL_KEY,
+          typeof rawCredential === 'string' ? rawCredential.trim() : `${rawCredential.studentId || ''}${rawCredential.accessCode || ''}`,
+        );
         window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
         window.setTimeout(() => {
           if (!readCurrentStudent()) return;
@@ -1959,7 +2010,8 @@ export default function StudentPage() {
   function logoutStudent() {
     setActiveStudent(null);
     try {
-      window.sessionStorage.removeItem('goodminton-student-current');
+      window.sessionStorage.removeItem(STUDENT_CURRENT_KEY);
+      window.sessionStorage.removeItem(STUDENT_CREDENTIAL_KEY);
       window.dispatchEvent(new Event(STUDENT_SESSION_EVENT));
     } catch {
       // Ignore storage failures; clearing React state is enough for the current page.

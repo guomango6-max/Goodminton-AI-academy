@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 type StudentSubmissionPayload = {
   id?: string;
@@ -126,6 +127,35 @@ async function sendStudentSubmissionNtfy(submission: ReturnType<typeof normalize
   }
 }
 
+async function archiveStudentSubmission(submission: ReturnType<typeof normalizeSubmission>) {
+  const supabase = createSupabaseAdminClient();
+  if (!supabase) {
+    return false;
+  }
+
+  const payload = {
+    external_id: submission.id,
+    student_id: submission.studentId,
+    student_name: submission.studentName,
+    submission_type: submission.submissionType,
+    submitted_at: submission.submittedAt,
+    lesson_date: submission.lessonSummary.date || null,
+    lesson_title: submission.lessonSummary.title || null,
+    payload: submission,
+    status: 'new',
+  };
+
+  const { error } = await supabase
+    .from('student_submissions')
+    .upsert(payload, { onConflict: 'external_id' });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return true;
+}
+
 export async function POST(req: Request) {
   const raw = (await req.json().catch(() => null)) as StudentSubmissionPayload | null;
 
@@ -158,11 +188,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Match review is empty.' }, { status: 400 });
   }
 
+  let archived = false;
+
+  try {
+    archived = await archiveStudentSubmission(submission);
+  } catch (error) {
+    console.error('[student-submission-archive-error]', error);
+    return NextResponse.json({ error: 'Failed to save submission.' }, { status: 502 });
+  }
+
   try {
     await sendStudentSubmissionNtfy(submission);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, archived, notified: true });
   } catch (error) {
     console.error('[student-submission-ntfy-error]', error);
+    if (archived) {
+      return NextResponse.json({ ok: true, archived, notified: false });
+    }
     return NextResponse.json({ error: 'Failed to notify coach.' }, { status: 502 });
   }
 }
