@@ -53,3 +53,5 @@ next-env.d.ts
 /data/student-review/
 /data/students/*.json
 !/data/students/demo.json
+
+# claude code 
