@@ -167,7 +167,7 @@ let cachedCurrentStudent: StudentData | null = null;
 const studentCopy = {
   zh: {
     portal: '学员图谱',
-    nav: ['总览', '课后总结', '历史记录', '比赛复盘', '家庭作业', '当前任务', '个人能力', '成就勋章'],
+    nav: ['总览', '课后总结', '训练日志', '比赛复盘', '家庭作业', '当前任务', '个人能力', '成就勋章'],
     logout: '退出',
     breadcrumb: '学员图谱',
     trainingData: (name: string) => `${name} 的训练数据`,
@@ -211,7 +211,7 @@ const studentCopy = {
     lessonLog: '上课日志',
     submissionRecord: '历史记录',
     submissionLog: '最近提交',
-    historyLessons: '上课记录',
+    historyLessons: '训练日志',
     historySummaries: '课后总结',
     historyMatches: '比赛复盘',
     recent20: '保留最近 20 条',
@@ -252,7 +252,7 @@ const studentCopy = {
   },
   en: {
     portal: 'Student Map',
-    nav: ['Overview', 'Lesson Summary', 'History', 'Match Review', 'Homework', 'Current Task', 'Ability', 'Badges'],
+    nav: ['Overview', 'Lesson Summary', 'Training Log', 'Match Review', 'Homework', 'Current Task', 'Ability', 'Badges'],
     logout: 'Log out',
     breadcrumb: 'Student Map',
     trainingData: (name: string) => `${name}'s Training Data`,
@@ -296,7 +296,7 @@ const studentCopy = {
     lessonLog: 'Training Log',
     submissionRecord: 'History',
     submissionLog: 'Recent Submissions',
-    historyLessons: 'Lesson Records',
+    historyLessons: 'Training Log',
     historySummaries: 'Lesson Summaries',
     historyMatches: 'Match Reviews',
     recent20: 'Keeps the latest 20 items',
@@ -669,31 +669,6 @@ function StudentHistoryPanel({
         </div>
       ) : null}
 
-      <HistoryGroup title={t.historyLessons} count={lessons.length} open={openLessons} expandLabel={t.expand} collapseLabel={t.collapse} onToggle={() => setOpenLessons((value) => !value)}>
-        {lessons.length ? (
-          lessons.map((lesson) => (
-            <article key={lesson.id || `${lesson.date}-${lesson.title}`} className="rounded-md border border-[#dfe7dc] bg-white px-3 py-3 text-sm leading-6 text-slate-700">
-              <div className="text-xs text-slate-500">{lesson.date}</div>
-              <div className="mt-1 font-semibold text-slate-950">{lesson.title}</div>
-              <div className="mt-2 space-y-1 text-slate-600">
-                <DetailLine label={lang === 'en' ? 'Content: ' : '内容：'} value={lesson.mainContent || [lesson.focus || '']} />
-                <DetailLine label={lang === 'en' ? 'Student: ' : '学员：'} value={lesson.studentNote} />
-                <DetailLine label={lang === 'en' ? 'Homework: ' : '作业：'} value={`${lesson.homeworkDone || 0}/${lesson.homeworkTotal || 0}`} />
-              </div>
-              {lesson.coachNote ? <div className="mt-2 text-slate-500">{lang === 'en' ? 'Coach: ' : '教练：'}{lesson.coachNote}</div> : null}
-              {lesson.coachLiked || lesson.coachFeedback ? (
-                <div className="mt-2 rounded-md border border-[#cfe8d9] bg-[#f7fbf5] px-3 py-2 text-xs leading-5 text-slate-600">
-                  {lesson.coachLiked ? <div className="font-medium text-[#16845f]">{t.coachLiked}</div> : null}
-                  {lesson.coachFeedback ? <div>{t.coachFeedback}: {lesson.coachFeedback}</div> : null}
-                </div>
-              ) : null}
-            </article>
-          ))
-        ) : (
-          <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>
-        )}
-      </HistoryGroup>
-
       <HistoryGroup title={t.historySummaries} count={lessonSummaries.length} open={openSummaries} expandLabel={t.expand} collapseLabel={t.collapse} onToggle={() => setOpenSummaries((value) => !value)}>
         {lessonSummaries.length ? lessonSummaries.map((log) => (
           <article key={log.id} className="rounded-md border border-[#dfe7dc] bg-white px-3 py-3 text-sm leading-6 text-slate-700 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
@@ -720,6 +695,31 @@ function StudentHistoryPanel({
             ) : null}
           </article>
         )) : <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>}
+      </HistoryGroup>
+
+      <HistoryGroup title={t.historyLessons} count={lessons.length} open={openLessons} expandLabel={t.expand} collapseLabel={t.collapse} onToggle={() => setOpenLessons((value) => !value)}>
+        {lessons.length ? (
+          lessons.map((lesson) => (
+            <article key={lesson.id || `${lesson.date}-${lesson.title}`} className="rounded-md border border-[#dfe7dc] bg-white px-3 py-3 text-sm leading-6 text-slate-700">
+              <div className="text-xs text-slate-500">{lesson.date}</div>
+              <div className="mt-1 font-semibold text-slate-950">{lesson.title}</div>
+              <div className="mt-2 space-y-1 text-slate-600">
+                <DetailLine label={lang === 'en' ? 'Content: ' : '内容：'} value={lesson.mainContent || [lesson.focus || '']} />
+                <DetailLine label={lang === 'en' ? 'Student: ' : '学员：'} value={lesson.studentNote} />
+                <DetailLine label={lang === 'en' ? 'Homework: ' : '作业：'} value={`${lesson.homeworkDone || 0}/${lesson.homeworkTotal || 0}`} />
+              </div>
+              {lesson.coachNote ? <div className="mt-2 text-slate-500">{lang === 'en' ? 'Coach: ' : '教练：'}{lesson.coachNote}</div> : null}
+              {lesson.coachLiked || lesson.coachFeedback ? (
+                <div className="mt-2 rounded-md border border-[#cfe8d9] bg-[#f7fbf5] px-3 py-2 text-xs leading-5 text-slate-600">
+                  {lesson.coachLiked ? <div className="font-medium text-[#16845f]">{t.coachLiked}</div> : null}
+                  {lesson.coachFeedback ? <div>{t.coachFeedback}: {lesson.coachFeedback}</div> : null}
+                </div>
+              ) : null}
+            </article>
+          ))
+        ) : (
+          <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-3 text-sm text-slate-500">{t.noLogs}</div>
+        )}
       </HistoryGroup>
 
       <HistoryGroup title={t.historyMatches} count={matchReviews.length} open={openMatches} expandLabel={t.expand} collapseLabel={t.collapse} onToggle={() => setOpenMatches((value) => !value)}>
@@ -1848,7 +1848,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     {t.lessonSummary}
                   </a>
                   <a href="#student-section-2" className="flex min-h-12 items-center justify-center rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-semibold text-[#0e6f4d]">
-                    {t.submissionRecord}
+                    {t.historyLessons}
                   </a>
                   <a href="#student-section-3" className="flex min-h-12 items-center justify-center rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-semibold text-[#0e6f4d]">
                     {t.matchReview}
@@ -1945,7 +1945,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
               </div>
             </Section>
 
-            <Section id="student-section-2" title={t.submissionRecord}>
+            <Section id="student-section-2" title={t.historyLessons}>
               <StudentHistoryPanel
                 lessons={mergeLessonRecords(cloudLessonRecords, displayStudent.lessonHistory || [])}
                 submissionLogs={submissionLogs}
