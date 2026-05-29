@@ -211,7 +211,7 @@ const studentCopy = {
     lessonLog: '上课日志',
     submissionRecord: '历史记录',
     submissionLog: '最近提交',
-    historyLessons: '训练日志',
+    historyLessons: '上课记录',
     historySummaries: '课后总结',
     historyMatches: '比赛复盘',
     recent20: '保留最近 20 条',
@@ -296,7 +296,7 @@ const studentCopy = {
     lessonLog: 'Training Log',
     submissionRecord: 'History',
     submissionLog: 'Recent Submissions',
-    historyLessons: 'Training Log',
+    historyLessons: 'Lesson Records',
     historySummaries: 'Lesson Summaries',
     historyMatches: 'Match Reviews',
     recent20: 'Keeps the latest 20 items',
@@ -684,7 +684,14 @@ function StudentHistoryPanel({
               </div>
               <DetailLine label={t.summaryPrefix} value={log.lessonSummary.studentReflection || t.empty} />
               <DetailLine label={`${t.learningInterest}: `} value={log.lessonSummary.question || t.empty} />
-              <DetailLine label={`${t.confidence}: `} value={log.lessonSummary.confidence ? `${log.lessonSummary.confidence} / 5` : t.empty} />
+              <DetailLine
+                label={lang === 'en' ? 'Confidence focus: ' : '把握重点：'}
+                value={
+                  log.lessonSummary.confidence
+                    ? `${log.lessonSummary.title || t.empty} · ${log.lessonSummary.confidence} / 5`
+                    : t.empty
+                }
+              />
               <DetailLine label={lang === 'en' ? 'Completed homework: ' : '完成作业：'} value={log.lessonSummary.completedHomework.length ? log.lessonSummary.completedHomework : t.empty} />
             </div>
             {log.coachLiked || log.coachFeedback ? (
@@ -1848,7 +1855,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     {t.lessonSummary}
                   </a>
                   <a href="#student-section-2" className="flex min-h-12 items-center justify-center rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-semibold text-[#0e6f4d]">
-                    {t.historyLessons}
+                    {t.nav[2]}
                   </a>
                   <a href="#student-section-3" className="flex min-h-12 items-center justify-center rounded-md border border-[#cfe8d9] bg-white px-3 py-2 text-sm font-semibold text-[#0e6f4d]">
                     {t.matchReview}
@@ -1921,6 +1928,10 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
                     <span>{t.confidence}</span>
                     <span>{lessonInput.confidence} / 5</span>
                   </div>
+                  <div className="mt-1 rounded-md bg-[#f4f8f1] px-3 py-2 text-sm leading-6 text-slate-600">
+                    <span className="font-medium text-slate-900">{lang === 'en' ? 'Focus: ' : '重点：'}</span>
+                    {displayStudent.lessonSummary?.title || t.empty}
+                  </div>
                   <ConfidencePicker value={lessonInput.confidence} onChange={(confidence) => setLessonInput((value) => ({ ...value, confidence }))} />
                 </label>
                 <div className="rounded-md border border-[#dfe7dc] bg-[#f4f8f1] p-4">
@@ -1945,7 +1956,7 @@ function StudentDashboard({ student, onLogout }: { student: StudentData; onLogou
               </div>
             </Section>
 
-            <Section id="student-section-2" title={t.historyLessons}>
+            <Section id="student-section-2" title={t.nav[2]}>
               <StudentHistoryPanel
                 lessons={mergeLessonRecords(cloudLessonRecords, displayStudent.lessonHistory || [])}
                 submissionLogs={submissionLogs}
